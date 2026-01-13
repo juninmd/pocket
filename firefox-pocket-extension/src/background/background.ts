@@ -1,17 +1,57 @@
 import browser from 'webextension-polyfill';
+import { SavedItem, ItemStatus, ItemType, Message } from '../utils/types';
+import { getSavedItems, saveItem, updateItem, deleteItem, generateId } from '../utils/storage';
 
-browser.runtime.onMessage.addListener((message: any, sender: browser.Runtime.MessageSender) => {
-  if (message.action === 'saveLink') {
-    console.log('Saving link:', message.url, message.title);
-    // Here you would typically save the link to storage
-    // For now, let's just store it in localStorage as a simple example
-    browser.storage.local.get('savedLinks').then((data) => {
-      const savedLinks: any[] = (data.savedLinks as any[] || []);
-      savedLinks.push({ url: message.url, title: message.title, savedAt: new Date().toISOString() });
-      browser.storage.local.set({ savedLinks }).then(() => {
-        console.log('Link saved to storage.');
-      });
-    });
+browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.MessageSender) => {
+  const message = msg as Message;
+  switch (message.action) {
+    case 'saveLink': {
+      console.log('Saving link:', message.payload.url);
+      const { url, title } = message.payload;
+      const newItem: SavedItem = {
+        id: generateId(),
+        url: url,
+        title: title || url,
+        status: ItemStatus.Unread,
+        isFavorite: false,
+        type: ItemType.Article, // Default to article for now
+        tags: [],
+        savedAt: new Date().toISOString(),
+        estimatedReadTime: 5 // Mock value
+      };
+      await saveItem(newItem);
+      console.log('Link saved.');
+      // Broadcast update
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
+      return { success: true, item: newItem };
+    }
+    case 'getLinks': {
+      const items = await getSavedItems();
+      return { items };
+    }
+    case 'updateLink': {
+      const { id, updates } = message.payload;
+      const updatedItem = await updateItem(id, updates);
+      // Broadcast update
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
+      return { success: !!updatedItem, item: updatedItem };
+    }
+    case 'deleteLink': {
+      const { id, url } = message.payload;
+      if (id) {
+        await deleteItem(id);
+      } else if (url) {
+        // Delete by URL
+        const items = await getSavedItems();
+        const item = items.find(i => i.url === url);
+        if (item) {
+          await deleteItem(item.id);
+        }
+      }
+      // Broadcast update
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
+      return { success: true };
+    }
   }
 });
 
@@ -23,19 +63,30 @@ browser.contextMenus.create({
 
 browser.contextMenus.onClicked.addListener((info: browser.Menus.OnClickData, tab?: browser.Tabs.Tab) => {
   if (info.menuItemId === "save-to-pocket-like") {
-    if (info.linkUrl) {
-      // If it's a link, save the link URL
-      browser.runtime.sendMessage({
-        action: 'saveLink',
-        url: info.linkUrl,
-        title: info.selectionText || info.linkUrl,
-      });
-    } else if (tab && tab.url) {
-      // If it's a page, save the page URL
-      browser.runtime.sendMessage({
-        action: 'saveLink',
-        url: tab.url,
-        title: tab.title || tab.url,
+    let url = info.linkUrl;
+    let title = info.selectionText || info.linkUrl;
+
+    if (!url && tab && tab.url) {
+      url = tab.url;
+      title = tab.title || tab.url;
+    }
+
+    if (url) {
+      const newItem: SavedItem = {
+        id: generateId(),
+        url: url,
+        title: title || url,
+        status: ItemStatus.Unread,
+        isFavorite: false,
+        type: ItemType.Article,
+        tags: [],
+        savedAt: new Date().toISOString(),
+        estimatedReadTime: 5
+      };
+      saveItem(newItem).then(() => {
+        console.log('Saved via context menu');
+        browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
+        // Optional: Send message to content script to show notification
       });
     }
   }

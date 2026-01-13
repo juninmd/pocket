@@ -5,12 +5,14 @@ module.exports = {
   mode: 'development',
   entry: {
     popup: './src/popup/index.tsx',
+    dashboard: './src/dashboard/index.tsx',
     background: './src/background/background.ts',
     content: './src/content/content.ts',
   },
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
+    clean: true,
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
@@ -33,6 +35,11 @@ module.exports = {
       template: './src/popup/index.html',
       filename: 'popup.html',
       chunks: ['popup'],
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/dashboard/index.html',
+      filename: 'dashboard.html',
+      chunks: ['dashboard'],
     }),
   ],
 };
