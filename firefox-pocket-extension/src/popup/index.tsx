@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import Mascot from './Mascot';
 
 import browser from 'webextension-polyfill';
+import { SavedItem } from '../utils/types';
+import './index.css';
 
 const App = () => {
   const saveCurrentPage = () => {
@@ -21,6 +23,10 @@ const App = () => {
     }
   };
 
+  if (loading) {
+      return <div className="container">Loading...</div>;
+  }
+
   return (
     <div>
       <h1>Pocket-like Extension</h1>
@@ -36,6 +42,6 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <Popup />
   </React.StrictMode>
 );
