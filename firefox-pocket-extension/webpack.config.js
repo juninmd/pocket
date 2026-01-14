@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -40,6 +41,12 @@ module.exports = {
       template: './src/dashboard/index.html',
       filename: 'dashboard.html',
       chunks: ['dashboard'],
+    }),
+    new CopyPlugin({
+      patterns: [
+        { from: 'manifest.json', to: 'manifest.json' },
+        { from: 'icons', to: 'icons' },
+      ],
     }),
   ],
 };
