@@ -29,6 +29,12 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
       const items = await getSavedItems();
       return { items };
     }
+    case 'getLink': {
+      const { url } = message.payload;
+      const items = await getSavedItems();
+      const item = items.find(i => i.url === url);
+      return { success: !!item, item };
+    }
     case 'updateLink': {
       const { id, updates } = message.payload;
       const updatedItem = await updateItem(id, updates);

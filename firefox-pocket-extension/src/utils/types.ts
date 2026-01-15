@@ -32,6 +32,6 @@ export interface Tag {
 }
 
 export interface Message {
-  action: 'saveLink' | 'getLinks' | 'updateLink' | 'deleteLink' | 'getTags';
+  action: 'saveLink' | 'getLinks' | 'getLink' | 'updateLink' | 'deleteLink' | 'getTags';
   payload?: any;
 }

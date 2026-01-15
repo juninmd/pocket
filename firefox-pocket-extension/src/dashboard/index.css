@@ -151,6 +151,21 @@ body {
   font-weight: 500;
 }
 
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.card-tag {
+  background: #f0f0f0;
+  color: #666;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
 .card-actions {
   margin-top: auto;
   display: flex;
