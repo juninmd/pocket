@@ -190,6 +190,13 @@ const Dashboard = () => {
                   <div className="card-content">
                       <div className="card-title">{item.title}</div>
                       <div className="card-meta">{new URL(item.url).hostname} • {item.estimatedReadTime || 5} min</div>
+                      {item.tags && item.tags.length > 0 && (
+                        <div className="card-tags">
+                            {item.tags.map(tag => (
+                                <span key={tag} className="card-tag">{tag}</span>
+                            ))}
+                        </div>
+                      )}
                       <div className="card-actions">
                           <button
                               className="icon-btn"
