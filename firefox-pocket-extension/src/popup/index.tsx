@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus } from '../utils/types';
+import Mascot from './Mascot';
 import './index.css';
 
 const App = () => {
@@ -103,22 +104,21 @@ const App = () => {
   };
 
   if (status === 'loading' || status === 'saving') {
-      return <div className="loading">Saving...</div>;
+      return <div className="loading">Salvando...</div>;
   }
 
   if (status === 'error') {
-      return <div className="error">Could not save page.</div>;
+      return <div className="error">Não foi possível salvar a página.</div>;
   }
 
   return (
     <div className="popup-container">
-      <div className="header">
-        <div className="success-message">
-            <span className="check-icon">✓</span> Saved
-        </div>
+      <Mascot message="Link Salvo!" />
+
+      <div className="header" style={{ justifyContent: 'flex-end' }}>
         <div className="actions">
-             <button onClick={handleArchive} title="Archive">📥</button>
-             <button onClick={handleDelete} title="Delete">🗑️</button>
+             <button onClick={handleArchive} title="Arquivar">📥</button>
+             <button onClick={handleDelete} title="Excluir">🗑️</button>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ const App = () => {
         </div>
         <input
             type="text"
-            placeholder="Add Tags..."
+            placeholder="Adicionar tags..."
             value={tagInput}
             onChange={e => setTagInput(e.target.value)}
             onKeyDown={handleAddTag}
@@ -143,7 +143,7 @@ const App = () => {
       </div>
 
       <div className="footer">
-         <button className="link-btn" onClick={openDashboard}>Open My List</button>
+         <button className="link-btn" onClick={openDashboard}>Abrir Minha Lista</button>
       </div>
     </div>
   );
