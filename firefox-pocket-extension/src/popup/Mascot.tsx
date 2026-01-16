@@ -1,11 +1,15 @@
 import React from 'react';
 
-const Mascot = () => {
+interface MascotProps {
+  message?: string;
+}
+
+const Mascot: React.FC<MascotProps> = ({ message = "Olá, amigo!" }) => {
   return (
     <div className="mascot-container">
       <svg
-        width="100"
-        height="100"
+        width="80"
+        height="80"
         viewBox="0 0 100 100"
         xmlns="http://www.w3.org/2000/svg"
         className="mascot-svg"
@@ -23,7 +27,7 @@ const Mascot = () => {
         <circle cx="25" cy="55" r="5" fill="#FF69B4" opacity="0.6" />
         <circle cx="75" cy="55" r="5" fill="#FF69B4" opacity="0.6" />
       </svg>
-      <p className="mascot-message">Olá, amigo!</p>
+      <p className="mascot-message">{message}</p>
     </div>
   );
 };

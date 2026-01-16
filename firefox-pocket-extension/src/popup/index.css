@@ -137,3 +137,28 @@ body {
 .link-btn:hover {
   color: #ef4056;
 }
+
+/* Mascot Styles */
+.mascot-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 12px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.mascot-svg {
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.mascot-message {
+    margin: 8px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
