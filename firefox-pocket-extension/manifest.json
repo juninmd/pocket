@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Pocket-like Extension",
   "version": "1.0",
-  "description": "A Firefox extension similar to Pocket.",
+  "description": "Uma extensão para Firefox similar ao Pocket.",
   "icons": {
     "48": "icons/icon-48.png"
   },

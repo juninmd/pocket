@@ -10,7 +10,7 @@ type ViewType = 'home' | 'favorites' | 'archive' | 'discover' | 'collections' | 
 const MOCK_DISCOVER_ITEMS = [
   {
     id: 'd1',
-    title: 'The Future of Web Development',
+    title: 'O Futuro do Desenvolvimento Web',
     url: 'https://developer.mozilla.org',
     imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=300&q=80',
     hostname: 'developer.mozilla.org',
@@ -18,7 +18,7 @@ const MOCK_DISCOVER_ITEMS = [
   },
   {
     id: 'd2',
-    title: 'Understanding React Server Components',
+    title: 'Entendendo React Server Components',
     url: 'https://react.dev',
     imageUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=300&q=80',
     hostname: 'react.dev',
@@ -26,7 +26,7 @@ const MOCK_DISCOVER_ITEMS = [
   },
   {
     id: 'd3',
-    title: '10 Tips for Better CSS',
+    title: '10 Dicas para um CSS Melhor',
     url: 'https://css-tricks.com',
     imageUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&w=300&q=80',
     hostname: 'css-tricks.com',
@@ -65,7 +65,7 @@ const Dashboard = () => {
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this item?')) {
+    if (confirm('Tem certeza que deseja excluir este item?')) {
         await browser.runtime.sendMessage({ action: 'deleteLink', payload: { id } });
         loadItems();
     }
@@ -133,7 +133,7 @@ const Dashboard = () => {
                               <div className="card-title">{item.title}</div>
                               <div className="card-meta">{item.hostname} • {item.readTime} min</div>
                               <div className="card-actions">
-                                  <span style={{fontSize: '0.8rem', color: '#666'}}>Recommended</span>
+                                  <span style={{fontSize: '0.8rem', color: '#666'}}>Recomendado</span>
                               </div>
                           </div>
                       </a>
@@ -145,9 +145,9 @@ const Dashboard = () => {
       if (activeView === 'collections') {
           return (
               <div className="empty-state">
-                  <h2>Collections</h2>
-                  <p>Organize your saved items into collections.</p>
-                  <p><em>Coming soon in the next update!</em></p>
+                  <h2>Coleções</h2>
+                  <p>Organize seus itens salvos em coleções.</p>
+                  <p><em>Em breve na próxima atualização!</em></p>
               </div>
           );
       }
@@ -156,15 +156,15 @@ const Dashboard = () => {
           return (
               <div style={{maxWidth: '600px'}}>
                    <div className="card-content" style={{background: 'white', padding: '20px', borderRadius: '8px'}}>
-                      <h2>Settings</h2>
+                      <h2>Configurações</h2>
                       <div style={{marginBottom: '20px'}}>
-                          <h3>Data Management</h3>
-                          <button className="btn" onClick={handleExport} style={{padding: '10px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '4px'}}>Export Saved Items (JSON)</button>
+                          <h3>Gerenciamento de Dados</h3>
+                          <button className="btn" onClick={handleExport} style={{padding: '10px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '4px'}}>Exportar Itens Salvos (JSON)</button>
                       </div>
                       <div>
-                          <h3>About</h3>
-                          <p>Pocket-like Extension v1.0</p>
-                          <p>A privacy-focused alternative for saving links.</p>
+                          <h3>Sobre</h3>
+                          <p>Extensão Pocket-like v1.0</p>
+                          <p>Uma alternativa focada em privacidade para salvar links.</p>
                       </div>
                    </div>
               </div>
@@ -176,8 +176,8 @@ const Dashboard = () => {
       if (filteredItems.length === 0) {
           return (
               <div className="empty-state">
-                  <h2>No items found</h2>
-                  <p>Save some links to get started!</p>
+                  <h2>Nenhum item encontrado</h2>
+                  <p>Salve alguns links para começar!</p>
               </div>
           );
       }
@@ -186,7 +186,7 @@ const Dashboard = () => {
           <div className="grid">
               {filteredItems.map(item => (
                   <a href={item.url} target="_blank" rel="noopener noreferrer" className="card" key={item.id} style={{textDecoration: 'none', color: 'inherit'}}>
-                  <div className="card-image" style={{backgroundImage: `url(${item.imageUrl || 'https://via.placeholder.com/300x160?text=No+Image'})`}}></div>
+                  <div className="card-image" style={{backgroundImage: `url(${item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})`}}></div>
                   <div className="card-content">
                       <div className="card-title">{item.title}</div>
                       <div className="card-meta">{new URL(item.url).hostname} • {item.estimatedReadTime || 5} min</div>
@@ -200,7 +200,7 @@ const Dashboard = () => {
                       <div className="card-actions">
                           <button
                               className="icon-btn"
-                              title={item.isFavorite ? "Unfavorite" : "Favorite"}
+                              title={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
                               onClick={(e) => handleToggleFavorite(e, item.id, item.isFavorite)}
                               style={{color: item.isFavorite ? 'orange' : ''}}
                           >
@@ -208,7 +208,7 @@ const Dashboard = () => {
                           </button>
                           <button
                               className="icon-btn"
-                              title={item.status === ItemStatus.Archived ? "Unarchive" : "Archive"}
+                              title={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
                               onClick={(e) => handleToggleArchive(e, item.id, item.status)}
                               style={{color: item.status === ItemStatus.Archived ? 'green' : ''}}
                           >
@@ -216,7 +216,7 @@ const Dashboard = () => {
                           </button>
                            <button
                               className="icon-btn"
-                              title="Delete"
+                              title="Excluir"
                               onClick={(e) => handleDelete(e, item.id)}
                           >
                               🗑️
@@ -238,31 +238,31 @@ const Dashboard = () => {
              </svg>
             pocket-like
         </div>
-        <div className={`nav-item ${activeView === 'home' ? 'active' : ''}`} onClick={() => setActiveView('home')}>Home</div>
-        <div className={`nav-item ${activeView === 'favorites' ? 'active' : ''}`} onClick={() => setActiveView('favorites')}>Favorites</div>
-        <div className={`nav-item ${activeView === 'archive' ? 'active' : ''}`} onClick={() => setActiveView('archive')}>Archive</div>
+        <div className={`nav-item ${activeView === 'home' ? 'active' : ''}`} onClick={() => setActiveView('home')}>Início</div>
+        <div className={`nav-item ${activeView === 'favorites' ? 'active' : ''}`} onClick={() => setActiveView('favorites')}>Favoritos</div>
+        <div className={`nav-item ${activeView === 'archive' ? 'active' : ''}`} onClick={() => setActiveView('archive')}>Arquivo</div>
         <div className="nav-divider"></div>
-        <div className={`nav-item ${activeView === 'discover' ? 'active' : ''}`} onClick={() => setActiveView('discover')}>Discover</div>
-        <div className={`nav-item ${activeView === 'collections' ? 'active' : ''}`} onClick={() => setActiveView('collections')}>Collections</div>
+        <div className={`nav-item ${activeView === 'discover' ? 'active' : ''}`} onClick={() => setActiveView('discover')}>Descobrir</div>
+        <div className={`nav-item ${activeView === 'collections' ? 'active' : ''}`} onClick={() => setActiveView('collections')}>Coleções</div>
         <div className="nav-divider"></div>
-        <div className={`nav-item ${activeView === 'settings' ? 'active' : ''}`} onClick={() => setActiveView('settings')}>Settings</div>
+        <div className={`nav-item ${activeView === 'settings' ? 'active' : ''}`} onClick={() => setActiveView('settings')}>Configurações</div>
       </div>
 
       <div className="main-content">
         <div className="header">
             <h1 className="page-title">
-                {activeView === 'home' && 'My List'}
-                {activeView === 'favorites' && 'Favorites'}
-                {activeView === 'archive' && 'Archive'}
-                {activeView === 'discover' && 'Discover'}
-                {activeView === 'collections' && 'Collections'}
-                {activeView === 'settings' && 'Settings'}
+                {activeView === 'home' && 'Minha Lista'}
+                {activeView === 'favorites' && 'Favoritos'}
+                {activeView === 'archive' && 'Arquivo'}
+                {activeView === 'discover' && 'Descobrir'}
+                {activeView === 'collections' && 'Coleções'}
+                {activeView === 'settings' && 'Configurações'}
             </h1>
             {['home', 'favorites', 'archive'].includes(activeView) && (
                 <input
                     type="text"
                     className="search-bar"
-                    placeholder="Search..."
+                    placeholder="Pesquisar..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />

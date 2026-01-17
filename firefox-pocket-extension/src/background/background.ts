@@ -63,7 +63,7 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
 
 browser.contextMenus.create({
   id: "save-to-pocket-like",
-  title: "Save to Pocket-like",
+  title: "Salvar no Pocket-like",
   contexts: ["page", "link"],
 });
 
