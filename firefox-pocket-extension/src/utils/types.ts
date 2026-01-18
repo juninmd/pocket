@@ -24,6 +24,8 @@ export interface SavedItem {
   savedAt: string;
   readAt?: string;
   estimatedReadTime?: number; // in minutes
+  siteName?: string;
+  author?: string;
 }
 
 export interface Tag {

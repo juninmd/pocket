@@ -37,11 +37,23 @@ const App = () => {
       } else {
         // Not saved, save it
         setStatus('saving');
+
+        // Try to get metadata from content script
+        let metadata = {};
+        if (currentTab.id) {
+          try {
+              metadata = await browser.tabs.sendMessage(currentTab.id, { action: 'getMetadata' });
+          } catch (err) {
+              console.log('Could not get metadata, falling back to basic info', err);
+          }
+        }
+
         const saveResponse = await browser.runtime.sendMessage({
           action: 'saveLink',
           payload: {
             url: currentTab.url,
             title: currentTab.title || currentTab.url,
+            ...metadata
           }
         }) as { success: boolean, item?: SavedItem };
         if (saveResponse && saveResponse.success && saveResponse.item) {
