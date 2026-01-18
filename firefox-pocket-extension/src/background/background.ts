@@ -7,17 +7,21 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
   switch (message.action) {
     case 'saveLink': {
       console.log('Saving link:', message.payload.url);
-      const { url, title } = message.payload;
+      const { url, title, imageUrl, description, siteName, author, estimatedReadTime } = message.payload;
       const newItem: SavedItem = {
         id: generateId(),
         url: url,
         title: title || url,
+        excerpt: description,
+        imageUrl: imageUrl,
+        siteName: siteName,
+        author: author,
         status: ItemStatus.Unread,
         isFavorite: false,
         type: ItemType.Article, // Default to article for now
         tags: [],
         savedAt: new Date().toISOString(),
-        estimatedReadTime: 5 // Mock value
+        estimatedReadTime: estimatedReadTime || 5
       };
       await saveItem(newItem);
       console.log('Link saved.');
@@ -78,22 +82,35 @@ browser.contextMenus.onClicked.addListener((info: browser.Menus.OnClickData, tab
     }
 
     if (url) {
-      const newItem: SavedItem = {
-        id: generateId(),
-        url: url,
-        title: title || url,
-        status: ItemStatus.Unread,
-        isFavorite: false,
-        type: ItemType.Article,
-        tags: [],
-        savedAt: new Date().toISOString(),
-        estimatedReadTime: 5
-      };
-      saveItem(newItem).then(() => {
-        console.log('Saved via context menu');
-        browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
-        // Optional: Send message to content script to show notification
-      });
+        const performSave = (metadata: any = {}) => {
+             const newItem: SavedItem = {
+                id: generateId(),
+                url: url!, // We know url is present
+                title: title || metadata.title || url!,
+                excerpt: metadata.description,
+                imageUrl: metadata.imageUrl,
+                siteName: metadata.siteName,
+                author: metadata.author,
+                status: ItemStatus.Unread,
+                isFavorite: false,
+                type: ItemType.Article,
+                tags: [],
+                savedAt: new Date().toISOString(),
+                estimatedReadTime: metadata.estimatedReadTime || 5
+              };
+              saveItem(newItem).then(() => {
+                console.log('Saved via context menu');
+                browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
+              });
+        };
+
+        if (tab && tab.id) {
+            browser.tabs.sendMessage(tab.id, { action: 'getMetadata' })
+            .then(metadata => performSave(metadata))
+            .catch(() => performSave());
+        } else {
+            performSave();
+        }
     }
   }
 });

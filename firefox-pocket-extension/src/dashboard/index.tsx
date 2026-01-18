@@ -7,37 +7,11 @@ import './index.css';
 // Define filter types
 type ViewType = 'home' | 'favorites' | 'archive' | 'discover' | 'collections' | 'settings';
 
-const MOCK_DISCOVER_ITEMS = [
-  {
-    id: 'd1',
-    title: 'O Futuro do Desenvolvimento Web',
-    url: 'https://developer.mozilla.org',
-    imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=300&q=80',
-    hostname: 'developer.mozilla.org',
-    readTime: 5
-  },
-  {
-    id: 'd2',
-    title: 'Entendendo React Server Components',
-    url: 'https://react.dev',
-    imageUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=300&q=80',
-    hostname: 'react.dev',
-    readTime: 8
-  },
-  {
-    id: 'd3',
-    title: '10 Dicas para um CSS Melhor',
-    url: 'https://css-tricks.com',
-    imageUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&w=300&q=80',
-    hostname: 'css-tricks.com',
-    readTime: 4
-  }
-];
-
 const Dashboard = () => {
   const [items, setItems] = useState<SavedItem[]>([]);
   const [activeView, setActiveView] = useState<ViewType>('home');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   useEffect(() => {
     loadItems();
@@ -102,6 +76,12 @@ const Dashboard = () => {
       downloadAnchorNode.remove();
   };
 
+  const handleViewChange = (view: ViewType) => {
+      setActiveView(view);
+      setSelectedTag(null);
+      setSearchQuery('');
+  };
+
   const getFilteredItems = () => {
       return items.filter(item => {
           if (activeView === 'home') {
@@ -113,6 +93,9 @@ const Dashboard = () => {
           if (activeView === 'archive') {
               return item.status === ItemStatus.Archived;
           }
+          if (activeView === 'collections' && selectedTag) {
+              return item.tags && item.tags.includes(selectedTag);
+          }
           return true;
       }).filter(item => {
           // Search
@@ -122,32 +105,57 @@ const Dashboard = () => {
       });
   };
 
+  const getUniqueTags = () => {
+      const tags = new Set<string>();
+      items.forEach(item => item.tags && item.tags.forEach(tag => tags.add(tag)));
+      return Array.from(tags).sort();
+  };
+
   const renderContent = () => {
       if (activeView === 'discover') {
-          return (
-              <div className="grid">
-                  {MOCK_DISCOVER_ITEMS.map(item => (
-                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="card" key={item.id} style={{textDecoration: 'none', color: 'inherit'}}>
-                          <div className="card-image" style={{backgroundImage: `url(${item.imageUrl})`}}></div>
-                          <div className="card-content">
-                              <div className="card-title">{item.title}</div>
-                              <div className="card-meta">{item.hostname} • {item.readTime} min</div>
-                              <div className="card-actions">
-                                  <span style={{fontSize: '0.8rem', color: '#666'}}>Recomendado</span>
-                              </div>
-                          </div>
-                      </a>
-                  ))}
-              </div>
-          );
+           const unreadItems = items.filter(i => i.status === ItemStatus.Unread);
+           if (unreadItems.length === 0) {
+               return <div className="empty-state"><h2>Sem itens para redescobrir</h2><p>Salve mais itens!</p></div>;
+           }
+           const randomItem = unreadItems[Math.floor(Math.random() * unreadItems.length)];
+           return (
+               <div style={{display: 'flex', justifyContent: 'center'}}>
+                  <div className="card" style={{maxWidth: '600px', width: '100%'}}>
+                     <a href={randomItem.url} target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', color: 'inherit', display: 'block'}}>
+                      <div className="card-image" style={{height: '300px', backgroundImage: `url(${randomItem.imageUrl || 'https://via.placeholder.com/600x300?text=Sem+Imagem'})`}}></div>
+                      <div className="card-content">
+                           <div style={{color: '#ef4056', fontWeight: 'bold', marginBottom: '10px'}}>REDESCOBRIR</div>
+                           <div className="card-title" style={{fontSize: '1.5rem'}}>{randomItem.title}</div>
+                           <div className="card-meta">{randomItem.siteName || new URL(randomItem.url).hostname} • {randomItem.estimatedReadTime || 5} min</div>
+                            {randomItem.excerpt && <p style={{lineHeight: '1.6', color: '#555'}}>{randomItem.excerpt}</p>}
+                      </div>
+                     </a>
+                     <div className="card-content" style={{borderTop: '1px solid #eee'}}>
+                        <button className="btn" onClick={() => handleViewChange('discover')} style={{width: '100%', padding: '12px', background: '#ef4056', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem'}}>Próximo Item</button>
+                     </div>
+                  </div>
+               </div>
+           );
       }
 
-      if (activeView === 'collections') {
+      if (activeView === 'collections' && !selectedTag) {
+          const tags = getUniqueTags();
+          if (tags.length === 0) {
+              return (
+                  <div className="empty-state">
+                      <h2>Nenhuma coleção encontrada</h2>
+                      <p>Adicione tags aos seus itens para criar coleções.</p>
+                  </div>
+              );
+          }
           return (
-              <div className="empty-state">
-                  <h2>Coleções</h2>
-                  <p>Organize seus itens salvos em coleções.</p>
-                  <p><em>Em breve na próxima atualização!</em></p>
+              <div className="grid">
+                  {tags.map(tag => (
+                      <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{cursor: 'pointer', padding: '30px', alignItems: 'center', justifyContent: 'center'}}>
+                          <h3 style={{fontSize: '1.5rem', margin: 0}}>#{tag}</h3>
+                          <p style={{color: '#888'}}>{items.filter(i => i.tags && i.tags.includes(tag)).length} itens</p>
+                      </div>
+                  ))}
               </div>
           );
       }
@@ -177,7 +185,8 @@ const Dashboard = () => {
           return (
               <div className="empty-state">
                   <h2>Nenhum item encontrado</h2>
-                  <p>Salve alguns links para começar!</p>
+                  <p>{selectedTag ? `Nenhum item com a tag #${selectedTag}` : 'Salve alguns links para começar!'}</p>
+                  {selectedTag && <button onClick={() => setSelectedTag(null)} style={{marginTop: '10px', padding: '8px 16px', cursor: 'pointer'}}>Voltar para Coleções</button>}
               </div>
           );
       }
@@ -189,7 +198,15 @@ const Dashboard = () => {
                   <div className="card-image" style={{backgroundImage: `url(${item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})`}}></div>
                   <div className="card-content">
                       <div className="card-title">{item.title}</div>
-                      <div className="card-meta">{new URL(item.url).hostname} • {item.estimatedReadTime || 5} min</div>
+                      <div className="card-meta">
+                        {item.siteName || new URL(item.url).hostname} • {item.estimatedReadTime || 5} min
+                        {item.author && <span> • {item.author}</span>}
+                      </div>
+                      {item.excerpt && (
+                          <div style={{fontSize: '0.9rem', color: '#666', marginBottom: '10px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
+                              {item.excerpt}
+                          </div>
+                      )}
                       {item.tags && item.tags.length > 0 && (
                         <div className="card-tags">
                             {item.tags.map(tag => (
@@ -238,14 +255,14 @@ const Dashboard = () => {
              </svg>
             pocket-like
         </div>
-        <div className={`nav-item ${activeView === 'home' ? 'active' : ''}`} onClick={() => setActiveView('home')}>Início</div>
-        <div className={`nav-item ${activeView === 'favorites' ? 'active' : ''}`} onClick={() => setActiveView('favorites')}>Favoritos</div>
-        <div className={`nav-item ${activeView === 'archive' ? 'active' : ''}`} onClick={() => setActiveView('archive')}>Arquivo</div>
+        <div className={`nav-item ${activeView === 'home' ? 'active' : ''}`} onClick={() => handleViewChange('home')}>Início</div>
+        <div className={`nav-item ${activeView === 'favorites' ? 'active' : ''}`} onClick={() => handleViewChange('favorites')}>Favoritos</div>
+        <div className={`nav-item ${activeView === 'archive' ? 'active' : ''}`} onClick={() => handleViewChange('archive')}>Arquivo</div>
         <div className="nav-divider"></div>
-        <div className={`nav-item ${activeView === 'discover' ? 'active' : ''}`} onClick={() => setActiveView('discover')}>Descobrir</div>
-        <div className={`nav-item ${activeView === 'collections' ? 'active' : ''}`} onClick={() => setActiveView('collections')}>Coleções</div>
+        <div className={`nav-item ${activeView === 'discover' ? 'active' : ''}`} onClick={() => handleViewChange('discover')}>Redescobrir</div>
+        <div className={`nav-item ${activeView === 'collections' ? 'active' : ''}`} onClick={() => handleViewChange('collections')}>Coleções</div>
         <div className="nav-divider"></div>
-        <div className={`nav-item ${activeView === 'settings' ? 'active' : ''}`} onClick={() => setActiveView('settings')}>Configurações</div>
+        <div className={`nav-item ${activeView === 'settings' ? 'active' : ''}`} onClick={() => handleViewChange('settings')}>Configurações</div>
       </div>
 
       <div className="main-content">
@@ -254,11 +271,11 @@ const Dashboard = () => {
                 {activeView === 'home' && 'Minha Lista'}
                 {activeView === 'favorites' && 'Favoritos'}
                 {activeView === 'archive' && 'Arquivo'}
-                {activeView === 'discover' && 'Descobrir'}
-                {activeView === 'collections' && 'Coleções'}
+                {activeView === 'discover' && 'Redescobrir'}
+                {activeView === 'collections' && (selectedTag ? `Coleção #${selectedTag}` : 'Coleções')}
                 {activeView === 'settings' && 'Configurações'}
             </h1>
-            {['home', 'favorites', 'archive'].includes(activeView) && (
+            {['home', 'favorites', 'archive', 'collections'].includes(activeView) && (
                 <input
                     type="text"
                     className="search-bar"
