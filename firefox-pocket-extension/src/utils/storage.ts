@@ -37,5 +37,8 @@ export const deleteItem = async (id: string): Promise<void> => {
 };
 
 export const generateId = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
   return Math.random().toString(36).substr(2, 9);
 };
