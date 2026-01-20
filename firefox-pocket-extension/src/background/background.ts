@@ -7,7 +7,7 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
   switch (message.action) {
     case 'saveLink': {
       console.log('Saving link:', message.payload.url);
-      const { url, title, imageUrl, description, siteName, author, estimatedReadTime } = message.payload;
+      const { url, title, imageUrl, description, siteName, author, estimatedReadTime, content } = message.payload;
       const newItem: SavedItem = {
         id: generateId(),
         url: url,
@@ -16,6 +16,7 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
         imageUrl: imageUrl,
         siteName: siteName,
         author: author,
+        content: content,
         status: ItemStatus.Unread,
         isFavorite: false,
         type: ItemType.Article, // Default to article for now
@@ -91,6 +92,7 @@ browser.contextMenus.onClicked.addListener((info: browser.Menus.OnClickData, tab
                 imageUrl: metadata.imageUrl,
                 siteName: metadata.siteName,
                 author: metadata.author,
+                content: metadata.content,
                 status: ItemStatus.Unread,
                 isFavorite: false,
                 type: ItemType.Article,

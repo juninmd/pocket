@@ -26,6 +26,7 @@ export interface SavedItem {
   estimatedReadTime?: number; // in minutes
   siteName?: string;
   author?: string;
+  content?: string; // HTML content of the article
 }
 
 export interface Tag {
