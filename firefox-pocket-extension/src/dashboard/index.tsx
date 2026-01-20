@@ -193,10 +193,15 @@ const Dashboard = () => {
 
       return (
           <div className="grid">
-              {filteredItems.map(item => (
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="card" key={item.id} style={{textDecoration: 'none', color: 'inherit'}}>
-                  <div className="card-image" style={{backgroundImage: `url(${item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})`}}></div>
-                  <div className="card-content">
+              {filteredItems.map(item => {
+                  const readerUrl = `reader.html?id=${item.id}`;
+                  const hasContent = !!item.content;
+
+                  return (
+                  <div className="card" key={item.id} style={{textDecoration: 'none', color: 'inherit'}}>
+                  <a href={hasContent ? readerUrl : item.url} target={hasContent ? "_self" : "_blank"} rel="noopener noreferrer" style={{textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%'}}>
+                    <div className="card-image" style={{backgroundImage: `url(${item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})`}}></div>
+                    <div className="card-content">
                       <div className="card-title">{item.title}</div>
                       <div className="card-meta">
                         {item.siteName || new URL(item.url).hostname} • {item.estimatedReadTime || 5} min
@@ -214,7 +219,22 @@ const Dashboard = () => {
                             ))}
                         </div>
                       )}
-                      <div className="card-actions">
+
+                      {/* Spacer to push actions to bottom if needed, but flex handles it */}
+                      <div style={{flex: 1}}></div>
+
+                      <div className="card-actions" onClick={(e) => e.preventDefault()}>
+                          <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="icon-btn"
+                              title="Abrir original"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                          >
+                              🔗
+                          </a>
                           <button
                               className="icon-btn"
                               title={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
@@ -239,9 +259,10 @@ const Dashboard = () => {
                               🗑️
                           </button>
                       </div>
-                  </div>
+                    </div>
                   </a>
-              ))}
+                  </div>
+              )})}
           </div>
       );
   };

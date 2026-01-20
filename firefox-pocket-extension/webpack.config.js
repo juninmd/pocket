@@ -7,6 +7,7 @@ module.exports = {
   entry: {
     popup: './src/popup/index.tsx',
     dashboard: './src/dashboard/index.tsx',
+    reader: './src/reader/index.tsx',
     background: './src/background/background.ts',
     content: './src/content/content.ts',
   },
@@ -41,6 +42,11 @@ module.exports = {
       template: './src/dashboard/index.html',
       filename: 'dashboard.html',
       chunks: ['dashboard'],
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/reader/index.html',
+      filename: 'reader.html',
+      chunks: ['reader'],
     }),
     new CopyPlugin({
       patterns: [

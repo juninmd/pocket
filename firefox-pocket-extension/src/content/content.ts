@@ -18,6 +18,21 @@ function calculateReadTime(): number {
   return Math.max(1, Math.ceil(words / wpm));
 }
 
+function getContent(): string {
+  const article = document.querySelector('article') || document.querySelector('main');
+  if (article) {
+    return article.innerHTML;
+  }
+  // Fallback to body but try to exclude common non-content elements
+  const bodyClone = document.body.cloneNode(true) as HTMLElement;
+  const selectorsToRemove = ['nav', 'header', 'footer', 'script', 'style', 'noscript', 'iframe', '.ad', '.ads', '.social', '.sidebar'];
+  selectorsToRemove.forEach(selector => {
+    const elements = bodyClone.querySelectorAll(selector);
+    elements.forEach(el => el.remove());
+  });
+  return bodyClone.innerHTML;
+}
+
 browser.runtime.onMessage.addListener((message: any) => {
   if (message.action === 'getMetadata') {
     const title = getMetaContent('og:title', 'twitter:title') || document.title;
@@ -26,6 +41,7 @@ browser.runtime.onMessage.addListener((message: any) => {
     const siteName = getMetaContent('og:site_name', 'application-name');
     const author = getMetaContent('author', 'article:author', 'twitter:creator');
     const estimatedReadTime = calculateReadTime();
+    const content = getContent();
 
     return Promise.resolve({
       title,
@@ -33,7 +49,8 @@ browser.runtime.onMessage.addListener((message: any) => {
       imageUrl,
       siteName,
       author,
-      estimatedReadTime
+      estimatedReadTime,
+      content
     });
   }
 });
