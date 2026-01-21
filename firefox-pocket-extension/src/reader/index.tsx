@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import browser from 'webextension-polyfill';
+import DOMPurify from 'dompurify';
 import { SavedItem } from '../utils/types';
 import './index.css';
 
@@ -65,7 +66,7 @@ const Reader = () => {
 
       <div className="content">
         {item.content ? (
-           <div dangerouslySetInnerHTML={{ __html: item.content }} />
+           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content) }} />
         ) : (
            <div>
                <p>{item.excerpt}</p>
