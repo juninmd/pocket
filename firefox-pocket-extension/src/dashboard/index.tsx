@@ -83,13 +83,17 @@ const Dashboard = () => {
     };
 
     const handleExport = () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
+        const jsonString = JSON.stringify(items, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
         const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("href", url);
         downloadAnchorNode.setAttribute("download", "pocket_like_export.json");
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
+        URL.revokeObjectURL(url);
     };
 
     const handleViewChange = (view: ViewType) => {

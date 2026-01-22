@@ -11,6 +11,7 @@ const Reader = () => {
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [summarizeError, setSummarizeError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,11 +59,12 @@ const Reader = () => {
     }
 
     if (!item?.content) {
-      alert("Não há conteúdo textual suficiente para resumir.");
+      setSummarizeError("Não há conteúdo textual suficiente para resumir.");
       return;
     }
 
     setIsSummarizing(true);
+    setSummarizeError(null);
     try {
       // Strip HTML for the prompt to save tokens (basic stripping)
       const tempDiv = document.createElement('div');
@@ -97,7 +99,7 @@ const Reader = () => {
 
     } catch (e: any) {
       console.error("Erro ao resumir", e);
-      alert(`Erro ao gerar resumo: ${e.message}`);
+      setSummarizeError(`Erro ao gerar resumo: ${e.message}`);
     } finally {
       setIsSummarizing(false);
     }
@@ -145,6 +147,11 @@ const Reader = () => {
                 <>✨ Resumir com IA</>
               )}
             </button>
+          )}
+          {summarizeError && (
+             <div style={{ color: 'red', marginTop: '10px', fontSize: '0.9rem' }}>
+                {summarizeError}
+             </div>
           )}
         </div>
       </div>
