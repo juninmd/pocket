@@ -122,17 +122,26 @@ const Dashboard = () => {
 
     const handleOrganizeAI = async () => {
         if (!apiKey) {
-            alert('Please configure Gemin API Key first.');
+            alert('Por favor, configure a chave da API Gemini primeiro.');
+            return;
+        }
+        if (items.length === 0) {
+            alert('Nenhum item para organizar. Salve alguns links primeiro!');
             return;
         }
         setIsOrganizing(true);
         try {
-            await browser.runtime.sendMessage({ action: 'organizeWithAI', payload: { apiKey } });
-            alert('Organization complete!');
+            await browser.runtime.sendMessage({
+                action: 'organizeWithAI',
+                payload: { apiKey }
+            });
+
+            alert('✨ Organização concluída!\n\nVeja as pastas sugeridas em "Coleções".\nSe gostar do resultado, use "Exportar para Firefox" para salvar nos favoritos.');
             loadItems();
+            setActiveView('collections'); // Navigate to collections to show the result
         } catch (e) {
             console.error(e);
-            alert('AI Organization failed.');
+            alert('Falha ao organizar com IA. Verifique a chave da API.');
         } finally {
             setIsOrganizing(false);
         }
@@ -356,9 +365,17 @@ const Dashboard = () => {
                                 <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})` }}></div>
                                 <div className="card-content">
                                     <div className="card-title">{item.title}</div>
-                                    <div className="card-meta">
-                                        {item.siteName || new URL(item.url).hostname} • {item.estimatedReadTime || 5} min
+                                    <div className="card-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <img
+                                            src={item.favicon || `https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}&sz=16`}
+                                            alt=""
+                                            style={{ width: '16px', height: '16px', borderRadius: '2px' }}
+                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                        />
+                                        <span>{item.siteName || new URL(item.url).hostname}</span>
+                                        <span>• {item.estimatedReadTime || 5} min</span>
                                         {item.author && <span> • {item.author}</span>}
+                                        {item.content && <span title="Versão backup disponível" style={{ color: '#4caf50' }}>📖</span>}
                                     </div>
                                     {item.excerpt && (
                                         <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

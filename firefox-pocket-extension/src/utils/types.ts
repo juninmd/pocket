@@ -31,6 +31,7 @@ export interface SavedItem {
   originalFolder?: string; // Folder path if imported from bookmarks
   aiFolder?: string; // Suggested folder by AI
   aiTags?: string[]; // Tags suggested by AI
+  favicon?: string; // Site favicon URL
 }
 
 export interface Tag {
@@ -39,6 +40,6 @@ export interface Tag {
 }
 
 export interface Message {
-  action: 'saveLink' | 'getLinks' | 'getLink' | 'updateLink' | 'deleteLink' | 'getTags' | 'importBookmarks' | 'organizeWithAI' | 'exportToFirefox';
+  action: 'saveLink' | 'getLinks' | 'getLink' | 'updateLink' | 'deleteLink' | 'getTags' | 'importBookmarks' | 'organizeWithAI' | 'exportToFirefox' | 'organizeAndExportAI';
   payload?: any;
 }

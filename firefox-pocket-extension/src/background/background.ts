@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus, ItemType, Message } from '../utils/types';
 import { getSavedItems, saveItem, updateItem, deleteItem, generateId } from '../utils/storage';
-import { organizeWithAI, importBookmarks, exportToFirefox } from '../utils/aiOrganizer';
+import { organizeWithAI, importBookmarks, exportToFirefox, organizeAndExportToFirefox } from '../utils/aiOrganizer';
 
 const captureSnapshot = async (windowId?: number): Promise<string | undefined> => {
   try {
@@ -36,7 +36,7 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
   switch (message.action) {
     case 'saveLink': {
       console.log('Saving link:', message.payload.url);
-      const { url, title, imageUrl, description, siteName, author, estimatedReadTime, content } = message.payload;
+      const { url, title, imageUrl, description, siteName, author, estimatedReadTime, content, favicon } = message.payload;
       const newItem: SavedItem = {
         id: generateId(),
         url: url,
@@ -46,6 +46,7 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
         siteName: siteName,
         author: author,
         content: content,
+        favicon: favicon || `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`,
         status: ItemStatus.Unread,
         isFavorite: false,
         type: ItemType.Article,
@@ -116,6 +117,13 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
       const items = await getSavedItems();
       const count = await exportToFirefox(items);
       return { success: true, count };
+    }
+    case 'organizeAndExportAI': {
+      const { apiKey } = message.payload;
+      const items = await getSavedItems();
+      const result = await organizeAndExportToFirefox(items, apiKey);
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
+      return result;
     }
   }
 });
