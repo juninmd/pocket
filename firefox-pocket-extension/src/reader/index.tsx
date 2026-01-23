@@ -142,7 +142,7 @@ const Reader = () => {
               }}
             >
               {isSummarizing ? (
-                <>Wait...</>
+                <>Aguarde...</>
               ) : (
                 <>✨ Resumir com IA</>
               )}
