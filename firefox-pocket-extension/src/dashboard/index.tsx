@@ -239,13 +239,13 @@ const Dashboard = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                     {folders.length > 0 && (
                         <div>
-                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Pastas Sugeridas (IA)</h3>
+                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Pastas Sugeridas (IA)</h3>
                             <div className="grid">
                                 {folders.map(folder => (
-                                    <div key={folder} className="card" onClick={() => setSelectedFolder(folder)} style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center', background: '#fff8f8', borderColor: '#ffebee' }}>
+                                    <div key={folder} className="card" onClick={() => setSelectedFolder(folder)} style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center' }}>
                                         <div style={{ fontSize: '2rem', marginBottom: '10px' }}>📁</div>
                                         <h3 style={{ fontSize: '1.2rem', margin: 0, textAlign: 'center' }}>{folder}</h3>
-                                        <p style={{ color: '#888', margin: '5px 0 0' }}>{items.filter(i => i.aiFolder === folder || i.originalFolder === folder).length} itens</p>
+                                        <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0' }}>{items.filter(i => i.aiFolder === folder || i.originalFolder === folder).length} itens</p>
                                     </div>
                                 ))}
                             </div>
@@ -253,12 +253,12 @@ const Dashboard = () => {
                     )}
 
                     <div>
-                        <h3 style={{ marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Tags</h3>
+                        <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Tags</h3>
                         <div className="grid">
                             {tags.map(tag => (
                                 <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center' }}>
                                     <h3 style={{ fontSize: '1.2rem', margin: 0 }}>#{tag}</h3>
-                                    <p style={{ color: '#888', margin: '5px 0 0' }}>{items.filter(i => (i.tags && i.tags.includes(tag)) || (i.aiTags && i.aiTags.includes(tag))).length} itens</p>
+                                    <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0' }}>{items.filter(i => (i.tags && i.tags.includes(tag)) || (i.aiTags && i.aiTags.includes(tag))).length} itens</p>
                                 </div>
                             ))}
                         </div>
@@ -270,19 +270,20 @@ const Dashboard = () => {
         if (activeView === 'settings') {
             return (
                 <div style={{ maxWidth: '600px' }}>
-                    <div className="card-content" style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
+                    <div className="card" style={{ padding: '24px' }}>
                         <h2>Configurações</h2>
 
-                        <div style={{ marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '20px' }}>
+                        <div style={{ marginBottom: '30px', borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
                             <h3>Inteligência Artificial (Gemini)</h3>
-                            <p style={{ color: '#666', marginBottom: '10px' }}>Adicione sua chave de API do Gemini para habilitar resumos automáticos.</p>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '10px' }}>Adicione sua chave de API do Gemini para habilitar resumos automáticos.</p>
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <input
                                     type="password"
                                     value={apiKey}
                                     onChange={(e) => setApiKey(e.target.value)}
                                     placeholder="Cole sua API Key aqui"
-                                    style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
+                                    className="search-bar"
+                                    style={{ flex: 1, borderRadius: '8px' }}
                                 />
                                 <button
                                     className="btn"
