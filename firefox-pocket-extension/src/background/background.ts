@@ -1,6 +1,35 @@
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus, ItemType, Message } from '../utils/types';
 import { getSavedItems, saveItem, updateItem, deleteItem, generateId } from '../utils/storage';
+import { organizeWithAI, importBookmarks, exportToFirefox } from '../utils/aiOrganizer';
+
+const captureSnapshot = async (windowId?: number): Promise<string | undefined> => {
+  try {
+    const dataUrl = await browser.tabs.captureVisibleTab(windowId, { format: 'jpeg', quality: 50 });
+    return await resizeImage(dataUrl);
+  } catch (e) {
+    console.error('Failed to capture snapshot', e);
+    return undefined;
+  }
+};
+
+const resizeImage = (dataUrl: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 320;
+      const scale = MAX_WIDTH / img.width;
+      canvas.width = MAX_WIDTH;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+};
 
 browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.MessageSender) => {
   const message = msg as Message;
@@ -19,15 +48,22 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
         content: content,
         status: ItemStatus.Unread,
         isFavorite: false,
-        type: ItemType.Article, // Default to article for now
+        type: ItemType.Article,
         tags: [],
         savedAt: new Date().toISOString(),
         estimatedReadTime: estimatedReadTime || 5
       };
+
+      if (!imageUrl) {
+        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+        if (tabs[0] && tabs[0].url === url) {
+          newItem.snapshotUrl = await captureSnapshot(tabs[0].windowId);
+        }
+      }
+
       await saveItem(newItem);
       console.log('Link saved.');
-      // Broadcast update
-      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: true, item: newItem };
     }
     case 'getLinks': {
@@ -43,8 +79,7 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
     case 'updateLink': {
       const { id, updates } = message.payload;
       const updatedItem = await updateItem(id, updates);
-      // Broadcast update
-      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: !!updatedItem, item: updatedItem };
     }
     case 'deleteLink': {
@@ -52,16 +87,35 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
       if (id) {
         await deleteItem(id);
       } else if (url) {
-        // Delete by URL
         const items = await getSavedItems();
         const item = items.find(i => i.url === url);
         if (item) {
           await deleteItem(item.id);
         }
       }
-      // Broadcast update
-      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: true };
+    }
+    case 'importBookmarks': {
+      const bookmarks = await importBookmarks();
+      for (const item of bookmarks) {
+        await saveItem(item);
+      }
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
+      return { success: true, count: bookmarks.length };
+    }
+    case 'organizeWithAI': {
+      const { apiKey } = message.payload;
+      const items = await getSavedItems();
+      const organizedItems = await organizeWithAI(items, apiKey);
+      await browser.storage.local.set({ savedItems: organizedItems });
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
+      return { success: true };
+    }
+    case 'exportToFirefox': {
+      const items = await getSavedItems();
+      const count = await exportToFirefox(items);
+      return { success: true, count };
     }
   }
 });
@@ -83,36 +137,48 @@ browser.contextMenus.onClicked.addListener((info: browser.Menus.OnClickData, tab
     }
 
     if (url) {
-        const performSave = (metadata: any = {}) => {
-             const newItem: SavedItem = {
-                id: generateId(),
-                url: url!, // We know url is present
-                title: title || metadata.title || url!,
-                excerpt: metadata.description,
-                imageUrl: metadata.imageUrl,
-                siteName: metadata.siteName,
-                author: metadata.author,
-                content: metadata.content,
-                status: ItemStatus.Unread,
-                isFavorite: false,
-                type: ItemType.Article,
-                tags: [],
-                savedAt: new Date().toISOString(),
-                estimatedReadTime: metadata.estimatedReadTime || 5
-              };
-              saveItem(newItem).then(() => {
-                console.log('Saved via context menu');
-                browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => {});
-              });
+      const performSave = (metadata: any = {}) => {
+        const newItem: SavedItem = {
+          id: generateId(),
+          url: url!,
+          title: title || metadata.title || url!,
+          excerpt: metadata.description,
+          imageUrl: metadata.imageUrl,
+          siteName: metadata.siteName,
+          author: metadata.author,
+          content: metadata.content,
+          status: ItemStatus.Unread,
+          isFavorite: false,
+          type: ItemType.Article,
+          tags: [],
+          savedAt: new Date().toISOString(),
+          estimatedReadTime: metadata.estimatedReadTime || 5,
+          snapshotUrl: undefined
         };
 
-        if (tab && tab.id) {
-            browser.tabs.sendMessage(tab.id, { action: 'getMetadata' })
-            .then(metadata => performSave(metadata))
-            .catch(() => performSave());
+        if (tab && tab.active) {
+          captureSnapshot(tab.windowId).then(snapshot => {
+            if (snapshot) newItem.snapshotUrl = snapshot;
+            saveItem(newItem).then(() => {
+              console.log('Saved via context menu');
+              browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
+            });
+          });
         } else {
-            performSave();
+          saveItem(newItem).then(() => {
+            console.log('Saved via context menu');
+            browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
+          });
         }
+      };
+
+      if (tab && tab.id) {
+        browser.tabs.sendMessage(tab.id, { action: 'getMetadata' })
+          .then(metadata => performSave(metadata))
+          .catch(() => performSave());
+      } else {
+        performSave();
+      }
     }
   }
 });

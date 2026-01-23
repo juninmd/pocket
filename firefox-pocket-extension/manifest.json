@@ -39,6 +39,7 @@
     "contextMenus",
     "storage",
     "unlimitedStorage",
+    "bookmarks",
     "<all_urls>"
   ],
   "browser_specific_settings": {

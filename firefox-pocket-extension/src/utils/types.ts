@@ -27,6 +27,10 @@ export interface SavedItem {
   siteName?: string;
   author?: string;
   content?: string; // HTML content of the article
+  snapshotUrl?: string; // Data URI of the screenshot
+  originalFolder?: string; // Folder path if imported from bookmarks
+  aiFolder?: string; // Suggested folder by AI
+  aiTags?: string[]; // Tags suggested by AI
 }
 
 export interface Tag {
@@ -35,6 +39,6 @@ export interface Tag {
 }
 
 export interface Message {
-  action: 'saveLink' | 'getLinks' | 'getLink' | 'updateLink' | 'deleteLink' | 'getTags';
+  action: 'saveLink' | 'getLinks' | 'getLink' | 'updateLink' | 'deleteLink' | 'getTags' | 'importBookmarks' | 'organizeWithAI' | 'exportToFirefox';
   payload?: any;
 }

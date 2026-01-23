@@ -14,6 +14,10 @@ const Dashboard = () => {
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [apiKey, setApiKey] = useState('');
     const [isSavingKey, setIsSavingKey] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const [isOrganizing, setIsOrganizing] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 
     useEffect(() => {
         loadItems();
@@ -83,22 +87,76 @@ const Dashboard = () => {
     };
 
     const handleExport = () => {
-        const jsonString = JSON.stringify(items, null, 2);
+        const exportData = items.map(item => ({
+            ...item,
+            folder: item.aiFolder || item.originalFolder || 'Uncategorized'
+        }));
+        const jsonString = JSON.stringify(exportData, null, 2);
         const blob = new Blob([jsonString], { type: "application/json" });
         const url = URL.createObjectURL(blob);
 
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", url);
-        downloadAnchorNode.setAttribute("download", "pocket_like_export.json");
+        downloadAnchorNode.setAttribute("download", "pocket_like_organized.json");
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
         URL.revokeObjectURL(url);
     };
 
+    const handleImport = async () => {
+        setIsImporting(true);
+        try {
+            const res = await browser.runtime.sendMessage({ action: 'importBookmarks' }) as any;
+            if (res.success) {
+                alert(`${res.count} bookmarks imported!`);
+                loadItems();
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Failed to import bookmarks.');
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
+    const handleOrganizeAI = async () => {
+        if (!apiKey) {
+            alert('Please configure Gemin API Key first.');
+            return;
+        }
+        setIsOrganizing(true);
+        try {
+            await browser.runtime.sendMessage({ action: 'organizeWithAI', payload: { apiKey } });
+            alert('Organization complete!');
+            loadItems();
+        } catch (e) {
+            console.error(e);
+            alert('AI Organization failed.');
+        } finally {
+            setIsOrganizing(false);
+        }
+    };
+
+    const handleExportToFirefox = async () => {
+        setIsExporting(true);
+        try {
+            const res = await browser.runtime.sendMessage({ action: 'exportToFirefox' }) as any;
+            if (res.success) {
+                alert(`${res.count} favoritos exportados para o Firefox!`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Falha ao exportar.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     const handleViewChange = (view: ViewType) => {
         setActiveView(view);
         setSelectedTag(null);
+        setSelectedFolder(null); // Reset folder selection
         setSearchQuery('');
     };
 
@@ -114,7 +172,10 @@ const Dashboard = () => {
                 return item.status === ItemStatus.Archived;
             }
             if (activeView === 'collections' && selectedTag) {
-                return item.tags && item.tags.includes(selectedTag);
+                return item.tags && (item.tags.includes(selectedTag) || item.aiTags?.includes(selectedTag));
+            }
+            if (activeView === 'collections' && selectedFolder) {
+                return (item.aiFolder === selectedFolder) || (item.originalFolder === selectedFolder);
             }
             return true;
         }).filter(item => {
@@ -127,8 +188,20 @@ const Dashboard = () => {
 
     const getUniqueTags = () => {
         const tags = new Set<string>();
-        items.forEach(item => item.tags && item.tags.forEach(tag => tags.add(tag)));
+        items.forEach(item => {
+            item.tags && item.tags.forEach(tag => tags.add(tag));
+            item.aiTags && item.aiTags.forEach(tag => tags.add(tag));
+        });
         return Array.from(tags).sort();
+    };
+
+    const getUniqueFolders = () => {
+        const folders = new Set<string>();
+        items.forEach(item => {
+            if (item.aiFolder) folders.add(item.aiFolder);
+            else if (item.originalFolder) folders.add(item.originalFolder);
+        });
+        return Array.from(folders).sort();
     };
 
     const renderContent = () => {
@@ -158,24 +231,38 @@ const Dashboard = () => {
             );
         }
 
-        if (activeView === 'collections' && !selectedTag) {
+        if (activeView === 'collections' && !selectedTag && !selectedFolder) {
             const tags = getUniqueTags();
-            if (tags.length === 0) {
-                return (
-                    <div className="empty-state">
-                        <h2>Nenhuma coleção encontrada</h2>
-                        <p>Adicione tags aos seus itens para criar coleções.</p>
-                    </div>
-                );
-            }
+            const folders = getUniqueFolders();
+
             return (
-                <div className="grid">
-                    {tags.map(tag => (
-                        <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{ cursor: 'pointer', padding: '30px', alignItems: 'center', justifyContent: 'center' }}>
-                            <h3 style={{ fontSize: '1.5rem', margin: 0 }}>#{tag}</h3>
-                            <p style={{ color: '#888' }}>{items.filter(i => i.tags && i.tags.includes(tag)).length} itens</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                    {folders.length > 0 && (
+                        <div>
+                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Pastas Sugeridas (IA)</h3>
+                            <div className="grid">
+                                {folders.map(folder => (
+                                    <div key={folder} className="card" onClick={() => setSelectedFolder(folder)} style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center', background: '#fff8f8', borderColor: '#ffebee' }}>
+                                        <div style={{ fontSize: '2rem', marginBottom: '10px' }}>📁</div>
+                                        <h3 style={{ fontSize: '1.2rem', margin: 0, textAlign: 'center' }}>{folder}</h3>
+                                        <p style={{ color: '#888', margin: '5px 0 0' }}>{items.filter(i => i.aiFolder === folder || i.originalFolder === folder).length} itens</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    ))}
+                    )}
+
+                    <div>
+                        <h3 style={{ marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Tags</h3>
+                        <div className="grid">
+                            {tags.map(tag => (
+                                <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center' }}>
+                                    <h3 style={{ fontSize: '1.2rem', margin: 0 }}>#{tag}</h3>
+                                    <p style={{ color: '#888', margin: '5px 0 0' }}>{items.filter(i => (i.tags && i.tags.includes(tag)) || (i.aiTags && i.aiTags.includes(tag))).length} itens</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -219,7 +306,20 @@ const Dashboard = () => {
 
                         <div style={{ marginBottom: '20px' }}>
                             <h3>Gerenciamento de Dados</h3>
-                            <button className="btn" onClick={handleExport} style={{ padding: '10px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '4px' }}>Exportar Itens Salvos (JSON)</button>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <button className="btn" onClick={handleImport} disabled={isImporting} style={{ padding: '10px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '4px' }}>
+                                    {isImporting ? 'Importando...' : '📥 Importar Favoritos do Firefox'}
+                                </button>
+                                <button className="btn" onClick={handleOrganizeAI} disabled={isOrganizing} style={{ padding: '10px', cursor: 'pointer', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', borderRadius: '4px' }}>
+                                    {isOrganizing ? 'Organizando...' : '✨ Organizar TUDO com IA'}
+                                </button>
+                                <button className="btn" onClick={handleExport} style={{ padding: '10px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '4px' }}>
+                                    📤 Exportar (JSON)
+                                </button>
+                                <button className="btn" onClick={handleExportToFirefox} disabled={isExporting} style={{ padding: '10px', cursor: 'pointer', background: 'linear-gradient(135deg, #ff6b6b 0%, #ffa502 100%)', color: 'white', border: 'none', borderRadius: '4px' }}>
+                                    {isExporting ? 'Exportando...' : '🦊 Exportar para Firefox'}
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <h3>Sobre</h3>
@@ -252,7 +352,7 @@ const Dashboard = () => {
                     return (
                         <div className="card" key={item.id} style={{ textDecoration: 'none', color: 'inherit' }}>
                             <a href={hasContent ? readerUrl : item.url} target={hasContent ? "_self" : "_blank"} rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <div className="card-image" style={{ backgroundImage: `url(${item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})` }}></div>
+                                <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})` }}></div>
                                 <div className="card-content">
                                     <div className="card-title">{item.title}</div>
                                     <div className="card-meta">
@@ -269,6 +369,10 @@ const Dashboard = () => {
                                             {item.tags.map(tag => (
                                                 <span key={tag} className="card-tag">{tag}</span>
                                             ))}
+                                            {item.aiTags && item.aiTags.map(tag => (
+                                                <span key={`ai-${tag}`} className="card-tag" style={{ border: '1px solid #e0e0e0', background: 'white' }}>✨ {tag}</span>
+                                            ))}
+                                            {item.aiFolder && <span className="card-tag" style={{ background: '#e3f2fd', color: '#1565c0' }}>📁 {item.aiFolder}</span>}
                                         </div>
                                     )}
 
@@ -346,7 +450,10 @@ const Dashboard = () => {
                         {activeView === 'favorites' && 'Favoritos'}
                         {activeView === 'archive' && 'Arquivo'}
                         {activeView === 'discover' && 'Redescobrir'}
-                        {activeView === 'collections' && (selectedTag ? `Coleção #${selectedTag}` : 'Coleções')}
+                        {activeView === 'collections' && (
+                            selectedTag ? `Coleção #${selectedTag}` :
+                                selectedFolder ? `Pasta: ${selectedFolder}` : 'Coleções e Pastas'
+                        )}
                         {activeView === 'settings' && 'Configurações'}
                     </h1>
                     {['home', 'favorites', 'archive', 'collections'].includes(activeView) && (
