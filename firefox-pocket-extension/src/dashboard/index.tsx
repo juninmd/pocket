@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus } from '../utils/types';
+import { Modal } from '../components/Modal';
 import './index.css';
 
 // Define filter types
@@ -18,6 +19,22 @@ const Dashboard = () => {
     const [isOrganizing, setIsOrganizing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+
+    // Modal State
+    const [modal, setModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        content: React.ReactNode;
+        type?: 'default' | 'danger' | 'success';
+        onConfirm?: () => void;
+        confirmText?: string;
+    }>({ isOpen: false, title: '', content: null });
+
+    const openModal = (title: string, content: React.ReactNode, type: 'default' | 'danger' | 'success' = 'default', onConfirm?: () => void, confirmText = 'Confirmar') => {
+        setModal({ isOpen: true, title, content, type, onConfirm, confirmText });
+    };
+
+    const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
     useEffect(() => {
         loadItems();
@@ -59,10 +76,17 @@ const Dashboard = () => {
     const handleDelete = async (e: React.MouseEvent, id: string) => {
         e.preventDefault();
         e.stopPropagation();
-        if (confirm('Tem certeza que deseja excluir este item?')) {
-            await browser.runtime.sendMessage({ action: 'deleteLink', payload: { id } });
-            loadItems();
-        }
+        openModal(
+            'Excluir Item',
+            'Tem certeza que deseja excluir este item permanentemente?',
+            'danger',
+            async () => {
+                await browser.runtime.sendMessage({ action: 'deleteLink', payload: { id } });
+                loadItems();
+                closeModal();
+            },
+            'Excluir'
+        );
     };
 
     const handleToggleFavorite = async (e: React.MouseEvent, id: string, isFavorite: boolean) => {
@@ -109,12 +133,12 @@ const Dashboard = () => {
         try {
             const res = await browser.runtime.sendMessage({ action: 'importBookmarks' }) as any;
             if (res.success) {
-                alert(`${res.count} bookmarks imported!`);
+                openModal('Sucesso', `${res.count} favoritos importados!`, 'success');
                 loadItems();
             }
         } catch (e) {
             console.error(e);
-            alert('Failed to import bookmarks.');
+            openModal('Erro', 'Falha ao importar favoritos.', 'danger');
         } finally {
             setIsImporting(false);
         }
@@ -122,11 +146,11 @@ const Dashboard = () => {
 
     const handleOrganizeAI = async () => {
         if (!apiKey) {
-            alert('Por favor, configure a chave da API Gemini primeiro.');
+            openModal('Configuração Necessária', 'Por favor, configure a chave da API Gemini primeiro nas Configurações.', 'default');
             return;
         }
         if (items.length === 0) {
-            alert('Nenhum item para organizar. Salve alguns links primeiro!');
+            openModal('Ops!', 'Nenhum item para organizar. Salve alguns links primeiro!', 'default');
             return;
         }
         setIsOrganizing(true);
@@ -136,12 +160,22 @@ const Dashboard = () => {
                 payload: { apiKey }
             });
 
-            alert('✨ Organização concluída!\n\nVeja as pastas sugeridas em "Coleções".\nSe gostar do resultado, use "Exportar para Firefox" para salvar nos favoritos.');
+            openModal('Organização Concluída',
+                <div>
+                    <p>✨ Seus itens foram organizados com sucesso!</p>
+                    <p>Veja as novas pastas em "Coleções".</p>
+                </div>,
+                'success',
+                () => {
+                    setActiveView('collections');
+                    closeModal();
+                },
+                'Ver Coleções'
+            );
             loadItems();
-            setActiveView('collections'); // Navigate to collections to show the result
         } catch (e) {
             console.error(e);
-            alert('Falha ao organizar com IA. Verifique a chave da API.');
+            openModal('Erro', 'Falha ao organizar com IA. Verifique sua chave de API.', 'danger');
         } finally {
             setIsOrganizing(false);
         }
@@ -152,11 +186,11 @@ const Dashboard = () => {
         try {
             const res = await browser.runtime.sendMessage({ action: 'exportToFirefox' }) as any;
             if (res.success) {
-                alert(`${res.count} favoritos exportados para o Firefox!`);
+                openModal('Sucesso', `${res.count} favoritos exportados para o Firefox!`, 'success');
             }
         } catch (e) {
             console.error(e);
-            alert('Falha ao exportar.');
+            openModal('Erro', 'Falha ao exportar, verifique o console do browser.', 'danger');
         } finally {
             setIsExporting(false);
         }
@@ -486,6 +520,25 @@ const Dashboard = () => {
                 </div>
 
                 {renderContent()}
+
+                <Modal
+                    isOpen={modal.isOpen}
+                    onClose={closeModal}
+                    title={modal.title}
+                    type={modal.type}
+                    footer={
+                        modal.onConfirm ? (
+                            <>
+                                <button className="secondary-btn" onClick={closeModal}>Cancelar</button>
+                                <button className="primary-btn" onClick={modal.onConfirm}>{modal.confirmText}</button>
+                            </>
+                        ) : (
+                            <button className="primary-btn" onClick={closeModal}>OK</button>
+                        )
+                    }
+                >
+                    {modal.content}
+                </Modal>
             </div>
         </div>
     );

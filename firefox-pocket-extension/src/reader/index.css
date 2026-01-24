@@ -1,34 +1,15 @@
-/* ============================
-   READER STYLES - CSS VARIABLES
-   ============================ */
+@import '../styles/theme.css';
 
 :root {
-    --bg-primary: #f8f9fa;
-    --bg-reader: #ffffff;
-    --text-primary: #1a1a2e;
-    --text-secondary: #6c757d;
-    --accent: #ef4056;
-    --border: #e9ecef;
-    --shadow: 0 0 60px rgba(0, 0, 0, 0.08);
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-primary: #0d1117;
-        --bg-reader: #161b22;
-        --text-primary: #e6edf3;
-        --text-secondary: #8b949e;
-        --accent: #ff6b7a;
-        --border: #30363d;
-        --shadow: none;
-    }
+    /* Reader specific overrides */
+    --bg-reader: var(--bg-card);
 }
 
 body {
     margin: 0;
     font-family: "Charter", "Bitstream Charter", "Sitka Text", Cambria, serif;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    background-color: var(--bg-dark);
+    color: var(--text-main);
     line-height: 1.8;
     font-size: 19px;
     transition: background-color 0.3s, color 0.3s;
@@ -36,17 +17,22 @@ body {
 
 .reader-container {
     max-width: 740px;
-    margin: 0 auto;
-    padding: 60px 30px;
+    margin: 40px auto;
+    padding: 60px 40px;
     background-color: var(--bg-reader);
-    min-height: 100vh;
-    box-shadow: var(--shadow);
-    transition: background-color 0.3s, box-shadow 0.3s;
+    /* Glassmorphism card */
+    backdrop-filter: blur(12px);
+    border: var(--glass-border);
+    border-radius: var(--radius-lg);
+    min-height: 80vh;
+    box-shadow: var(--shadow-lg);
+    position: relative;
 }
 
+/* Header */
 .header {
     margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
     padding-bottom: 20px;
 }
 
@@ -56,47 +42,51 @@ body {
     gap: 6px;
     margin-bottom: 20px;
     text-decoration: none;
-    color: var(--accent);
-    font-family: "Inter", -apple-system, sans-serif;
+    color: var(--text-secondary);
+    font-family: var(--font-main);
     font-weight: 600;
     font-size: 14px;
-    cursor: pointer;
-    transition: opacity 0.2s;
+    transition: color 0.2s;
 }
 
 .back-btn:hover {
-    opacity: 0.8;
+    color: var(--primary);
 }
 
 .article-title {
-    font-size: 2.8rem;
-    line-height: 1.15;
+    font-size: 2.5rem;
+    line-height: 1.2;
     margin-bottom: 16px;
-    color: var(--text-primary);
+    color: var(--text-main);
     letter-spacing: -0.02em;
-    font-weight: 900;
+    font-weight: 800;
+    font-family: var(--font-main);
+    /* Modern title, serif body */
 }
 
 .article-meta {
     color: var(--text-secondary);
-    font-family: "Inter", -apple-system, sans-serif;
+    font-family: var(--font-main);
     font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .article-image {
     width: 100%;
     height: auto;
     margin-bottom: 30px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
 }
 
-/* ============================
-   CONTENT
-   ============================ */
+/* Content */
 .content {
     font-size: 1.125rem;
     line-height: 1.85;
-    color: var(--text-primary);
+    color: #e2e8f0;
+    /* Less harsh white for reading */
 }
 
 .content p {
@@ -108,12 +98,20 @@ body {
     height: auto;
     display: block;
     margin: 30px auto;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
 }
 
 .content a {
-    color: var(--accent);
+    color: var(--primary);
     text-decoration: underline;
+    text-decoration-color: rgba(102, 126, 234, 0.3);
+    text-underline-offset: 2px;
+    transition: all 0.2s;
+}
+
+.content a:hover {
+    color: #8197f6;
+    text-decoration-color: var(--primary);
 }
 
 .content h1,
@@ -121,71 +119,106 @@ body {
 .content h3 {
     margin-top: 2em;
     margin-bottom: 0.8em;
-    font-family: "Inter", -apple-system, system-ui, sans-serif;
-    color: var(--text-primary);
+    font-family: var(--font-main);
+    color: var(--text-main);
     font-weight: 700;
     letter-spacing: -0.02em;
 }
 
 .content blockquote {
-    border-left: 4px solid var(--accent);
+    border-left: 4px solid var(--primary);
     margin: 1.5em 0;
     padding: 0.5em 0 0.5em 1.5em;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     color: var(--text-secondary);
     font-style: italic;
 }
 
 .content code {
-    background: var(--bg-primary);
+    background: rgba(255, 255, 255, 0.1);
     padding: 2px 6px;
     border-radius: 4px;
+    font-family: 'Fira Code', monospace;
     font-size: 0.9em;
+    color: #ff9ca6;
 }
 
 .content pre {
-    background: var(--bg-primary);
+    background: #1e222a;
     padding: 16px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     overflow-x: auto;
+    border: 1px solid var(--border-light);
 }
 
-/* ============================
-   AI SUMMARY
-   ============================ */
+/* AI Summary Box */
 .ai-summary {
-    background: linear-gradient(135deg, rgba(239, 64, 86, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
-    border: 1px solid var(--accent);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 30px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
 }
 
-.ai-summary h4 {
-    margin: 0 0 12px;
-    font-family: "Inter", -apple-system, sans-serif;
-    color: var(--accent);
-    font-size: 0.9rem;
+.ai-summary::before {
+    content: '✨';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 80px;
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.ai-summary h3 {
+    margin: 0 0 16px;
+    font-family: var(--font-main);
+    color: var(--primary);
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-btn {
+    /* Uses .btn-primary from theme.css if class matches, but here we customize */
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.95rem;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
 }
 
-.ai-summary ul {
-    margin: 0;
-    padding-left: 20px;
+.ai-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
-.ai-summary li {
-    margin-bottom: 8px;
+.ai-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
 }
 
-/* ============================
-   LOADING / ERROR
-   ============================ */
+/* Loading / Error */
 .loading,
 .error {
     text-align: center;
-    padding: 50px;
-    font-family: "Inter", -apple-system, sans-serif;
+    padding: 60px;
+    font-family: var(--font-main);
     color: var(--text-secondary);
+    font-size: 1.1rem;
 }
 
 .error {

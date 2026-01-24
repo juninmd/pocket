@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client';
 import browser from 'webextension-polyfill';
 import DOMPurify from 'dompurify';
 import { SavedItem } from '../utils/types';
+import { Modal } from '../components/Modal';
+import { ReadingProgressBar } from '../components/ReadingProgressBar';
+import { TTSPlayer } from '../components/TTSPlayer';
 import './index.css';
 
 const Reader = () => {
@@ -13,6 +16,17 @@ const Reader = () => {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summarizeError, setSummarizeError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
+
+  const [modal, setModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    content: React.ReactNode;
+    type?: 'default' | 'danger' | 'success';
+    onConfirm?: () => void;
+    confirmText?: string;
+  }>({ isOpen: false, title: '', content: null });
+
+  const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
   useEffect(() => {
     const loadData = async () => {
@@ -52,9 +66,16 @@ const Reader = () => {
 
   const handleSummarize = async () => {
     if (!apiKey) {
-      if (confirm("Para usar o resumo com IA, você precisa configurar sua API Key do Gemini. Deseja ir para as configurações agora?")) {
-        window.location.href = "dashboard.html";
-      }
+      setModal({
+        isOpen: true,
+        title: 'Configuração Necessária',
+        content: <p>Para usar o resumo com IA, você precisa configurar sua API Key do Gemini. Deseja ir para as configurações agora?</p>,
+        type: 'default',
+        onConfirm: () => {
+          window.location.href = "dashboard.html";
+        },
+        confirmText: 'Ir para Configurações'
+      });
       return;
     }
 
@@ -109,8 +130,18 @@ const Reader = () => {
   if (error) return <div className="error">{error}</div>;
   if (!item) return <div className="error">Item não encontrado</div>;
 
+  // Prepare text for TTS
+  const getPlainText = () => {
+    if (!item.content) return "";
+    const temp = document.createElement('div');
+    temp.innerHTML = item.content;
+    return temp.textContent || temp.innerText || "";
+  };
+
   return (
     <div className="reader-container">
+      <ReadingProgressBar />
+
       <div className="header">
         <a href="dashboard.html" className="back-btn">← Voltar para Minha Lista</a>
         <h1 className="article-title">{item.title}</h1>
@@ -126,20 +157,6 @@ const Reader = () => {
               onClick={handleSummarize}
               disabled={isSummarizing}
               className="ai-btn"
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                cursor: isSummarizing ? 'wait' : 'pointer',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-              }}
             >
               {isSummarizing ? (
                 <>Aguarde...</>
@@ -149,23 +166,16 @@ const Reader = () => {
             </button>
           )}
           {summarizeError && (
-             <div style={{ color: 'red', marginTop: '10px', fontSize: '0.9rem' }}>
-                {summarizeError}
-             </div>
+            <div style={{ color: 'red', marginTop: '10px', fontSize: '0.9rem' }}>
+              {summarizeError}
+            </div>
           )}
         </div>
       </div>
 
       {summary && (
-        <div className="summary-box" style={{
-          background: '#f8f9fa',
-          border: '1px solid #e9ecef',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '30px',
-          borderLeft: '4px solid #764ba2'
-        }}>
-          <h3 style={{ marginTop: 0, color: '#764ba2' }}>Resumo Inteligente</h3>
+        <div className="ai-summary">
+          <h3>✨ Resumo Inteligente</h3>
           <div style={{ whiteSpace: 'pre-line', lineHeight: '1.6' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(summary.replace(/\n/g, '<br/>')) }} />
         </div>
       )}
@@ -195,6 +205,27 @@ const Reader = () => {
           </a>
         </div>
       )}
+
+      {item.content && <TTSPlayer text={getPlainText()} />}
+
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        title={modal.title}
+        type={modal.type}
+        footer={
+          modal.onConfirm ? (
+            <>
+              <button className="secondary-btn" onClick={closeModal} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}>Cancelar</button>
+              <button className="primary-btn" onClick={modal.onConfirm} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#ef4056', color: 'white', cursor: 'pointer' }}>{modal.confirmText}</button>
+            </>
+          ) : (
+            <button className="primary-btn" onClick={closeModal} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#ef4056', color: 'white', cursor: 'pointer' }}>OK</button>
+          )
+        }
+      >
+        {modal.content}
+      </Modal>
     </div>
   );
 };
