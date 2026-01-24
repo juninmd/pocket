@@ -3,7 +3,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  mode: 'production',
+  mode: 'development',
+  devtool: 'cheap-module-source-map',
   entry: {
     popup: './src/popup/index.tsx',
     dashboard: './src/dashboard/index.tsx',

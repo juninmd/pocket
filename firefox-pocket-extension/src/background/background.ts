@@ -105,11 +105,25 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
       browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: true, count: bookmarks.length };
     }
-    case 'organizeWithAI': {
+    case 'organizeWithAI': { // Legacy/Direct action
       const { apiKey } = message.payload;
       const items = await getSavedItems();
       const organizedItems = await organizeWithAI(items, apiKey);
       await browser.storage.local.set({ savedItems: organizedItems });
+      browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
+      return { success: true };
+    }
+    case 'previewOrganization': {
+      const { apiKey } = message.payload;
+      const items = await getSavedItems();
+      const organizedItems = await organizeWithAI(items, apiKey);
+      return { success: true, items: organizedItems };
+    }
+    case 'applyOrganization': {
+      const { items } = message.payload;
+      await saveItem(items[0]); // Hack to trigger storage? No, we need bulk save.
+      // Re-using storage.local.set for bulk update safely
+      await browser.storage.local.set({ savedItems: items });
       browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: true };
     }

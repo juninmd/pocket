@@ -39,7 +39,17 @@ export interface Tag {
   name: string;
 }
 
-export interface Message {
-  action: 'saveLink' | 'getLinks' | 'getLink' | 'updateLink' | 'deleteLink' | 'getTags' | 'importBookmarks' | 'organizeWithAI' | 'exportToFirefox' | 'organizeAndExportAI';
-  payload?: any;
-}
+export type Message =
+  | { action: 'saveLink'; payload: { url: string; title?: string;[key: string]: any } }
+  | { action: 'getLinks'; payload?: any }
+  | { action: 'getLink'; payload: { url: string } }
+  | { action: 'updateLink'; payload: { id: string; updates: Partial<SavedItem> } }
+  | { action: 'deleteLink'; payload: { id?: string; url?: string } }
+  | { action: 'getTags'; payload?: any }
+  | { action: 'importBookmarks'; payload?: any }
+  | { action: 'organizeWithAI'; payload: { apiKey: string } }
+  | { action: 'previewOrganization'; payload: { apiKey: string } } // New
+  | { action: 'applyOrganization'; payload: { items: SavedItem[] } } // New
+  | { action: 'exportToFirefox'; payload?: any }
+  | { action: 'organizeAndExportAI'; payload: { apiKey: string } }
+  | { action: 'itemsUpdated'; payload?: any };

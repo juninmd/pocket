@@ -84,13 +84,16 @@ ${JSON.stringify(simplifyForAI, null, 0)}`;
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: {
                         temperature: 0.3,
-                        maxOutputTokens: 8192
+                        maxOutputTokens: 8192,
+                        responseMimeType: "application/json"
                     }
                 })
             }
         );
 
         const data = await response.json();
+
+        debugger;
         const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!aiText) {

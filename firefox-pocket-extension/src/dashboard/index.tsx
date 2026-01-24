@@ -155,27 +155,55 @@ const Dashboard = () => {
         }
         setIsOrganizing(true);
         try {
-            await browser.runtime.sendMessage({
-                action: 'organizeWithAI',
+            // Preview First
+            const response = await browser.runtime.sendMessage({
+                action: 'previewOrganization',
                 payload: { apiKey }
-            });
+            }) as { success: boolean, items: SavedItem[] };
 
-            openModal('Organização Concluída',
-                <div>
-                    <p>✨ Seus itens foram organizados com sucesso!</p>
-                    <p>Veja as novas pastas em "Coleções".</p>
-                </div>,
-                'success',
-                () => {
-                    setActiveView('collections');
-                    closeModal();
-                },
-                'Ver Coleções'
-            );
-            loadItems();
+            if (response.success && response.items) {
+                const organizedItems = response.items;
+
+                // Calculate stats for preview
+                const folders: Record<string, number> = {};
+                organizedItems.forEach(item => {
+                    const folder = item.aiFolder || 'Outros';
+                    folders[folder] = (folders[folder] || 0) + 1;
+                });
+
+                const sortedFolders = Object.entries(folders).sort((a, b) => b[1] - a[1]);
+
+                openModal(
+                    'Prévia da Organização',
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <p>A IA sugeriu a seguinte estrutura para seus {items.length} itens:</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', marginTop: '14px' }}>
+                            {sortedFolders.map(([folder, count]) => (
+                                <React.Fragment key={folder}>
+                                    <div style={{ padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>📁 {folder}</div>
+                                    <div style={{ padding: '8px', textAlign: 'right', color: 'var(--text-secondary)' }}>{count} itens</div>
+                                </React.Fragment>
+                            ))}
+                        </div>
+                        <p style={{ marginTop: '15px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Deseja aplicar estas mudanças?</p>
+                    </div>,
+                    'default',
+                    async () => {
+                        await browser.runtime.sendMessage({
+                            action: 'applyOrganization',
+                            payload: { items: organizedItems }
+                        });
+                        alert('Organização aplicada com sucesso!');
+                        loadItems();
+                        setActiveView('collections');
+                        closeModal();
+                    },
+                    'Aplicar Mudanças'
+                );
+            }
         } catch (e) {
             console.error(e);
-            openModal('Erro', 'Falha ao organizar com IA. Verifique sua chave de API.', 'danger');
+            openModal('Erro', 'Falha ao gerar prévia da organização.', 'danger');
         } finally {
             setIsOrganizing(false);
         }
