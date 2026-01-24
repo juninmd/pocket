@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus } from '../utils/types';
 import { Modal } from '../components/Modal';
+import { buildFolderTree, FolderNode } from '../utils/folderStructure';
 import './index.css';
 
 // Define filter types
@@ -19,6 +20,50 @@ const Dashboard = () => {
     const [isOrganizing, setIsOrganizing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+
+    // Derived state for foldertree
+    const folderTree = React.useMemo(() => buildFolderTree(items), [items]);
+
+    const getCurrentFolderNode = (): FolderNode | null => {
+        if (!selectedFolder) return null;
+        const parts = selectedFolder.split('/');
+        let current: any = folderTree; // Start at root (which is Record<string, FolderNode>)
+
+        for (const part of parts) {
+            if (current[part]) {
+                current = current[part].children; // Use children for next iteration if we are traversing
+            } else {
+                // If we can't find the path (maybe items changed), return null
+                return null;
+            }
+        }
+        // Wait, the structure is: root = { "Tech": { children: { "JS": ... } } }
+        // The loop above logic is slightly wrong for returning the node itself.
+
+        let currentNode: FolderNode | null = null;
+        let currentLevel = folderTree;
+
+        for (const part of parts) {
+            if (currentLevel[part]) {
+                currentNode = currentLevel[part];
+                currentLevel = currentNode.children;
+            } else {
+                return null;
+            }
+        }
+        return currentNode;
+    };
+
+    // Breadcrumbs helper
+    const getBreadcrumbs = () => {
+        if (!selectedFolder) return [];
+        const parts = selectedFolder.split('/');
+        let path = '';
+        return parts.map(part => {
+            path = path ? `${path}/${part}` : part;
+            return { name: part, path };
+        });
+    };
 
     // Modal State
     const [modal, setModal] = useState<{
@@ -231,6 +276,20 @@ const Dashboard = () => {
         setSearchQuery('');
     };
 
+    const handleFolderClick = (folderPath: string) => {
+        setSelectedFolder(folderPath); // folderPath should be full path e.g. "Tech/JS"
+        setSearchQuery('');
+    };
+
+    // Helper to get direct items in the current folder ONLY (not subfolders) logic for display
+    const getItemsInCurrentFolder = () => {
+        if (!selectedFolder) return [];
+        return items.filter(item => {
+            const itemFolder = item.aiFolder || item.originalFolder || 'Outros';
+            return itemFolder === selectedFolder;
+        });
+    };
+
     const getFilteredItems = () => {
         return items.filter(item => {
             if (activeView === 'home') {
@@ -246,7 +305,14 @@ const Dashboard = () => {
                 return item.tags && (item.tags.includes(selectedTag) || item.aiTags?.includes(selectedTag));
             }
             if (activeView === 'collections' && selectedFolder) {
-                return (item.aiFolder === selectedFolder) || (item.originalFolder === selectedFolder);
+                // In collections view with a folder, we might want to just show items IN this specific folder
+                // filtering is handled in renderContent now for hierarchy, but if user uses Search bar,
+                // we might want global search? Or search within folder?
+                // Let's keep global search behavior if query exists.
+                if (searchQuery) return true;
+
+                // If just viewing folder, we handle that in renderContent to split folders vs items
+                return true;
             }
             return true;
         }).filter(item => {
@@ -273,6 +339,87 @@ const Dashboard = () => {
             else if (item.originalFolder) folders.add(item.originalFolder);
         });
         return Array.from(folders).sort();
+    };
+
+    // Helper to render individual item card (extracted to reuse)
+    const renderItemCard = (item: SavedItem) => {
+        const readerUrl = `reader.html?id=${item.id}`;
+        const hasContent = !!item.content;
+
+        return (
+            <div className="card" key={item.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <a href={hasContent ? readerUrl : item.url} target={hasContent ? "_self" : "_blank"} rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})` }}></div>
+                    <div className="card-content">
+                        <div className="card-title">{item.title}</div>
+                        <div className="card-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <img
+                                src={item.favicon || `https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}&sz=16`}
+                                alt=""
+                                style={{ width: '16px', height: '16px', borderRadius: '2px' }}
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                            <span>{item.siteName || new URL(item.url).hostname}</span>
+                            <span>• {item.estimatedReadTime || 5} min</span>
+                            {item.content && <span title="Versão backup disponível" style={{ color: '#4caf50' }}>📖</span>}
+                        </div>
+                        {item.excerpt && (
+                            <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                {item.excerpt}
+                            </div>
+                        )}
+                        {/* Tags handling */}
+                        {item.tags && item.tags.length > 0 && (
+                            <div className="card-tags">
+                                {item.tags.map(tag => (
+                                    <span key={tag} className="card-tag">{tag}</span>
+                                ))}
+                                {item.aiTags && item.aiTags.map(tag => (
+                                    <span key={`ai-${tag}`} className="card-tag" style={{ border: '1px solid #e0e0e0', background: 'white' }}>✨ {tag}</span>
+                                ))}
+                            </div>
+                        )}
+                        <div style={{ flex: 1 }}></div>
+                        <div className="card-actions" onClick={(e) => e.preventDefault()}>
+                            <a
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="icon-btn"
+                                title="Abrir original"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                🔗
+                            </a>
+                            <button
+                                className="icon-btn"
+                                title={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
+                                onClick={(e) => handleToggleFavorite(e, item.id, item.isFavorite)}
+                                style={{ color: item.isFavorite ? 'orange' : '' }}
+                            >
+                                ★
+                            </button>
+                            <button
+                                className="icon-btn"
+                                title={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
+                                onClick={(e) => handleToggleArchive(e, item.id, item.status)}
+                                style={{ color: item.status === ItemStatus.Archived ? 'green' : '' }}
+                            >
+                                📥
+                            </button>
+                            <button
+                                className="icon-btn"
+                                title="Excluir"
+                                onClick={(e) => handleDelete(e, item.id)}
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        );
     };
 
     const renderContent = () => {
@@ -302,38 +449,139 @@ const Dashboard = () => {
             );
         }
 
-        if (activeView === 'collections' && !selectedTag && !selectedFolder) {
-            const tags = getUniqueTags();
-            const folders = getUniqueFolders();
+        if (activeView === 'collections') {
+            // If we have a selected tag, show tag view (flat list of items with that tag)
+            if (selectedTag) {
+                const filtered = items.filter(i => i.tags?.includes(selectedTag) || i.aiTags?.includes(selectedTag));
+                return (
+                    <div>
+                        <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <button className="btn" onClick={() => setSelectedTag(null)} style={{ background: 'var(--bg-secondary)' }}>← Voltar</button>
+                            <h2>#{selectedTag}</h2>
+                        </div>
+                        <div className="grid">
+                            {filtered.map(renderItemCard)}
+                        </div>
+                    </div>
+                )
+            }
+
+            // Folder Navigation Logic
+            const currentFolderNode = getCurrentFolderNode();
+            const subfolders = currentFolderNode ? Object.values(currentFolderNode.children) : Object.values(folderTree);
+
+            // Items directly in this folder (if specific folder selected)
+            // If at root (!selectedFolder), we usually don't show loose items unless they have no folder?
+            // "Outros" handles loose items usually.
+
+            const directItems = selectedFolder
+                ? items.filter(i => (i.aiFolder || i.originalFolder || 'Outros') === selectedFolder)
+                : []; // At root, show only folders. Everything should be in a folder (Outros included)
+
+            // Breadcrumbs UI
+            const breadcrumbs = getBreadcrumbs();
 
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                    {folders.length > 0 && (
+
+                    {/* Navigation Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                        {selectedFolder && (
+                            <button className="btn" onClick={() => {
+                                const parts = selectedFolder.split('/');
+                                parts.pop();
+                                setSelectedFolder(parts.length > 0 ? parts.join('/') : null);
+                            }} style={{ background: 'var(--bg-secondary)', padding: '5px 10px' }}>
+                                ⬆ Subir
+                            </button>
+                        )}
+
+                        <div className="breadcrumbs" style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                            <span
+                                onClick={() => setSelectedFolder(null)}
+                                style={{ cursor: 'pointer', color: !selectedFolder ? 'var(--primary)' : 'inherit', textDecoration: !selectedFolder ? 'underline' : 'none' }}
+                            >
+                                Coleções
+                            </span>
+                            {breadcrumbs.map((crumb, idx) => (
+                                <React.Fragment key={crumb.path}>
+                                    <span>/</span>
+                                    <span
+                                        onClick={() => setSelectedFolder(crumb.path)}
+                                        style={{
+                                            cursor: 'pointer',
+                                            color: idx === breadcrumbs.length - 1 ? 'var(--primary)' : 'inherit',
+                                            fontWeight: idx === breadcrumbs.length - 1 ? 'bold' : 'normal'
+                                        }}
+                                    >
+                                        {crumb.name}
+                                    </span>
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Subfolders Grid */}
+                    {subfolders.length > 0 && (
                         <div>
-                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Pastas Sugeridas (IA)</h3>
-                            <div className="grid">
-                                {folders.map(folder => (
-                                    <div key={folder} className="card" onClick={() => setSelectedFolder(folder)} style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center' }}>
-                                        <div style={{ fontSize: '2rem', marginBottom: '10px' }}>📁</div>
-                                        <h3 style={{ fontSize: '1.2rem', margin: 0, textAlign: 'center' }}>{folder}</h3>
-                                        <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0' }}>{items.filter(i => i.aiFolder === folder || i.originalFolder === folder).length} itens</p>
+                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+                                {selectedFolder ? 'Subpastas' : 'Minhas Coleções'}
+                            </h3>
+                            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                                {subfolders.map(node => (
+                                    <div
+                                        key={node.fullPath}
+                                        className="card"
+                                        onClick={() => handleFolderClick(node.fullPath)}
+                                        style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}
+                                    >
+                                        <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>📁</div>
+                                        <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{node.name}</h3>
+                                        <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0', fontSize: '0.9rem' }}>
+                                            {node.totalItemCount} itens
+                                        </p>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    <div>
-                        <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Tags</h3>
-                        <div className="grid">
-                            {tags.map(tag => (
-                                <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center' }}>
-                                    <h3 style={{ fontSize: '1.2rem', margin: 0 }}>#{tag}</h3>
-                                    <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0' }}>{items.filter(i => (i.tags && i.tags.includes(tag)) || (i.aiTags && i.aiTags.includes(tag))).length} itens</p>
-                                </div>
-                            ))}
+                    {/* Direct Items Grid */}
+                    {directItems.length > 0 && (
+                        <div>
+                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+                                Itens em "{breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].name : '...'} "
+                            </h3>
+                            <div className="grid">
+                                {directItems.map(renderItemCard)}
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Tags Section - Only show at Root */}
+                    {!selectedFolder && (
+                        <div>
+                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Explorar por Tags</h3>
+                            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
+                                {getUniqueTags().map(tag => (
+                                    <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{ cursor: 'pointer', padding: '15px', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                                        <h3 style={{ fontSize: '1rem', margin: 0 }}>#{tag}</h3>
+                                        <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0', fontSize: '0.8rem' }}>
+                                            {items.filter(i => (i.tags && i.tags.includes(tag)) || (i.aiTags && i.aiTags.includes(tag))).length}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Empty State */}
+                    {subfolders.length === 0 && directItems.length === 0 && selectedFolder && (
+                        <div className="empty-state">
+                            <p>Esta pasta está vazia.</p>
+                        </div>
+                    )}
+
                 </div>
             );
         }
@@ -417,89 +665,7 @@ const Dashboard = () => {
 
         return (
             <div className="grid">
-                {filteredItems.map(item => {
-                    const readerUrl = `reader.html?id=${item.id}`;
-                    const hasContent = !!item.content;
-
-                    return (
-                        <div className="card" key={item.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <a href={hasContent ? readerUrl : item.url} target={hasContent ? "_self" : "_blank"} rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})` }}></div>
-                                <div className="card-content">
-                                    <div className="card-title">{item.title}</div>
-                                    <div className="card-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <img
-                                            src={item.favicon || `https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}&sz=16`}
-                                            alt=""
-                                            style={{ width: '16px', height: '16px', borderRadius: '2px' }}
-                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                        />
-                                        <span>{item.siteName || new URL(item.url).hostname}</span>
-                                        <span>• {item.estimatedReadTime || 5} min</span>
-                                        {item.author && <span> • {item.author}</span>}
-                                        {item.content && <span title="Versão backup disponível" style={{ color: '#4caf50' }}>📖</span>}
-                                    </div>
-                                    {item.excerpt && (
-                                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                            {item.excerpt}
-                                        </div>
-                                    )}
-                                    {item.tags && item.tags.length > 0 && (
-                                        <div className="card-tags">
-                                            {item.tags.map(tag => (
-                                                <span key={tag} className="card-tag">{tag}</span>
-                                            ))}
-                                            {item.aiTags && item.aiTags.map(tag => (
-                                                <span key={`ai-${tag}`} className="card-tag" style={{ border: '1px solid #e0e0e0', background: 'white' }}>✨ {tag}</span>
-                                            ))}
-                                            {item.aiFolder && <span className="card-tag" style={{ background: '#e3f2fd', color: '#1565c0' }}>📁 {item.aiFolder}</span>}
-                                        </div>
-                                    )}
-
-                                    {/* Spacer to push actions to bottom if needed, but flex handles it */}
-                                    <div style={{ flex: 1 }}></div>
-
-                                    <div className="card-actions" onClick={(e) => e.preventDefault()}>
-                                        <a
-                                            href={item.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="icon-btn"
-                                            title="Abrir original"
-                                            onClick={(e) => e.stopPropagation()}
-                                            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                        >
-                                            🔗
-                                        </a>
-                                        <button
-                                            className="icon-btn"
-                                            title={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
-                                            onClick={(e) => handleToggleFavorite(e, item.id, item.isFavorite)}
-                                            style={{ color: item.isFavorite ? 'orange' : '' }}
-                                        >
-                                            ★
-                                        </button>
-                                        <button
-                                            className="icon-btn"
-                                            title={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
-                                            onClick={(e) => handleToggleArchive(e, item.id, item.status)}
-                                            style={{ color: item.status === ItemStatus.Archived ? 'green' : '' }}
-                                        >
-                                            📥
-                                        </button>
-                                        <button
-                                            className="icon-btn"
-                                            title="Excluir"
-                                            onClick={(e) => handleDelete(e, item.id)}
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    )
-                })}
+                {filteredItems.map(renderItemCard)}
             </div>
         );
     };
@@ -530,12 +696,10 @@ const Dashboard = () => {
                         {activeView === 'favorites' && 'Favoritos'}
                         {activeView === 'archive' && 'Arquivo'}
                         {activeView === 'discover' && 'Redescobrir'}
-                        {activeView === 'collections' && (
-                            selectedTag ? `Coleção #${selectedTag}` :
-                                selectedFolder ? `Pasta: ${selectedFolder}` : 'Coleções e Pastas'
-                        )}
+                        {activeView === 'collections' && 'Coleções'}
                         {activeView === 'settings' && 'Configurações'}
                     </h1>
+                    {/* Search bar logic updated to only show if not in deep collection navigation unless we want it? keeping it simple for now */}
                     {['home', 'favorites', 'archive', 'collections'].includes(activeView) && (
                         <input
                             type="text"
@@ -549,6 +713,7 @@ const Dashboard = () => {
 
                 {renderContent()}
 
+                {/* Modal logic remains the same */}
                 <Modal
                     isOpen={modal.isOpen}
                     onClose={closeModal}

@@ -60,7 +60,7 @@ const analyzeAllItems = async (items: SavedItem[], apiKey: string): Promise<Save
 
 REGRAS:
 1. Crie categorias intuitivas baseadas no conteúdo (ex: "Tecnologia/Programação/JavaScript", "Entretenimento/Jogos", "Trabalho/Ferramentas")
-2. Use "/" para hierarquia de pastas
+2. Use "/" para criar subcoleções (ex: "Tecnologia/Programação/React" cria uma pasta React dentro de Programação, dentro de Tecnologia)
 3. Agrupe itens similares na mesma pasta
 4. Máximo 3 níveis de profundidade
 5. Use nomes de pastas em português
