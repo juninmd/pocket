@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus } from '../utils/types';
 import { Modal } from '../components/Modal';
+import { ItemCard } from '../components/ItemCard';
 import { buildFolderTree, FolderNode } from '../utils/folderStructure';
 import './index.css';
 
@@ -81,6 +82,17 @@ const Dashboard = () => {
 
     const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
+    const loadItems = useCallback(async () => {
+        try {
+            const response = await browser.runtime.sendMessage({ action: 'getLinks' }) as { items: SavedItem[] };
+            if (response && response.items) {
+                setItems(response.items);
+            }
+        } catch (err) {
+            console.error("Failed to load items", err);
+        }
+    }, []);
+
     useEffect(() => {
         loadItems();
         loadApiKey();
@@ -92,18 +104,7 @@ const Dashboard = () => {
                 loadItems();
             }
         });
-    }, []);
-
-    const loadItems = async () => {
-        try {
-            const response = await browser.runtime.sendMessage({ action: 'getLinks' }) as { items: SavedItem[] };
-            if (response && response.items) {
-                setItems(response.items);
-            }
-        } catch (err) {
-            console.error("Failed to load items", err);
-        }
-    };
+    }, [loadItems]);
 
     const loadApiKey = async () => {
         const data = await browser.storage.local.get('geminiApiKey') as { geminiApiKey?: string };
@@ -118,7 +119,7 @@ const Dashboard = () => {
         setTimeout(() => setIsSavingKey(false), 1000);
     };
 
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
+    const handleDelete = useCallback(async (e: React.MouseEvent, id: string) => {
         e.preventDefault();
         e.stopPropagation();
         openModal(
@@ -132,9 +133,9 @@ const Dashboard = () => {
             },
             'Excluir'
         );
-    };
+    }, [loadItems]);
 
-    const handleToggleFavorite = async (e: React.MouseEvent, id: string, isFavorite: boolean) => {
+    const handleToggleFavorite = useCallback(async (e: React.MouseEvent, id: string, isFavorite: boolean) => {
         e.preventDefault();
         e.stopPropagation();
         await browser.runtime.sendMessage({
@@ -142,9 +143,9 @@ const Dashboard = () => {
             payload: { id, updates: { isFavorite: !isFavorite } }
         });
         loadItems();
-    };
+    }, [loadItems]);
 
-    const handleToggleArchive = async (e: React.MouseEvent, id: string, currentStatus: ItemStatus) => {
+    const handleToggleArchive = useCallback(async (e: React.MouseEvent, id: string, currentStatus: ItemStatus) => {
         e.preventDefault();
         e.stopPropagation();
         const newStatus = currentStatus === ItemStatus.Archived ? ItemStatus.Unread : ItemStatus.Archived;
@@ -153,7 +154,7 @@ const Dashboard = () => {
             payload: { id, updates: { status: newStatus } }
         });
         loadItems();
-    };
+    }, [loadItems]);
 
     const handleExport = () => {
         const exportData = items.map(item => ({
@@ -290,7 +291,7 @@ const Dashboard = () => {
         });
     };
 
-    const getFilteredItems = () => {
+    const filteredItems = useMemo(() => {
         return items.filter(item => {
             if (activeView === 'home') {
                 return item.status === ItemStatus.Unread;
@@ -321,106 +322,25 @@ const Dashboard = () => {
             return item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.url.toLowerCase().includes(searchQuery.toLowerCase());
         });
-    };
+    }, [items, activeView, selectedTag, selectedFolder, searchQuery]);
 
-    const getUniqueTags = () => {
+    const uniqueTags = useMemo(() => {
         const tags = new Set<string>();
         items.forEach(item => {
             item.tags && item.tags.forEach(tag => tags.add(tag));
             item.aiTags && item.aiTags.forEach(tag => tags.add(tag));
         });
         return Array.from(tags).sort();
-    };
+    }, [items]);
 
-    const getUniqueFolders = () => {
+    const uniqueFolders = useMemo(() => {
         const folders = new Set<string>();
         items.forEach(item => {
             if (item.aiFolder) folders.add(item.aiFolder);
             else if (item.originalFolder) folders.add(item.originalFolder);
         });
         return Array.from(folders).sort();
-    };
-
-    // Helper to render individual item card (extracted to reuse)
-    const renderItemCard = (item: SavedItem) => {
-        const readerUrl = `reader.html?id=${item.id}`;
-        const hasContent = !!item.content;
-
-        return (
-            <div className="card" key={item.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <a href={hasContent ? readerUrl : item.url} target={hasContent ? "_self" : "_blank"} rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})` }}></div>
-                    <div className="card-content">
-                        <div className="card-title">{item.title}</div>
-                        <div className="card-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <img
-                                src={item.favicon || `https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}&sz=16`}
-                                alt=""
-                                style={{ width: '16px', height: '16px', borderRadius: '2px' }}
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                            <span>{item.siteName || new URL(item.url).hostname}</span>
-                            <span>• {item.estimatedReadTime || 5} min</span>
-                            {item.content && <span title="Versão backup disponível" style={{ color: '#4caf50' }}>📖</span>}
-                        </div>
-                        {item.excerpt && (
-                            <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                {item.excerpt}
-                            </div>
-                        )}
-                        {/* Tags handling */}
-                        {item.tags && item.tags.length > 0 && (
-                            <div className="card-tags">
-                                {item.tags.map(tag => (
-                                    <span key={tag} className="card-tag">{tag}</span>
-                                ))}
-                                {item.aiTags && item.aiTags.map(tag => (
-                                    <span key={`ai-${tag}`} className="card-tag" style={{ border: '1px solid #e0e0e0', background: 'white' }}>✨ {tag}</span>
-                                ))}
-                            </div>
-                        )}
-                        <div style={{ flex: 1 }}></div>
-                        <div className="card-actions" onClick={(e) => e.preventDefault()}>
-                            <a
-                                href={item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="icon-btn"
-                                title="Abrir original"
-                                onClick={(e) => e.stopPropagation()}
-                                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                                🔗
-                            </a>
-                            <button
-                                className="icon-btn"
-                                title={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
-                                onClick={(e) => handleToggleFavorite(e, item.id, item.isFavorite)}
-                                style={{ color: item.isFavorite ? 'orange' : '' }}
-                            >
-                                ★
-                            </button>
-                            <button
-                                className="icon-btn"
-                                title={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
-                                onClick={(e) => handleToggleArchive(e, item.id, item.status)}
-                                style={{ color: item.status === ItemStatus.Archived ? 'green' : '' }}
-                            >
-                                📥
-                            </button>
-                            <button
-                                className="icon-btn"
-                                title="Excluir"
-                                onClick={(e) => handleDelete(e, item.id)}
-                            >
-                                🗑️
-                            </button>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        );
-    };
+    }, [items]);
 
     const renderContent = () => {
         if (activeView === 'discover') {
@@ -460,7 +380,15 @@ const Dashboard = () => {
                             <h2>#{selectedTag}</h2>
                         </div>
                         <div className="grid">
-                            {filtered.map(renderItemCard)}
+                            {filtered.map(item => (
+                                <ItemCard
+                                    key={item.id}
+                                    item={item}
+                                    onToggleFavorite={handleToggleFavorite}
+                                    onToggleArchive={handleToggleArchive}
+                                    onDelete={handleDelete}
+                                />
+                            ))}
                         </div>
                     </div>
                 )
@@ -553,7 +481,15 @@ const Dashboard = () => {
                                 Itens em "{breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].name : '...'} "
                             </h3>
                             <div className="grid">
-                                {directItems.map(renderItemCard)}
+                                {directItems.map(item => (
+                                    <ItemCard
+                                        key={item.id}
+                                        item={item}
+                                        onToggleFavorite={handleToggleFavorite}
+                                        onToggleArchive={handleToggleArchive}
+                                        onDelete={handleDelete}
+                                    />
+                                ))}
                             </div>
                         </div>
                     )}
@@ -563,7 +499,7 @@ const Dashboard = () => {
                         <div>
                             <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Explorar por Tags</h3>
                             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
-                                {getUniqueTags().map(tag => (
+                                {uniqueTags.map(tag => (
                                     <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{ cursor: 'pointer', padding: '15px', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                                         <h3 style={{ fontSize: '1rem', margin: 0 }}>#{tag}</h3>
                                         <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0', fontSize: '0.8rem' }}>
@@ -651,8 +587,6 @@ const Dashboard = () => {
             );
         }
 
-        const filteredItems = getFilteredItems();
-
         if (filteredItems.length === 0) {
             return (
                 <div className="empty-state">
@@ -665,7 +599,15 @@ const Dashboard = () => {
 
         return (
             <div className="grid">
-                {filteredItems.map(renderItemCard)}
+                {filteredItems.map(item => (
+                    <ItemCard
+                        key={item.id}
+                        item={item}
+                        onToggleFavorite={handleToggleFavorite}
+                        onToggleArchive={handleToggleArchive}
+                        onDelete={handleDelete}
+                    />
+                ))}
             </div>
         );
     };
