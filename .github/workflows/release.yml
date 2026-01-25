@@ -1,0 +1,47 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: cd firefox-pocket-extension && pnpm install
+
+      - name: Build extension
+        run: cd firefox-pocket-extension && pnpm run build
+
+      - name: Package extension
+        run: |
+          cd firefox-pocket-extension
+          npx web-ext build --source-dir dist --artifacts-dir web-ext-artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            firefox-pocket-extension/web-ext-artifacts/*.zip
+            firefox-pocket-extension/web-ext-artifacts/*.xpi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
