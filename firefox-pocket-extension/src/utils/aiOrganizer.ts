@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus, ItemType } from './types';
 import { generateId } from './storage';
+import { callGemini } from './aiService';
 
 // Maximum items to batch for AI analysis
 const BATCH_SIZE = 15;
@@ -75,26 +76,11 @@ Input (${items.length} itens):
 ${JSON.stringify(simplifyForAI, null, 0)}`;
 
     try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.3,
-                        maxOutputTokens: 8192,
-                        responseMimeType: "application/json"
-                    }
-                })
-            }
-        );
-
-        const data = await response.json();
-
-        debugger;
-        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const aiText = await callGemini(apiKey, prompt, 'gemini-2.5-pro', {
+            temperature: 0.3,
+            maxOutputTokens: 8192,
+            jsonMode: true
+        });
 
         if (!aiText) {
             console.error("No AI response received");
