@@ -6,6 +6,7 @@ import { SavedItem } from '../utils/types';
 import { Modal } from '../components/Modal';
 import { ReadingProgressBar } from '../components/ReadingProgressBar';
 import { TTSPlayer } from '../components/TTSPlayer';
+import { callGemini } from '../utils/aiService';
 import './index.css';
 
 const Reader = () => {
@@ -95,23 +96,8 @@ const Reader = () => {
 
       const prompt = `Resuma o seguinte artigo em 3 pontos principais (bullet points) e um breve parágrafo de conclusão. Responda em Português do Brasil.\n\nArtigo:\n${truncatedText}`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      });
+      const aiText = await callGemini(apiKey, prompt, 'gemini-1.5-flash');
 
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error.message || "Erro na API");
-      }
-
-      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (aiText) {
         setSummary(aiText);
       } else {
