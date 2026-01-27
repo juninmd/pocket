@@ -15,7 +15,7 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
     return (
         <div className="card" style={{ textDecoration: 'none', color: 'inherit' }}>
             <a href={hasContent ? readerUrl : item.url} target={hasContent ? "_self" : "_blank"} rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'https://via.placeholder.com/300x160?text=Sem+Imagem'})` }}></div>
+                <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'icons/placeholder.svg'})` }}></div>
                 <div className="card-content">
                     <div className="card-title">{item.title}</div>
                     <div className="card-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
