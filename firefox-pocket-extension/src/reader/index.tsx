@@ -7,6 +7,8 @@ import { Modal } from '../components/Modal';
 import { ReadingProgressBar } from '../components/ReadingProgressBar';
 import { TTSPlayer } from '../components/TTSPlayer';
 import { callGemini } from '../utils/aiService';
+import { ChatPanel } from '../components/AI/ChatPanel';
+import { KeyConcepts } from '../components/AI/KeyConcepts';
 import './index.css';
 
 const Reader = () => {
@@ -17,6 +19,10 @@ const Reader = () => {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summarizeError, setSummarizeError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
+
+  // AI Sidebar State
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<'chat' | 'concepts'>('chat');
 
   const [modal, setModal] = useState<{
     isOpen: boolean;
@@ -65,6 +71,17 @@ const Reader = () => {
     loadData();
   }, []);
 
+  useEffect(() => {
+      if (showSidebar) {
+          document.body.classList.add('has-sidebar');
+      } else {
+          document.body.classList.remove('has-sidebar');
+      }
+      return () => {
+          document.body.classList.remove('has-sidebar');
+      };
+  }, [showSidebar]);
+
   const handleSummarize = async () => {
     if (!apiKey) {
       setModal({
@@ -88,7 +105,6 @@ const Reader = () => {
     setIsSummarizing(true);
     setSummarizeError(null);
     try {
-      // Strip HTML for the prompt to save tokens (basic stripping)
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = item.content;
       const plainText = tempDiv.textContent || "";
@@ -112,11 +128,24 @@ const Reader = () => {
     }
   };
 
+  const toggleSidebar = () => {
+      if (!apiKey) {
+          setModal({
+              isOpen: true,
+              title: 'Recurso de IA',
+              content: <p>Configure sua API Key nas opções para usar o chat inteligente e a extração de conceitos.</p>,
+              onConfirm: () => window.location.href = "dashboard.html",
+              confirmText: "Configurar"
+          });
+          return;
+      }
+      setShowSidebar(!showSidebar);
+  };
+
   if (loading) return <div className="loading">Carregando...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!item) return <div className="error">Item não encontrado</div>;
 
-  // Prepare text for TTS
   const getPlainText = () => {
     if (!item.content) return "";
     const temp = document.createElement('div');
@@ -125,6 +154,7 @@ const Reader = () => {
   };
 
   return (
+    <>
     <div className="reader-container">
       <ReadingProgressBar />
 
@@ -137,7 +167,7 @@ const Reader = () => {
           {item.estimatedReadTime && <span> • {item.estimatedReadTime} min de leitura</span>}
         </div>
 
-        <div style={{ marginTop: '20px' }}>
+        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           {!summary && (
             <button
               onClick={handleSummarize}
@@ -147,12 +177,16 @@ const Reader = () => {
               {isSummarizing ? (
                 <>Aguarde...</>
               ) : (
-                <>✨ Resumir com IA</>
+                <>✨ Resumir</>
               )}
             </button>
           )}
+          <button className="ai-btn" onClick={toggleSidebar}>
+              💬 Chat & Conceitos
+          </button>
+
           {summarizeError && (
-            <div style={{ color: 'red', marginTop: '10px', fontSize: '0.9rem' }}>
+            <div style={{ color: 'red', marginTop: '10px', fontSize: '0.9rem', width: '100%' }}>
               {summarizeError}
             </div>
           )}
@@ -213,6 +247,38 @@ const Reader = () => {
         {modal.content}
       </Modal>
     </div>
+
+    {/* Floating Toggle Button */}
+    <button className={`toggle-sidebar-btn ${showSidebar ? 'active' : ''}`} onClick={toggleSidebar}>
+        {showSidebar ? '✕' : '💬'}
+    </button>
+
+    {/* AI Sidebar */}
+    <div className={`ai-sidebar ${showSidebar ? 'open' : ''}`}>
+        <div className="sidebar-header">
+            <div className="sidebar-title">
+                <span>🤖</span> Assistente
+            </div>
+            <button className="sidebar-close" onClick={() => setShowSidebar(false)}>✕</button>
+        </div>
+        <div className="sidebar-tabs">
+            <button className={`sidebar-tab ${sidebarTab === 'chat' ? 'active' : ''}`} onClick={() => setSidebarTab('chat')}>Chat</button>
+            <button className={`sidebar-tab ${sidebarTab === 'concepts' ? 'active' : ''}`} onClick={() => setSidebarTab('concepts')}>Conceitos</button>
+        </div>
+        <div className="sidebar-content">
+            {apiKey && item?.content ? (
+                <>
+                    {sidebarTab === 'chat' && <ChatPanel apiKey={apiKey} articleContent={item.content} />}
+                    {sidebarTab === 'concepts' && <KeyConcepts apiKey={apiKey} articleContent={item.content} />}
+                </>
+            ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                   {!apiKey ? "Configure a API Key para usar este recurso." : "Conteúdo não disponível para análise."}
+                </div>
+            )}
+        </div>
+    </div>
+    </>
   );
 };
 
