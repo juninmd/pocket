@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest",
     "build": "webpack --config webpack.config.js",
-    "watch": "webpack --config webpack.config.js --watch"
+    "build:prod": "webpack --config webpack.config.js --mode production",
+    "watch": "webpack --config webpack.config.js --watch",
+    "package": "web-ext build --source-dir dist --artifacts-dir web-ext-artifacts"
   },
   "keywords": [],
   "author": "",

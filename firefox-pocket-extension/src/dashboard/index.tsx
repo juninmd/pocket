@@ -353,7 +353,7 @@ const Dashboard = () => {
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <div className="card" style={{ maxWidth: '600px', width: '100%' }}>
                         <a href={randomItem.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                            <div className="card-image" style={{ height: '300px', backgroundImage: `url(${randomItem.imageUrl || 'https://via.placeholder.com/600x300?text=Sem+Imagem'})` }}></div>
+                            <div className="card-image" style={{ height: '300px', backgroundImage: `url(${randomItem.imageUrl || 'icons/placeholder.svg'})` }}></div>
                             <div className="card-content">
                                 <div style={{ color: '#ef4056', fontWeight: 'bold', marginBottom: '10px' }}>REDESCOBRIR</div>
                                 <div className="card-title" style={{ fontSize: '1.5rem' }}>{randomItem.title}</div>
