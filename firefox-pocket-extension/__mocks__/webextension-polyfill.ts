@@ -24,6 +24,7 @@ export const tabs = {
   query: jest.fn(),
   sendMessage: jest.fn(),
   create: jest.fn(),
+  captureVisibleTab: jest.fn(),
 };
 
 export const contextMenus = {
@@ -33,11 +34,17 @@ export const contextMenus = {
   },
 };
 
+export const bookmarks = {
+  getTree: jest.fn(),
+  create: jest.fn(),
+};
+
 const browser = {
   storage,
   runtime,
   tabs,
   contextMenus,
+  bookmarks,
 };
 
 export default browser;

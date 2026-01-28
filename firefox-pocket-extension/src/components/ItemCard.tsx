@@ -12,9 +12,20 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
     const readerUrl = `reader.html?id=${item.id}`;
     const hasContent = !!item.content;
 
+    const handleCardClick = (e: React.MouseEvent) => {
+        // Prevent navigation if clicking on actions
+        if ((e.target as HTMLElement).closest('.card-actions')) return;
+
+        if (hasContent) {
+            window.location.href = readerUrl;
+        } else {
+            window.open(item.url, '_blank');
+        }
+    };
+
     return (
-        <div className="card" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <a href={hasContent ? readerUrl : item.url} target={hasContent ? "_self" : "_blank"} rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="card" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }} onClick={handleCardClick}>
+            <div style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'icons/placeholder.svg'})` }}></div>
                 <div className="card-content">
                     <div className="card-title">{item.title}</div>
@@ -46,7 +57,7 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                         </div>
                     )}
                     <div style={{ flex: 1 }}></div>
-                    <div className="card-actions" onClick={(e) => e.preventDefault()}>
+                    <div className="card-actions" onClick={(e) => e.stopPropagation()}>
                         <a
                             href={item.url}
                             target="_blank"
@@ -83,7 +94,7 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                         </button>
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
     );
 });
