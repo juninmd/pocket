@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus, ItemType } from './types';
 import { generateId } from './storage';
-import { callGemini } from './aiService';
+import { callGeminiWithTools, Tool } from './aiService';
 
 // Maximum items to batch for AI analysis
 const BATCH_SIZE = 15;
@@ -16,6 +16,31 @@ export interface OrganizationResult {
     foldersCreated: number;
     error?: string;
 }
+
+const organizeItemsTool: Tool = {
+    function_declarations: [{
+        name: "organize_items",
+        description: "Organizes a list of items into a hierarchical folder structure and assigns tags. Use '/' to separate folder levels (e.g. 'Tech/Web/React').",
+        parameters: {
+            type: "OBJECT",
+            properties: {
+                organizedItems: {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            id: { type: "STRING" },
+                            folderPath: { type: "STRING", description: "The logical folder path (e.g. 'Technology/Dev'). Max depth 3." },
+                            tags: { type: "ARRAY", items: { type: "STRING" } }
+                        },
+                        required: ["id", "folderPath", "tags"]
+                    }
+                }
+            },
+            required: ["organizedItems"]
+        }
+    }]
+};
 
 export const importBookmarks = async (): Promise<SavedItem[]> => {
     const bookmarks = await browser.bookmarks.getTree();
@@ -57,7 +82,7 @@ const analyzeAllItems = async (items: SavedItem[], apiKey: string): Promise<Save
         domain: new URL(item.url).hostname
     }));
 
-    const prompt = `Você é um especialista em organização de conhecimento. Analise estes favoritos e crie uma estrutura de pastas lógica e hierárquica.
+    const prompt = `Você é um especialista em organização de conhecimento. Analise estes favoritos e chame a função para organizá-los em pastas lógicas.
 
 REGRAS:
 1. Crie categorias intuitivas baseadas no conteúdo (ex: "Tecnologia/Programação/JavaScript", "Entretenimento/Jogos", "Trabalho/Ferramentas")
@@ -67,49 +92,38 @@ REGRAS:
 5. Use nomes de pastas em português
 6. Cada item deve ter exatamente 1 pasta e 3 tags relevantes
 
-Retorne APENAS um JSON array válido, sem markdown, onde cada objeto tem:
-- id: (exatamente como no input)
-- aiFolder: (string com caminho da pasta, ex: "Tecnologia/Web Dev")
-- aiTags: (array de 3 strings descritivas)
-
 Input (${items.length} itens):
 ${JSON.stringify(simplifyForAI, null, 0)}`;
 
     try {
-        const aiText = await callGemini(apiKey, prompt, 'gemini-2.5-pro', {
-            temperature: 0.3,
-            maxOutputTokens: 8192,
-            jsonMode: true
+        const response = await callGeminiWithTools(apiKey, prompt, 'gemini-2.5-pro', {
+            tools: [organizeItemsTool],
+            toolConfig: { function_calling_config: { mode: 'ANY' } }
         });
 
-        if (!aiText) {
-            console.error("No AI response received");
-            return items;
-        }
+        if (response.functionCall && response.functionCall.name === 'organize_items') {
+            const suggestions = response.functionCall.args.organizedItems;
 
-        // Extract JSON from response (handle markdown code blocks)
-        let jsonString = aiText;
-        const codeBlockMatch = aiText.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (codeBlockMatch) {
-            jsonString = codeBlockMatch[1].trim();
-        } else {
-            const jsonMatch = aiText.match(/\[[\s\S]*\]/);
-            if (jsonMatch) jsonString = jsonMatch[0];
-        }
-
-        const suggestions = JSON.parse(jsonString);
-
-        return items.map(item => {
-            const suggestion = suggestions.find((s: any) => s.id === item.id);
-            if (suggestion) {
-                return {
-                    ...item,
-                    aiFolder: suggestion.aiFolder || 'Outros',
-                    aiTags: suggestion.aiTags || []
-                };
+            if (!suggestions || !Array.isArray(suggestions)) {
+                 console.error("Invalid function call arguments", response.functionCall.args);
+                 return items;
             }
-            return { ...item, aiFolder: 'Outros', aiTags: [] };
-        });
+
+            return items.map(item => {
+                const suggestion = suggestions.find((s: any) => s.id === item.id);
+                if (suggestion) {
+                    return {
+                        ...item,
+                        aiFolder: suggestion.folderPath || 'Outros',
+                        aiTags: suggestion.tags || []
+                    };
+                }
+                return { ...item, aiFolder: 'Outros', aiTags: [] };
+            });
+        }
+
+        console.warn("AI did not call the expected tool", response);
+        return items;
 
     } catch (e) {
         console.error("AI Analysis Failed", e);
