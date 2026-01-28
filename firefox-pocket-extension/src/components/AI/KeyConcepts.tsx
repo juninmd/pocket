@@ -68,7 +68,7 @@ export const KeyConcepts: React.FC<KeyConceptsProps> = ({ apiKey, articleContent
         }
     };
 
-    if (!hasLoaded && !loading) {
+    if (!hasLoaded && !loading && !error) {
         return (
             <div className="concepts-start">
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>

@@ -3,17 +3,7 @@ import { SavedItem, ItemStatus, ItemType, Message } from '../utils/types';
 import { getSavedItems, saveItem, updateItem, deleteItem, generateId } from '../utils/storage';
 import { organizeWithAI, importBookmarks, exportToFirefox, organizeAndExportToFirefox } from '../utils/aiOrganizer';
 
-const captureSnapshot = async (windowId?: number): Promise<string | undefined> => {
-  try {
-    const dataUrl = await browser.tabs.captureVisibleTab(windowId, { format: 'jpeg', quality: 50 });
-    return await resizeImage(dataUrl);
-  } catch (e) {
-    console.error('Failed to capture snapshot', e);
-    return undefined;
-  }
-};
-
-const resizeImage = (dataUrl: string): Promise<string> => {
+export const resizeImage = (dataUrl: string): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -31,7 +21,17 @@ const resizeImage = (dataUrl: string): Promise<string> => {
   });
 };
 
-browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.MessageSender) => {
+export const captureSnapshot = async (windowId?: number): Promise<string | undefined> => {
+  try {
+    const dataUrl = await browser.tabs.captureVisibleTab(windowId, { format: 'jpeg', quality: 50 });
+    return await resizeImage(dataUrl);
+  } catch (e) {
+    console.error('Failed to capture snapshot', e);
+    return undefined;
+  }
+};
+
+export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSender) => {
   const message = msg as Message;
   switch (message.action) {
     case 'saveLink': {
@@ -140,15 +140,9 @@ browser.runtime.onMessage.addListener(async (msg: any, sender: browser.Runtime.M
       return result;
     }
   }
-});
+};
 
-browser.contextMenus.create({
-  id: "save-to-pocket-like",
-  title: "Salvar no Pocket-like",
-  contexts: ["page", "link"],
-});
-
-browser.contextMenus.onClicked.addListener((info: browser.Menus.OnClickData, tab?: browser.Tabs.Tab) => {
+export const handleContextMenu = async (info: browser.Menus.OnClickData, tab?: browser.Tabs.Tab) => {
   if (info.menuItemId === "save-to-pocket-like") {
     let url = info.linkUrl;
     let title = info.selectionText || info.linkUrl;
@@ -159,7 +153,7 @@ browser.contextMenus.onClicked.addListener((info: browser.Menus.OnClickData, tab
     }
 
     if (url) {
-      const performSave = (metadata: any = {}) => {
+      const performSave = async (metadata: any = {}) => {
         const newItem: SavedItem = {
           id: generateId(),
           url: url!,
@@ -179,28 +173,35 @@ browser.contextMenus.onClicked.addListener((info: browser.Menus.OnClickData, tab
         };
 
         if (tab && tab.active) {
-          captureSnapshot(tab.windowId).then(snapshot => {
-            if (snapshot) newItem.snapshotUrl = snapshot;
-            saveItem(newItem).then(() => {
-              console.log('Saved via context menu');
-              browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
-            });
-          });
-        } else {
-          saveItem(newItem).then(() => {
-            console.log('Saved via context menu');
-            browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
-          });
+          const snapshot = await captureSnapshot(tab.windowId);
+          if (snapshot) newItem.snapshotUrl = snapshot;
         }
+
+        await saveItem(newItem);
+        console.log('Saved via context menu');
+        browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       };
 
       if (tab && tab.id) {
-        browser.tabs.sendMessage(tab.id, { action: 'getMetadata' })
-          .then(metadata => performSave(metadata))
-          .catch(() => performSave());
+        try {
+            const metadata = await browser.tabs.sendMessage(tab.id, { action: 'getMetadata' });
+            await performSave(metadata);
+        } catch (e) {
+            await performSave();
+        }
       } else {
-        performSave();
+        await performSave();
       }
     }
   }
+};
+
+browser.runtime.onMessage.addListener(handleMessage);
+
+browser.contextMenus.create({
+  id: "save-to-pocket-like",
+  title: "Salvar no Pocket-like",
+  contexts: ["page", "link"],
 });
+
+browser.contextMenus.onClicked.addListener(handleContextMenu);

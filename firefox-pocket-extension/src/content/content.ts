@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import { Readability } from '@mozilla/readability';
 
-function getMetaContent(...properties: string[]): string | undefined {
+export function getMetaContent(...properties: string[]): string | undefined {
   for (const property of properties) {
     const element = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
     const content = element?.getAttribute('content');
@@ -10,13 +10,13 @@ function getMetaContent(...properties: string[]): string | undefined {
   return undefined;
 }
 
-function calculateReadTime(text: string): number {
+export function calculateReadTime(text: string): number {
   const wpm = 200;
   const words = text.trim().split(/\s+/).length;
   return Math.max(1, Math.ceil(words / wpm));
 }
 
-browser.runtime.onMessage.addListener((message: any) => {
+export const handleMessage = (message: any) => {
   if (message.action === 'getMetadata') {
     try {
       // Clone document to avoid modifying the live page
@@ -66,4 +66,6 @@ browser.runtime.onMessage.addListener((message: any) => {
       });
     }
   }
-});
+};
+
+browser.runtime.onMessage.addListener(handleMessage);
