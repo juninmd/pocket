@@ -176,11 +176,15 @@ describe('aiOrganizer', () => {
         });
 
         it('should handle errors', async () => {
-             (callGeminiWithTools as jest.Mock).mockRejectedValue(new Error('Fail'));
+             // Mock AI success (or failure handled gracefully) so we proceed to export
+             (callGeminiWithTools as jest.Mock).mockRejectedValue(new Error('AI Fail'));
+
+             // Mock export failure which should be caught by organizeAndExportToFirefox
+             (browser.bookmarks.create as jest.Mock).mockRejectedValue(new Error('Export Fail'));
 
              const result = await organizeAndExportToFirefox([mockItem], 'key');
              expect(result.success).toBe(false);
-             expect(result.error).toBe('Error: Fail');
+             expect(result.error).toBe('Error: Export Fail');
         });
     });
 
