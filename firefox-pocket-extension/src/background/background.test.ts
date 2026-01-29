@@ -171,8 +171,8 @@ describe('background script', () => {
         });
 
         it('should get metadata from tab if possible', async () => {
-            const info = { menuItemId: 'save-to-pocket-like', linkUrl: 'http://test.com' } as any;
-            const tab = { id: 1, active: true, windowId: 123 } as any;
+            const info = { menuItemId: 'save-to-pocket-like' } as any;
+            const tab = { id: 1, active: true, windowId: 123, url: 'http://test.com' } as any;
 
             (browser.tabs.sendMessage as jest.Mock).mockResolvedValue({ title: 'Meta Title' });
             (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');

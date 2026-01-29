@@ -43,7 +43,7 @@ export const handleMessage = (message: any) => {
         || document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
       const favicon = faviconLink?.href || `${window.location.origin}/favicon.ico`;
 
-      const textContent = article?.textContent || document.body.innerText;
+      const textContent = article?.textContent || document.body.innerText || document.body.textContent || '';
       const estimatedReadTime = calculateReadTime(textContent);
 
       return Promise.resolve({

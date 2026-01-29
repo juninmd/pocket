@@ -157,7 +157,7 @@ export const handleContextMenu = async (info: browser.Menus.OnClickData, tab?: b
         const newItem: SavedItem = {
           id: generateId(),
           url: url!,
-          title: title || metadata.title || url!,
+          title: (title && title !== url) ? title : (metadata.title || title || url!),
           excerpt: metadata.description,
           imageUrl: metadata.imageUrl,
           siteName: metadata.siteName,
@@ -182,7 +182,7 @@ export const handleContextMenu = async (info: browser.Menus.OnClickData, tab?: b
         browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       };
 
-      if (tab && tab.id) {
+      if (tab && tab.id && (!info.linkUrl || info.linkUrl === tab.url)) {
         try {
             const metadata = await browser.tabs.sendMessage(tab.id, { action: 'getMetadata' });
             await performSave(metadata);
