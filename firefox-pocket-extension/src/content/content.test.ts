@@ -108,5 +108,83 @@ describe('content script', () => {
             const result: any = await handleMessage({ action: 'getMetadata' });
             expect(result.favicon).toContain('favicon.ico');
         });
+
+        it('should fallback to default favicon if none found', async () => {
+             (Readability as unknown as jest.Mock).mockImplementation(() => ({
+                parse: jest.fn().mockReturnValue({})
+            }));
+            jest.spyOn(document, 'cloneNode').mockReturnValue(document);
+            // No link tags added
+
+            const result: any = await handleMessage({ action: 'getMetadata' });
+            expect(result.favicon).toContain('/favicon.ico');
+        });
+
+        it('should use meta tags if Readability returns minimal info', async () => {
+             (Readability as unknown as jest.Mock).mockImplementation(() => ({
+                parse: jest.fn().mockReturnValue({}) // No title/excerpt
+            }));
+            jest.spyOn(document, 'cloneNode').mockReturnValue(document);
+
+            // Add meta tags
+            const metaTitle = document.createElement('meta');
+            metaTitle.setAttribute('property', 'og:title');
+            metaTitle.content = 'Meta Title';
+            document.head.appendChild(metaTitle);
+
+            const metaDesc = document.createElement('meta');
+            metaDesc.setAttribute('name', 'description');
+            metaDesc.content = 'Meta Desc';
+            document.head.appendChild(metaDesc);
+
+            const result: any = await handleMessage({ action: 'getMetadata' });
+            expect(result.title).toBe('Meta Title');
+            expect(result.description).toBe('Meta Desc');
+        });
+
+        it('should fallback to document title and empty string if all else fails', async () => {
+             (Readability as unknown as jest.Mock).mockImplementation(() => ({
+                parse: jest.fn().mockReturnValue({})
+            }));
+            jest.spyOn(document, 'cloneNode').mockReturnValue(document);
+            document.title = 'Fallback Title';
+
+            const result: any = await handleMessage({ action: 'getMetadata' });
+            expect(result.title).toBe('Fallback Title');
+            expect(result.description).toBe('');
+        });
+
+        it('should handle null article from Readability', async () => {
+             (Readability as unknown as jest.Mock).mockImplementation(() => ({
+                parse: jest.fn().mockReturnValue(null)
+            }));
+            jest.spyOn(document, 'cloneNode').mockReturnValue(document);
+            document.title = 'Title';
+
+            const result: any = await handleMessage({ action: 'getMetadata' });
+            expect(result.title).toBe('Title');
+            expect(result.content).toBe('');
+        });
+
+        it('should handle undefined article from Readability', async () => {
+             (Readability as unknown as jest.Mock).mockImplementation(() => ({
+                parse: jest.fn().mockReturnValue(undefined)
+            }));
+            jest.spyOn(document, 'cloneNode').mockReturnValue(document);
+            document.title = 'Title';
+
+            const result: any = await handleMessage({ action: 'getMetadata' });
+            expect(result.content).toBe('');
+        });
+
+        it('should handle article with null content', async () => {
+             (Readability as unknown as jest.Mock).mockImplementation(() => ({
+                parse: jest.fn().mockReturnValue({ content: null })
+            }));
+            jest.spyOn(document, 'cloneNode').mockReturnValue(document);
+
+            const result: any = await handleMessage({ action: 'getMetadata' });
+            expect(result.content).toBe('');
+        });
     });
 });

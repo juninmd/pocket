@@ -3,7 +3,9 @@ import { importBookmarks, organizeWithAI, organizeAndExportToFirefox, exportToFi
 import { callGeminiWithTools } from './aiService';
 import { SavedItem, ItemStatus, ItemType } from './types';
 
-jest.mock('./aiService');
+jest.mock('./aiService', () => ({
+    callGeminiWithTools: jest.fn()
+}));
 jest.mock('webextension-polyfill', () => ({
     bookmarks: {
         getTree: jest.fn(),
@@ -112,6 +114,15 @@ describe('aiOrganizer', () => {
             expect(callGeminiWithTools).toHaveBeenCalledTimes(2);
         });
 
+        it('should handle batch errors', async () => {
+            const items = Array.from({ length: 20 }, (_, i) => ({ ...mockItem, id: `${i}` }));
+            (callGeminiWithTools as jest.Mock).mockRejectedValue(new Error('Batch Fail'));
+
+            const result = await organizeWithAI(items, 'key');
+            expect(result).toHaveLength(20); // Should return original items
+            expect(callGeminiWithTools).toHaveBeenCalledTimes(2);
+        });
+
         it('should handle wrong function call name', async () => {
              const items = [mockItem];
              const mockResponse = {
@@ -176,7 +187,8 @@ describe('aiOrganizer', () => {
         });
 
         it('should handle errors', async () => {
-             (callGeminiWithTools as jest.Mock).mockRejectedValue(new Error('Fail'));
+             (callGeminiWithTools as jest.Mock).mockResolvedValue({}); // AI succeeds (or swallows)
+             (browser.bookmarks.create as jest.Mock).mockRejectedValue(new Error('Fail'));
 
              const result = await organizeAndExportToFirefox([mockItem], 'key');
              expect(result.success).toBe(false);
@@ -195,6 +207,25 @@ describe('aiOrganizer', () => {
 
             const count = await exportToFirefox(items);
             expect(count).toBe(1);
+        });
+
+        it('should reuse existing folders', async () => {
+             const items = [
+                 { ...mockItem, id: '1', aiFolder: 'Tech' },
+                 { ...mockItem, id: '2', aiFolder: 'Tech' }
+             ];
+
+             (browser.bookmarks.create as jest.Mock)
+                .mockResolvedValueOnce({ id: 'root' }) // Root
+                .mockResolvedValueOnce({ id: 'tech_id' }) // Tech folder (1st time)
+                .mockResolvedValueOnce({ id: 'bm1' }) // Item 1
+                .mockResolvedValueOnce({ id: 'bm2' }); // Item 2
+
+             const count = await exportToFirefox(items);
+             expect(count).toBe(2);
+             // Should verify create calls.
+             // 1 root + 1 folder + 2 items = 4 calls.
+             expect(browser.bookmarks.create).toHaveBeenCalledTimes(4);
         });
     });
 });
