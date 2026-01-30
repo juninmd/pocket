@@ -1,4 +1,4 @@
-export type GeminiModel = 'gemini-1.5-flash' | 'gemini-2.5-pro' | 'gemini-1.5-pro';
+export type GeminiModel = 'gemini-1.5-flash' | 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-1.5-pro';
 
 export interface GeminiMessage {
     role: 'user' | 'model';
@@ -70,6 +70,7 @@ export const callGemini = async (
     const data = await response.json();
 
     if (data.error) {
+        console.error("Gemini API Error Details:", JSON.stringify(data.error, null, 2));
         throw new Error(data.error.message || "Erro na API do Gemini");
     }
 
@@ -111,6 +112,7 @@ export const callGeminiChat = async (
     const data = await response.json();
 
     if (data.error) {
+        console.error("Gemini API Error (Chat):", JSON.stringify(data.error, null, 2));
         throw new Error(data.error.message || "Erro na API do Gemini");
     }
 
@@ -160,6 +162,7 @@ export const callGeminiWithTools = async (
     const data = await response.json();
 
     if (data.error) {
+        console.error("Gemini API Error (with tools):", JSON.stringify(data.error, null, 2));
         throw new Error(data.error.message || "Erro na API do Gemini");
     }
 

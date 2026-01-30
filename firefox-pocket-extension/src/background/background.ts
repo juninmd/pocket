@@ -106,18 +106,18 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
       return { success: true, count: bookmarks.length };
     }
     case 'organizeWithAI': { // Legacy/Direct action
-      const { apiKey } = message.payload;
+      const { apiKey, model } = message.payload;
       const items = await getSavedItems();
-      const organizedItems = await organizeWithAI(items, apiKey);
+      const { items: organizedItems } = await organizeWithAI(items, apiKey, model);
       await browser.storage.local.set({ savedItems: organizedItems });
       browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: true };
     }
     case 'previewOrganization': {
-      const { apiKey } = message.payload;
+      const { apiKey, model } = message.payload;
       const items = await getSavedItems();
-      const organizedItems = await organizeWithAI(items, apiKey);
-      return { success: true, items: organizedItems };
+      const { items: organizedItems, debugLogs } = await organizeWithAI(items, apiKey, model);
+      return { success: true, items: organizedItems, debugLogs };
     }
     case 'applyOrganization': {
       const { items } = message.payload;
@@ -184,10 +184,10 @@ export const handleContextMenu = async (info: browser.Menus.OnClickData, tab?: b
 
       if (tab && tab.id && (!info.linkUrl || info.linkUrl === tab.url)) {
         try {
-            const metadata = await browser.tabs.sendMessage(tab.id, { action: 'getMetadata' });
-            await performSave(metadata);
+          const metadata = await browser.tabs.sendMessage(tab.id, { action: 'getMetadata' });
+          await performSave(metadata);
         } catch (e) {
-            await performSave();
+          await performSave();
         }
       } else {
         await performSave();

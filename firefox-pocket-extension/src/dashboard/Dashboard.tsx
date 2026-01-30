@@ -20,6 +20,7 @@ const Dashboard = () => {
     const [isOrganizing, setIsOrganizing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+    const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
 
     // Derived state for foldertree
     const folderTree = React.useMemo(() => buildFolderTree(items), [items]);
@@ -97,9 +98,12 @@ const Dashboard = () => {
     }, [loadItems]);
 
     const loadApiKey = async () => {
-        const data = await browser.storage.local.get('geminiApiKey') as { geminiApiKey?: string };
+        const data = await browser.storage.local.get(['geminiApiKey', 'selectedModel']) as { geminiApiKey?: string; selectedModel?: string };
         if (data && data.geminiApiKey) {
             setApiKey(data.geminiApiKey);
+        }
+        if (data && data.selectedModel) {
+            setSelectedModel(data.selectedModel);
         }
     };
 
@@ -194,15 +198,15 @@ const Dashboard = () => {
             // Preview First
             const response = await browser.runtime.sendMessage({
                 action: 'previewOrganization',
-                payload: { apiKey }
+                payload: { apiKey, model: selectedModel }
             }) as { success: boolean, items: SavedItem[] };
 
-            if (response.success && response.items) {
-                const organizedItems = response.items;
+            const { success, items: organizedItems, debugLogs } = response as any;
 
+            if (success && organizedItems) {
                 // Calculate stats for preview
                 const folders: Record<string, number> = {};
-                organizedItems.forEach(item => {
+                organizedItems.forEach((item: SavedItem) => {
                     const folder = item.aiFolder || 'Outros';
                     folders[folder] = (folders[folder] || 0) + 1;
                 });
@@ -211,7 +215,7 @@ const Dashboard = () => {
 
                 openModal(
                     'Prévia da Organização',
-                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                         <p>A IA sugeriu a seguinte estrutura para seus {items.length} itens:</p>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', marginTop: '14px' }}>
                             {sortedFolders.map(([folder, count]) => (
@@ -221,6 +225,25 @@ const Dashboard = () => {
                                 </React.Fragment>
                             ))}
                         </div>
+
+                        {debugLogs && (
+                            <details style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+                                <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>🔍 Detalhes Técnicos (Debug)</summary>
+                                <pre style={{
+                                    background: '#1e1e1e',
+                                    padding: '10px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.8rem',
+                                    overflow: 'auto',
+                                    maxHeight: '200px',
+                                    whiteSpace: 'pre-wrap',
+                                    marginTop: '10px'
+                                }}>
+                                    {JSON.stringify(debugLogs, null, 2)}
+                                </pre>
+                            </details>
+                        )}
+
                         <p style={{ marginTop: '15px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Deseja aplicar estas mudanças?</p>
                     </div>,
                     'default',
@@ -548,6 +571,28 @@ const Dashboard = () => {
                             <p style={{ fontSize: '0.8rem', marginTop: '5px' }}>
                                 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: '#ef4056' }}>Obter chave de API gratuita</a>
                             </p>
+
+                            <div style={{ marginTop: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: 'var(--text-primary)' }}>Modelo de IA</label>
+                                <select
+                                    className="search-bar"
+                                    value={selectedModel}
+                                    onChange={async (e) => {
+                                        const newModel = e.target.value;
+                                        setSelectedModel(newModel);
+                                        await browser.storage.local.set({ selectedModel: newModel });
+                                    }}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px' }}
+                                >
+                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Grátis + Rápido)</option>
+                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Grátis + Avançado)</option>
+                                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Pago + Rápido)</option>
+                                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Pago + Avançado)</option>
+                                </select>
+                                <p style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                    ℹ️ Modelos 2.5 exigem plano pago. Use 1.5 Flash/Pro se estiver no tier gratuito.
+                                </p>
+                            </div>
                         </div>
 
                         <div style={{ marginBottom: '20px' }}>

@@ -74,7 +74,7 @@ export const importBookmarks = async (): Promise<SavedItem[]> => {
 /**
  * Analyze all items at once to get a cohesive folder structure
  */
-const analyzeAllItems = async (items: SavedItem[], apiKey: string): Promise<SavedItem[]> => {
+const analyzeAllItems = async (items: SavedItem[], apiKey: string, model: string = 'gemini-1.5-flash'): Promise<{ items: SavedItem[], debugLog: any }> => {
     const simplifyForAI = items.map(item => ({
         id: item.id,
         title: item.title,
@@ -95,48 +95,67 @@ REGRAS:
 Input (${items.length} itens):
 ${JSON.stringify(simplifyForAI, null, 0)}`;
 
+    console.log("[AI Organizer] Prompting Gemini with:", items.length, "items");
+
+    let debugInfo: any = {
+        promptInfo: { itemCount: items.length },
+        rawResponse: null,
+        error: null
+    };
+
     try {
-        const response = await callGeminiWithTools(apiKey, prompt, 'gemini-2.5-pro', {
+        const response = await callGeminiWithTools(apiKey, prompt, model as any, {
             tools: [organizeItemsTool],
             toolConfig: { function_calling_config: { mode: 'ANY' } }
         });
 
+        debugInfo.rawResponse = response;
+
+        console.log("[AI Organizer] Raw Response:", response);
+
         if (response.functionCall && response.functionCall.name === 'organize_items') {
             const suggestions = response.functionCall.args.organizedItems;
+            console.log("[AI Organizer] Suggestions received:", suggestions?.length);
 
             if (!suggestions || !Array.isArray(suggestions)) {
-                 console.error("Invalid function call arguments", response.functionCall.args);
-                 return items;
+                console.error("[AI Organizer] Invalid function call arguments:", response.functionCall.args);
+                return { items, debugLog: debugInfo };
             }
 
-            return items.map(item => {
+            const organized = items.map(item => {
                 const suggestion = suggestions.find((s: any) => s.id === item.id);
                 if (suggestion) {
+                    console.log(`[AI Organizer] Matched item ${item.id} to folder: ${suggestion.folderPath}`);
                     return {
                         ...item,
                         aiFolder: suggestion.folderPath || 'Outros',
                         aiTags: suggestion.tags || []
                     };
                 }
+                console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
                 return { ...item, aiFolder: 'Outros', aiTags: [] };
             });
+            return { items: organized, debugLog: debugInfo };
+            return { items: organized, debugLog: debugInfo };
         }
 
-        console.warn("AI did not call the expected tool", response);
-        return items;
+        console.warn("[AI Organizer] AI did not call 'organize_items'. Response:", response);
+        return { items, debugLog: debugInfo };
 
     } catch (e) {
-        console.error("AI Analysis Failed", e);
-        return items;
+        console.error("[AI Organizer] AI Analysis Failed Critical:", e);
+        debugInfo.error = String(e);
+        return { items, debugLog: debugInfo };
     }
 };
 
 /**
  * Process items in batches for large collections
  */
-export const organizeWithAI = async (items: SavedItem[], apiKey: string): Promise<SavedItem[]> => {
+export const organizeWithAI = async (items: SavedItem[], apiKey: string, model: string = 'gemini-1.5-flash'): Promise<{ items: SavedItem[], debugLogs: any[] }> => {
     if (items.length <= BATCH_SIZE) {
-        return analyzeAllItems(items, apiKey);
+        const result = await analyzeAllItems(items, apiKey, model);
+        return { items: result.items, debugLogs: [result.debugLog] };
     }
 
     // For large collections, process in batches
@@ -146,17 +165,21 @@ export const organizeWithAI = async (items: SavedItem[], apiKey: string): Promis
     }
 
     let processedItems: SavedItem[] = [];
+    const allDebugLogs: any[] = [];
+
     for (const batch of batches) {
         try {
-            const enrichedBatch = await analyzeAllItems(batch, apiKey);
+            const { items: enrichedBatch, debugLog } = await analyzeAllItems(batch, apiKey, model);
             processedItems = [...processedItems, ...enrichedBatch];
+            allDebugLogs.push(debugLog);
         } catch (e) {
             console.error("Error analyzing batch", e);
             processedItems = [...processedItems, ...batch];
+            allDebugLogs.push({ error: String(e), batchSize: batch.length });
         }
     }
 
-    return processedItems;
+    return { items: processedItems, debugLogs: allDebugLogs };
 };
 
 /**
@@ -169,7 +192,7 @@ export const organizeAndExportToFirefox = async (
     try {
         // Step 1: Analyze items with AI
         console.log(`[AI Organizer] Analyzing ${items.length} items...`);
-        const organizedItems = await organizeWithAI(items, apiKey);
+        const { items: organizedItems } = await organizeWithAI(items, apiKey);
 
         // Step 2: Export to Firefox
         console.log(`[AI Organizer] Creating Firefox bookmark structure...`);

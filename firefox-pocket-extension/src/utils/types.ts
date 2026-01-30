@@ -47,8 +47,8 @@ export type Message =
   | { action: 'deleteLink'; payload: { id?: string; url?: string } }
   | { action: 'getTags'; payload?: any }
   | { action: 'importBookmarks'; payload?: any }
-  | { action: 'organizeWithAI'; payload: { apiKey: string } }
-  | { action: 'previewOrganization'; payload: { apiKey: string } } // New
+  | { action: 'organizeWithAI'; payload: { apiKey: string; model?: string } }
+  | { action: 'previewOrganization'; payload: { apiKey: string; model?: string } } // New
   | { action: 'applyOrganization'; payload: { items: SavedItem[] } } // New
   | { action: 'exportToFirefox'; payload?: any }
   | { action: 'organizeAndExportAI'; payload: { apiKey: string } }
