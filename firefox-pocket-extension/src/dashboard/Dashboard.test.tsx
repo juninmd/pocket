@@ -250,7 +250,7 @@ describe('Dashboard', () => {
         fireEvent.click(screen.getByText('📥 Importar Favoritos do Firefox'));
 
         await waitFor(() => expect(screen.getByText('Sucesso')).toBeInTheDocument());
-        expect(screen.getByText('5 favoritos importados!')).toBeInTheDocument();
+        expect(screen.getByText('✅ 5 favoritos importados com sucesso!')).toBeInTheDocument();
         fireEvent.click(screen.getByText('OK'));
     });
 

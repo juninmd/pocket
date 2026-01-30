@@ -191,14 +191,14 @@ describe('background script', () => {
 
         it('organizeWithAI should organize', async () => {
             (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
-            (aiOrganizer.organizeWithAI as jest.Mock).mockResolvedValue([mockItem]);
+            (aiOrganizer.organizeWithAI as jest.Mock).mockResolvedValue({ items: [mockItem] });
             const result = await handleMessage({ action: 'organizeWithAI', payload: { apiKey: 'key' } }, {} as any);
             expect(result.success).toBe(true);
         });
 
         it('previewOrganization should return items', async () => {
              (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
-            (aiOrganizer.organizeWithAI as jest.Mock).mockResolvedValue([mockItem]);
+            (aiOrganizer.organizeWithAI as jest.Mock).mockResolvedValue({ items: [mockItem] });
             const result = await handleMessage({ action: 'previewOrganization', payload: { apiKey: 'key' } }, {} as any);
             expect(result.items).toEqual([mockItem]);
         });

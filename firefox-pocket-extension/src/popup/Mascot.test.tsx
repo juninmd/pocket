@@ -5,8 +5,10 @@ import Mascot from './Mascot';
 // Mock framer-motion to avoid animation issues in tests
 jest.mock('framer-motion', () => ({
     motion: {
-        svg: ({ children, className, ...props }: any) => <svg className={className} {...props}>{children}</svg>,
-        p: ({ children, className, ...props }: any) => <p className={className} {...props}>{children}</p>,
+        svg: ({ children, className, initial, animate, transition, whileHover, ...props }: any) =>
+            <svg className={className} {...props}>{children}</svg>,
+        p: ({ children, className, initial, animate, transition, ...props }: any) =>
+            <p className={className} {...props}>{children}</p>,
     },
 }));
 
