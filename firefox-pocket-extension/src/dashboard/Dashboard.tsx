@@ -17,6 +17,7 @@ const Dashboard = () => {
     const [apiKey, setApiKey] = useState('');
     const [isSavingKey, setIsSavingKey] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
     const [isOrganizing, setIsOrganizing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
@@ -91,6 +92,8 @@ const Dashboard = () => {
             const message = msg as any;
             if (message.action === 'itemsUpdated') {
                 loadItems();
+            } else if (message.action === 'importProgress') {
+                setImportProgress(message.payload);
             }
         };
         browser.runtime.onMessage.addListener(listener);
@@ -170,17 +173,19 @@ const Dashboard = () => {
 
     const handleImport = async () => {
         setIsImporting(true);
+        setImportProgress({ current: 0, total: 0 });
         try {
             const res = await browser.runtime.sendMessage({ action: 'importBookmarks' }) as any;
             if (res.success) {
-                openModal('Sucesso', `${res.count} favoritos importados!`, 'success');
+                openModal('Sucesso', `✅ ${res.count} favoritos importados com sucesso!`, 'success');
                 loadItems();
             }
         } catch (e) {
             console.error(e);
-            openModal('Erro', 'Falha ao importar favoritos.', 'danger');
+            openModal('Erro', 'Falha ao importar favoritos. Tente novamente.', 'danger');
         } finally {
             setIsImporting(false);
+            setImportProgress({ current: 0, total: 0 });
         }
     };
 
@@ -579,7 +584,7 @@ const Dashboard = () => {
 
                         <div style={{ marginBottom: '20px' }}>
                             <h3>Gerenciamento de Dados</h3>
-                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: isImporting ? '10px' : '0' }}>
                                 <button className="btn" onClick={handleImport} disabled={isImporting} style={{ padding: '10px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '4px' }}>
                                     {isImporting ? 'Importando...' : '📥 Importar Favoritos do Firefox'}
                                 </button>
@@ -593,6 +598,38 @@ const Dashboard = () => {
                                     {isExporting ? 'Exportando...' : '🦊 Exportar para Firefox'}
                                 </button>
                             </div>
+
+                            {isImporting && (
+                                <div style={{
+                                    padding: '15px',
+                                    background: 'rgba(0,0,0,0.03)',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(0,0,0,0.05)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
+                                        <span style={{ fontWeight: '600' }}>Importando favoritos...</span>
+                                        <span>{Math.round((importProgress.current / (importProgress.total || 1)) * 100)}%</span>
+                                    </div>
+                                    <div style={{
+                                        height: '8px',
+                                        width: '100%',
+                                        backgroundColor: 'rgba(0,0,0,0.1)',
+                                        borderRadius: '4px',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <div style={{
+                                            height: '100%',
+                                            width: `${(importProgress.current / (importProgress.total || 1)) * 100}%`,
+                                            background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                                            transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            boxShadow: '0 0 10px rgba(102, 126, 234, 0.5)'
+                                        }} />
+                                    </div>
+                                    <p style={{ fontSize: '0.75rem', marginTop: '8px', color: 'var(--text-secondary)', textAlign: 'right' }}>
+                                        {importProgress.current} de {importProgress.total} itens processados
+                                    </p>
+                                </div>
+                            )}
                         </div>
                         <div>
                             <h3>Sobre</h3>

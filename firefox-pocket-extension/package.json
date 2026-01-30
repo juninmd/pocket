@@ -9,7 +9,7 @@
     "build:prod": "webpack --config webpack.config.js --mode production",
     "watch": "webpack --config webpack.config.js --watch",
     "package": "web-ext build --source-dir dist --artifacts-dir web-ext-artifacts --overwrite-dest",
-    "start:firefox": "web-ext run --source-dir dist --browser-console"
+    "start:firefox": "web-ext run --source-dir dist --browser-console --keep-profile-changes"
   },
   "keywords": [],
   "author": "",

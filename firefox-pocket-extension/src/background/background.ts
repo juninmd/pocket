@@ -99,9 +99,28 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
     }
     case 'importBookmarks': {
       const bookmarks = await importBookmarks();
-      for (const item of bookmarks) {
-        await saveItem(item);
+      const BATCH_SIZE = 100;
+      let processed = 0;
+      const total = bookmarks.length;
+
+      // Process in batches
+      for (let i = 0; i < bookmarks.length; i += BATCH_SIZE) {
+        const batch = bookmarks.slice(i, i + BATCH_SIZE);
+
+        // Save batch
+        for (const item of batch) {
+          await saveItem(item);
+        }
+
+        processed += batch.length;
+
+        // Broadcast progress
+        browser.runtime.sendMessage({
+          action: 'importProgress',
+          payload: { current: processed, total }
+        }).catch(() => { });
       }
+
       browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: true, count: bookmarks.length };
     }
