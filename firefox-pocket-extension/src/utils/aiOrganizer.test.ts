@@ -192,7 +192,7 @@ describe('aiOrganizer', () => {
 
              const result = await organizeAndExportToFirefox([mockItem], 'key');
              expect(result.success).toBe(false);
-             expect(result.error).toBe('Error: Fail');
+             expect(result.error).toBe('Error: Export Fail');
         });
     });
 

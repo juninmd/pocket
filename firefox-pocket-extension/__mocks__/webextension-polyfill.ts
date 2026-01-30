@@ -12,7 +12,7 @@ export const storage = {
 };
 
 export const runtime = {
-  sendMessage: jest.fn(),
+  sendMessage: jest.fn().mockResolvedValue(undefined),
   onMessage: {
     addListener: jest.fn(),
     removeListener: jest.fn(),

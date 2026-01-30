@@ -24,8 +24,15 @@ module.exports = {
     rules: [
       {
         test: /\.(ts|tsx)$/,
-        exclude: /node_modules/,
-        use: 'ts-loader',
+        exclude: [/node_modules/, /\.test\.(ts|tsx)$/],
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              configFile: 'tsconfig.build.json',
+            },
+          },
+        ],
       },
       {
         test: /\.css$/,
