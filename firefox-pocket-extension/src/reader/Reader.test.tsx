@@ -121,4 +121,108 @@ describe('Reader', () => {
          fireEvent.click(screen.getAllByText('✕')[0]);
          // Checking class or state might be hard, but we can check if sidebar is visible via class if we could
     });
+
+    it('should handle load data error', async () => {
+        (browser.storage.local.get as jest.Mock).mockRejectedValue(new Error('Storage Fail'));
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Erro ao carregar o item.')).toBeInTheDocument());
+    });
+
+    it('should cleanup sidebar class on unmount', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem], geminiApiKey: 'key' });
+        const { unmount } = render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('💬'));
+        expect(document.body.classList.contains('has-sidebar')).toBe(true);
+
+        unmount();
+        expect(document.body.classList.contains('has-sidebar')).toBe(false);
+    });
+
+    it('should handle summarize error', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem], geminiApiKey: 'key' });
+        (callGemini as jest.Mock).mockRejectedValue(new Error('AI Fail'));
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('✨ Resumir'));
+        await waitFor(() => expect(screen.getByText('Erro ao gerar resumo: AI Fail')).toBeInTheDocument());
+    });
+
+    it('should handle empty summary response', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem], geminiApiKey: 'key' });
+        (callGemini as jest.Mock).mockResolvedValue(''); // Empty response
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('✨ Resumir'));
+        await waitFor(() => expect(screen.getByText('Erro ao gerar resumo: Nenhuma resposta gerada.')).toBeInTheDocument());
+    });
+
+    it('should redirect to settings if no key for summarize', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+        // Mock window.location.href setter?
+        // We can spy on window.location assignment if we use Object.defineProperty
+        // But we already mocked window.location in beforeEach.
+        // We can make href a setter spy.
+        const hrefSpy = jest.fn();
+        Object.defineProperty(window, 'location', {
+            value: {
+                search: '?id=1',
+                origin: 'http://localhost',
+                set href(val: string) { hrefSpy(val); },
+                get href() { return 'reader.html?id=1'; }
+            },
+            writable: true
+        });
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('✨ Resumir'));
+        expect(screen.getByText('Configuração Necessária')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByText('Ir para Configurações'));
+        expect(hrefSpy).toHaveBeenCalledWith('dashboard.html');
+    });
+
+    it('should redirect to settings if no key for sidebar', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+        const hrefSpy = jest.fn();
+        Object.defineProperty(window, 'location', {
+            value: {
+                search: '?id=1',
+                origin: 'http://localhost',
+                set href(val: string) { hrefSpy(val); },
+                get href() { return 'reader.html?id=1'; }
+            },
+            writable: true
+        });
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('💬'));
+        expect(screen.getByText('Recurso de IA')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByText('Configurar'));
+        expect(hrefSpy).toHaveBeenCalledWith('dashboard.html');
+    });
+
+    it('should close modal', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        // Trigger modal (e.g. summarize without key)
+        fireEvent.click(screen.getByText('✨ Resumir'));
+        expect(screen.getByText('Configuração Necessária')).toBeInTheDocument();
+
+        // Click Cancelar
+        fireEvent.click(screen.getByText('Cancelar'));
+        await waitFor(() => expect(screen.queryByText('Configuração Necessária')).not.toBeInTheDocument());
+    });
 });

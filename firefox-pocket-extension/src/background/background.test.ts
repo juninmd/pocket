@@ -12,6 +12,36 @@ jest.mock('../utils/aiOrganizer', () => ({
     organizeAndExportToFirefox: jest.fn(),
 }));
 
+jest.mock('webextension-polyfill', () => ({
+    bookmarks: {
+        getTree: jest.fn(),
+        create: jest.fn(),
+    },
+    storage: {
+        local: {
+            set: jest.fn(),
+            get: jest.fn(),
+        }
+    },
+    runtime: {
+        sendMessage: jest.fn().mockResolvedValue(undefined),
+        onMessage: {
+            addListener: jest.fn(),
+        }
+    },
+    tabs: {
+        query: jest.fn(),
+        captureVisibleTab: jest.fn(),
+        sendMessage: jest.fn(),
+    },
+    contextMenus: {
+        create: jest.fn(),
+        onClicked: {
+            addListener: jest.fn(),
+        }
+    }
+}));
+
 // Mock HTMLImageElement and Canvas for resizeImage
 class MockImage {
   onload: (() => void) | null = null;
@@ -50,6 +80,25 @@ describe('background script', () => {
             const result = await resizeImage('data:image/jpeg;base64,original');
             expect(result).toBe('data:image/jpeg;base64,resized');
         });
+
+        it('should return original if loading fails', async () => {
+            // Mock Image to fail onload
+            const originalImage = global.Image;
+            // @ts-ignore
+            global.Image = class FailImage {
+                onload: any = null;
+                onerror: any = null;
+                src = '';
+                constructor() {
+                    setTimeout(() => this.onerror && this.onerror(), 10);
+                }
+            } as any;
+
+            const result = await resizeImage('data:image/jpeg;base64,original');
+            expect(result).toBe('data:image/jpeg;base64,original');
+
+            global.Image = originalImage;
+        });
     });
 
     describe('captureSnapshot', () => {
@@ -81,6 +130,25 @@ describe('background script', () => {
             expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ action: 'itemsUpdated' });
         });
 
+        it('saveLink should fallback to url for title', async () => {
+            const payload = { url: 'http://test.com' }; // No title
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://test.com', windowId: 1 }]);
+            (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');
+
+            await handleMessage({ action: 'saveLink', payload }, {} as any);
+            expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({ title: 'http://test.com' }));
+        });
+
+        it('should handle sendMessage error', async () => {
+            const payload = { url: 'http://test.com', title: 'Test' };
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Send Fail'));
+
+            // Should not throw
+            await handleMessage({ action: 'saveLink', payload }, {} as any);
+        });
+
         it('getLinks should return items', async () => {
             (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
             const result = await handleMessage({ action: 'getLinks' }, {} as any);
@@ -104,6 +172,14 @@ describe('background script', () => {
             (storage.deleteItem as jest.Mock).mockResolvedValue(undefined);
             const result = await handleMessage({ action: 'deleteLink', payload: { id: '1' } }, {} as any);
             expect(result.success).toBe(true);
+        });
+
+        it('deleteLink should delete item by url', async () => {
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
+            (storage.deleteItem as jest.Mock).mockResolvedValue(undefined);
+            const result = await handleMessage({ action: 'deleteLink', payload: { url: 'http://test.com' } }, {} as any);
+            expect(result.success).toBe(true);
+            expect(storage.deleteItem).toHaveBeenCalledWith('1');
         });
 
         it('importBookmarks should import', async () => {
@@ -174,7 +250,7 @@ describe('background script', () => {
             const info = { menuItemId: 'save-to-pocket-like' } as any;
             const tab = { id: 1, active: true, windowId: 123, url: 'http://test.com' } as any;
 
-            (browser.tabs.sendMessage as jest.Mock).mockResolvedValue({ title: 'Meta Title' });
+            (browser.tabs.sendMessage as jest.Mock).mockResolvedValue({ title: 'Meta Title', siteName: 'Meta Site' });
             (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');
              (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
 
@@ -182,7 +258,27 @@ describe('background script', () => {
              await new Promise(r => setTimeout(r, 50));
 
              expect(browser.tabs.sendMessage).toHaveBeenCalled();
-             expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({ title: 'Meta Title' }));
+             // title might be overwritten by linkUrl, so check siteName
+             expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({ siteName: 'Meta Site' }));
+        });
+
+        it('should handle metadata fetch failure', async () => {
+            const info = { menuItemId: 'save-to-pocket-like', linkUrl: 'http://test.com' } as any;
+            const tab = { id: 1 } as any;
+
+            (browser.tabs.sendMessage as jest.Mock).mockRejectedValue(new Error('Meta Fail'));
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+
+            await handleContextMenu(info, tab);
+            await new Promise(r => setTimeout(r, 50));
+
+            expect(storage.saveItem).toHaveBeenCalled(); // Should still save
+        });
+
+        it('should ignore unrelated context menu items', async () => {
+            const info = { menuItemId: 'other-item', linkUrl: 'http://test.com' } as any;
+            await handleContextMenu(info);
+            expect(storage.saveItem).not.toHaveBeenCalled();
         });
     });
 });

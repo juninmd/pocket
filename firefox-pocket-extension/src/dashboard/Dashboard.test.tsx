@@ -189,4 +189,234 @@ describe('Dashboard', () => {
          fireEvent.click(screen.getByText('← Voltar'));
          expect(screen.getByText('#tech')).toBeInTheDocument();
     });
+
+    it('should navigate folder structure', async () => {
+         const folderItem = { ...mockItem, aiFolder: 'Tech/Web' };
+         (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [folderItem] });
+         render(<Dashboard />);
+
+         fireEvent.click(screen.getByText('Coleções'));
+         await waitFor(() => expect(screen.getByText('Tech')).toBeInTheDocument());
+
+         // Enter Tech
+         fireEvent.click(screen.getByText('Tech'));
+         await waitFor(() => expect(screen.getByText('Web')).toBeInTheDocument());
+         expect(screen.getByText('Tech')).toBeInTheDocument(); // Breadcrumb
+
+         // Enter Web
+         fireEvent.click(screen.getByText('Web'));
+         await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+         expect(screen.getByText('Web')).toBeInTheDocument(); // Breadcrumb
+
+         // Navigate up via breadcrumb
+         fireEvent.click(screen.getByText('Tech'));
+         await waitFor(() => expect(screen.getByText('Web')).toBeInTheDocument());
+
+         // Navigate up button
+         fireEvent.click(screen.getByText('⬆ Subir'));
+         await waitFor(() => expect(screen.getByText('Tech')).toBeInTheDocument());
+    });
+
+    it('should handle export JSON', async () => {
+         (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+         const createObjectURLMock = jest.fn().mockReturnValue('blob:url');
+         const revokeObjectURLMock = jest.fn();
+         global.URL.createObjectURL = createObjectURLMock;
+         global.URL.revokeObjectURL = revokeObjectURLMock;
+
+         const clickSpy = jest.spyOn(HTMLElement.prototype, 'click');
+
+         render(<Dashboard />);
+         fireEvent.click(screen.getByText('Configurações'));
+         fireEvent.click(screen.getByText('📤 Exportar (JSON)'));
+
+         expect(createObjectURLMock).toHaveBeenCalled();
+         expect(clickSpy).toHaveBeenCalled();
+
+         clickSpy.mockRestore();
+    });
+
+    it('should handle import bookmarks', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+             if (msg.action === 'getLinks') return Promise.resolve({ items: [] });
+             if (msg.action === 'importBookmarks') return Promise.resolve({ success: true, count: 5 });
+             return Promise.resolve({});
+        });
+
+        fireEvent.click(screen.getByText('📥 Importar Favoritos do Firefox'));
+
+        await waitFor(() => expect(screen.getByText('Sucesso')).toBeInTheDocument());
+        expect(screen.getByText('5 favoritos importados!')).toBeInTheDocument();
+        fireEvent.click(screen.getByText('OK'));
+    });
+
+    it('should handle export to Firefox', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+             if (msg.action === 'getLinks') return Promise.resolve({ items: [] });
+             if (msg.action === 'exportToFirefox') return Promise.resolve({ success: true, count: 3 });
+             return Promise.resolve({});
+        });
+
+        fireEvent.click(screen.getByText('🦊 Exportar para Firefox'));
+
+        await waitFor(() => expect(screen.getByText('Sucesso')).toBeInTheDocument());
+        expect(screen.getByText('3 favoritos exportados para o Firefox!')).toBeInTheDocument();
+    });
+
+    it('should handle API missing for organize', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({}); // No key
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+
+        fireEvent.click(screen.getByText('✨ Organizar TUDO com IA'));
+        await waitFor(() => expect(screen.getByText('Configuração Necessária')).toBeInTheDocument());
+    });
+
+    it('should handle no items for organize', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+
+        // Wait for key to be loaded
+        await waitFor(() => expect(screen.getByDisplayValue('key')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('✨ Organizar TUDO com IA'));
+        await waitFor(() => expect(screen.getByText('Ops!')).toBeInTheDocument());
+    });
+
+    it('should handle discover empty state', async () => {
+        const archivedItem = { ...mockItem, status: ItemStatus.Archived };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [archivedItem] });
+        render(<Dashboard />);
+
+        fireEvent.click(screen.getByText('Redescobrir'));
+        await waitFor(() => expect(screen.getByText('Sem itens para redescobrir')).toBeInTheDocument());
+    });
+
+    it('should handle load items error', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Load Fail'));
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        render(<Dashboard />);
+        await waitFor(() => expect(consoleSpy).toHaveBeenCalledWith("Failed to load items", expect.any(Error)));
+        consoleSpy.mockRestore();
+    });
+
+    it('should handle import error', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+             if (msg.action === 'getLinks') return Promise.resolve({ items: [] });
+             if (msg.action === 'importBookmarks') return Promise.reject(new Error('Import Fail'));
+             return Promise.resolve({});
+        });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+        fireEvent.click(screen.getByText('📥 Importar Favoritos do Firefox'));
+        await waitFor(() => expect(screen.getByText('Erro')).toBeInTheDocument());
+    });
+
+    it('should handle export to Firefox error', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+             if (msg.action === 'getLinks') return Promise.resolve({ items: [] });
+             if (msg.action === 'exportToFirefox') return Promise.reject(new Error('Export Fail'));
+             return Promise.resolve({});
+        });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+        fireEvent.click(screen.getByText('🦊 Exportar para Firefox'));
+        await waitFor(() => expect(screen.getByText('Erro')).toBeInTheDocument());
+    });
+
+    it('should handle organize preview error', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+             if (msg.action === 'getLinks') return Promise.resolve({ items: [mockItem] });
+             if (msg.action === 'previewOrganization') return Promise.reject(new Error('Preview Fail'));
+             return Promise.resolve({});
+        });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+        await waitFor(() => expect(screen.getByDisplayValue('key')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('✨ Organizar TUDO com IA'));
+        await waitFor(() => expect(screen.getByText('Erro')).toBeInTheDocument());
+    });
+
+    it('should search by URL', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        const input = screen.getByPlaceholderText('Pesquisar...');
+        fireEvent.change(input, { target: { value: 'test.com' } });
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+    });
+
+    it('should list folders from originalFolder', async () => {
+        const item = { ...mockItem, aiFolder: undefined, originalFolder: 'Bookmarks/Old' };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [item] });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('Bookmarks')).toBeInTheDocument());
+    });
+
+    it('should reload items on update message', async () => {
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+
+        render(<Dashboard />);
+
+        // Update mock to return item
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+
+        // Trigger listener
+        if (listener) {
+            listener({ action: 'itemsUpdated' });
+        }
+
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+    });
+
+    it('should ignore irrelevant messages', async () => {
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+        render(<Dashboard />);
+
+        // Trigger irrelevant listener
+        if (listener) {
+            listener({ action: 'other' });
+        }
+        // Expect NO reload (sendMessage call count stays same)
+        expect(browser.runtime.sendMessage).toHaveBeenCalledTimes(1); // 1 for initial load
+    });
+
+    it('should handle deleted folder gracefully', async () => {
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+        const item = { ...mockItem, aiFolder: 'Tech' };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [item] });
+        render(<Dashboard />);
+
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('Tech')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('Tech'));
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        // Simulate delete (reload items as empty)
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+
+        if (listener) {
+            listener({ action: 'itemsUpdated' });
+        }
+
+        await waitFor(() => expect(screen.queryByText('Test Item')).not.toBeInTheDocument());
+        expect(screen.getByText('Esta pasta está vazia.')).toBeInTheDocument();
+    });
 });
