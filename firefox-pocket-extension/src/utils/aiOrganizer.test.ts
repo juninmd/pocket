@@ -83,8 +83,8 @@ describe('aiOrganizer', () => {
             (callGeminiWithTools as jest.Mock).mockResolvedValue(mockResponse);
 
             const result = await organizeWithAI(items, apiKey);
-            expect(result[0].aiFolder).toBe('Tech/Web');
-            expect(result[0].aiTags).toEqual(['web']);
+            expect(result.items[0].aiFolder).toBe('Tech/Web');
+            expect(result.items[0].aiTags).toEqual(['web']);
         });
 
         it('should handle AI failures gracefully', async () => {
@@ -92,9 +92,9 @@ describe('aiOrganizer', () => {
             (callGeminiWithTools as jest.Mock).mockRejectedValue(new Error('AI Error'));
 
             const result = await organizeWithAI(items, 'key');
-            expect(result[0].aiFolder).toBeUndefined(); // Or however it falls back
+            expect(result.items[0].aiFolder).toBeUndefined(); // Or however it falls back
             // Actually it returns original item if failure
-            expect(result[0]).toEqual(mockItem);
+            expect(result.items[0]).toEqual(mockItem);
         });
 
         it('should handle batching', async () => {
@@ -119,7 +119,7 @@ describe('aiOrganizer', () => {
             (callGeminiWithTools as jest.Mock).mockRejectedValue(new Error('Batch Fail'));
 
             const result = await organizeWithAI(items, 'key');
-            expect(result).toHaveLength(20); // Should return original items
+            expect(result.items).toHaveLength(20); // Should return original items
             expect(callGeminiWithTools).toHaveBeenCalledTimes(2);
         });
 
@@ -134,7 +134,7 @@ describe('aiOrganizer', () => {
             (callGeminiWithTools as jest.Mock).mockResolvedValue(mockResponse);
 
             const result = await organizeWithAI(items, 'key');
-            expect(result[0]).toEqual(mockItem);
+            expect(result.items[0]).toEqual(mockItem);
         });
 
         it('should handle invalid args', async () => {
@@ -148,7 +148,7 @@ describe('aiOrganizer', () => {
             (callGeminiWithTools as jest.Mock).mockResolvedValue(mockResponse);
 
             const result = await organizeWithAI(items, 'key');
-            expect(result[0]).toEqual(mockItem);
+            expect(result.items[0]).toEqual(mockItem);
         });
     });
 
@@ -192,7 +192,7 @@ describe('aiOrganizer', () => {
 
              const result = await organizeAndExportToFirefox([mockItem], 'key');
              expect(result.success).toBe(false);
-             expect(result.error).toBe('Error: Export Fail');
+             expect(result.error).toBe('Error: Fail');
         });
     });
 
