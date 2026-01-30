@@ -212,4 +212,54 @@ describe('Popup', () => {
             payload: expect.not.objectContaining({ description: expect.anything() })
         }));
     });
+
+    it('should handle empty response from check saved', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue(null);
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('O que deseja fazer?')).toBeInTheDocument());
+    });
+
+    it('should handle empty response from save', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'getLink') return Promise.resolve({ success: false });
+            if (msg.action === 'saveLink') return Promise.resolve(null);
+            return Promise.resolve({});
+        });
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('💾 Salvar Esta Página')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('💾 Salvar Esta Página'));
+
+        await waitFor(() => expect(screen.getByText('Não foi possível acessar a página.')).toBeInTheDocument());
+    });
+
+    it('should not add tag if input empty or other key', async () => {
+        const mockItem = { id: '1', title: 'Test', url: 'http://example.com', tags: [] };
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ success: true, item: mockItem });
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByPlaceholderText('Adicionar tags...')).toBeInTheDocument());
+
+        const input = screen.getByPlaceholderText('Adicionar tags...');
+
+        // Empty input + Enter
+        fireEvent.change(input, { target: { value: '   ' } });
+        fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', charCode: 13 });
+
+        // Valid input + Other key
+        fireEvent.change(input, { target: { value: 'tag' } });
+        fireEvent.keyDown(input, { key: 'a', code: 'KeyA' });
+
+        // Verify updateLink NOT called (except for initial check calls?)
+        // Initial check calls getLink.
+        // We want to check updateLink action.
+        expect(browser.runtime.sendMessage).not.toHaveBeenCalledWith(expect.objectContaining({
+            action: 'updateLink'
+        }));
+    });
 });

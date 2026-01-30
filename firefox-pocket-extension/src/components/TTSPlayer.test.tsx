@@ -67,5 +67,47 @@ describe('TTSPlayer', () => {
         const rateBtn = screen.getByText('1x');
         fireEvent.click(rateBtn);
         expect(screen.getByText('1.5x')).toBeInTheDocument();
+        fireEvent.click(screen.getByText('1.5x'));
+        expect(screen.getByText('2x')).toBeInTheDocument();
+        fireEvent.click(screen.getByText('2x'));
+        expect(screen.getByText('1x')).toBeInTheDocument();
+    });
+
+    it('should reset on end', () => {
+        render(<TTSPlayer text="Hello" />);
+        fireEvent.click(screen.getByLabelText('Play'));
+
+        const utterance = (global.SpeechSynthesisUtterance as jest.Mock).mock.instances[0];
+        act(() => {
+            utterance.onend();
+        });
+
+        expect(screen.getByLabelText('Play')).toBeInTheDocument();
+    });
+
+    it('should restart when changing rate while playing', () => {
+        jest.useFakeTimers();
+        render(<TTSPlayer text="Hello" />);
+        fireEvent.click(screen.getByLabelText('Play'));
+
+        // Now change rate
+        fireEvent.click(screen.getByText('1x'));
+
+        expect(mockCancel).toHaveBeenCalled();
+
+        act(() => {
+            jest.advanceTimersByTime(100);
+        });
+
+        expect(mockSpeak).toHaveBeenCalledTimes(2); // Initial + restart
+
+        // Trigger onend for the new utterance to cover lines 70-71
+        const newUtterance = (global.SpeechSynthesisUtterance as jest.Mock).mock.instances[1];
+        act(() => {
+            newUtterance.onend();
+        });
+
+        expect(screen.getByLabelText('Play')).toBeInTheDocument();
+        jest.useRealTimers();
     });
 });

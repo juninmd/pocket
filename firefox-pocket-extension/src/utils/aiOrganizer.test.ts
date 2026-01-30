@@ -92,7 +92,6 @@ describe('aiOrganizer', () => {
             (callGeminiWithTools as jest.Mock).mockRejectedValue(new Error('AI Error'));
 
             const result = await organizeWithAI(items, 'key');
-            expect(result.items[0].aiFolder).toBeUndefined(); // Or however it falls back
             // Actually it returns original item if failure
             expect(result.items[0]).toEqual(mockItem);
         });
@@ -100,7 +99,7 @@ describe('aiOrganizer', () => {
         it('should handle batching', async () => {
             // Create 20 items (BATCH_SIZE is 15)
             const items = Array.from({ length: 20 }, (_, i) => ({ ...mockItem, id: `${i}` }));
-             const mockResponse = {
+            const mockResponse = {
                 functionCall: {
                     name: 'organize_items',
                     args: {
@@ -124,8 +123,8 @@ describe('aiOrganizer', () => {
         });
 
         it('should handle wrong function call name', async () => {
-             const items = [mockItem];
-             const mockResponse = {
+            const items = [mockItem];
+            const mockResponse = {
                 functionCall: {
                     name: 'wrong_func',
                     args: {}
@@ -138,8 +137,8 @@ describe('aiOrganizer', () => {
         });
 
         it('should handle invalid args', async () => {
-             const items = [mockItem];
-             const mockResponse = {
+            const items = [mockItem];
+            const mockResponse = {
                 functionCall: {
                     name: 'organize_items',
                     args: { organizedItems: null }
@@ -150,13 +149,49 @@ describe('aiOrganizer', () => {
             const result = await organizeWithAI(items, 'key');
             expect(result.items[0]).toEqual(mockItem);
         });
+
+        it('should handle missing item in suggestion', async () => {
+            const items = [mockItem];
+            const mockResponse = {
+                functionCall: {
+                    name: 'organize_items',
+                    args: {
+                        organizedItems: [] // Empty suggestions
+                    }
+                }
+            };
+            (callGeminiWithTools as jest.Mock).mockResolvedValue(mockResponse);
+            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+            const result = await organizeWithAI(items, 'key');
+            expect(result.items[0].aiFolder).toBe('Outros');
+            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No suggestion found'));
+            consoleSpy.mockRestore();
+        });
+
+        it('should handle AI not calling function', async () => {
+            const items = [mockItem];
+            const mockResponse = {
+                text: 'Just text response'
+            };
+            (callGeminiWithTools as jest.Mock).mockResolvedValue(mockResponse);
+            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+            const result = await organizeWithAI(items, 'key');
+            expect(result.items[0]).toEqual(mockItem); // Original returned
+            expect(consoleSpy).toHaveBeenCalledWith(
+                expect.stringContaining("AI did not call 'organize_items'"),
+                expect.anything()
+            );
+            consoleSpy.mockRestore();
+        });
     });
 
     describe('organizeAndExportToFirefox', () => {
         it('should organize and then export', async () => {
-             const items = [mockItem];
-             // Mock organizeWithAI internal call by mocking callGeminiWithTools
-             const mockResponse = {
+            const items = [mockItem];
+            // Mock organizeWithAI internal call by mocking callGeminiWithTools
+            const mockResponse = {
                 functionCall: {
                     name: 'organize_items',
                     args: {
@@ -187,12 +222,12 @@ describe('aiOrganizer', () => {
         });
 
         it('should handle errors', async () => {
-             (callGeminiWithTools as jest.Mock).mockResolvedValue({}); // AI succeeds (or swallows)
-             (browser.bookmarks.create as jest.Mock).mockRejectedValue(new Error('Fail'));
+            (callGeminiWithTools as jest.Mock).mockResolvedValue({}); // AI succeeds (or swallows)
+            (browser.bookmarks.create as jest.Mock).mockRejectedValue(new Error('Fail'));
 
-             const result = await organizeAndExportToFirefox([mockItem], 'key');
-             expect(result.success).toBe(false);
-             expect(result.error).toBe('Error: Fail');
+            const result = await organizeAndExportToFirefox([mockItem], 'key');
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Error: Fail');
         });
     });
 
@@ -200,7 +235,7 @@ describe('aiOrganizer', () => {
         it('should export items using existing structure', async () => {
             const items = [{ ...mockItem, aiFolder: 'Folder1' }];
 
-             (browser.bookmarks.create as jest.Mock)
+            (browser.bookmarks.create as jest.Mock)
                 .mockResolvedValueOnce({ id: 'root' })
                 .mockResolvedValueOnce({ id: 'f1' })
                 .mockResolvedValueOnce({ id: 'b1' });
@@ -210,22 +245,22 @@ describe('aiOrganizer', () => {
         });
 
         it('should reuse existing folders', async () => {
-             const items = [
-                 { ...mockItem, id: '1', aiFolder: 'Tech' },
-                 { ...mockItem, id: '2', aiFolder: 'Tech' }
-             ];
+            const items = [
+                { ...mockItem, id: '1', aiFolder: 'Tech' },
+                { ...mockItem, id: '2', aiFolder: 'Tech' }
+            ];
 
-             (browser.bookmarks.create as jest.Mock)
+            (browser.bookmarks.create as jest.Mock)
                 .mockResolvedValueOnce({ id: 'root' }) // Root
                 .mockResolvedValueOnce({ id: 'tech_id' }) // Tech folder (1st time)
                 .mockResolvedValueOnce({ id: 'bm1' }) // Item 1
                 .mockResolvedValueOnce({ id: 'bm2' }); // Item 2
 
-             const count = await exportToFirefox(items);
-             expect(count).toBe(2);
-             // Should verify create calls.
-             // 1 root + 1 folder + 2 items = 4 calls.
-             expect(browser.bookmarks.create).toHaveBeenCalledTimes(4);
+            const count = await exportToFirefox(items);
+            expect(count).toBe(2);
+            // Should verify create calls.
+            // 1 root + 1 folder + 2 items = 4 calls.
+            expect(browser.bookmarks.create).toHaveBeenCalledTimes(4);
         });
     });
 });

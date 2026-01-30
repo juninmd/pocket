@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import Dashboard from './Dashboard';
 import browser from 'webextension-polyfill';
 import { ItemStatus } from '../utils/types';
@@ -252,6 +252,94 @@ describe('Dashboard', () => {
         await waitFor(() => expect(screen.getByText('Sucesso')).toBeInTheDocument());
         expect(screen.getByText('✅ 5 favoritos importados com sucesso!')).toBeInTheDocument();
         fireEvent.click(screen.getByText('OK'));
+    });
+
+    it('should handle API key save timeout', async () => {
+        jest.useFakeTimers();
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+
+        const saveBtn = screen.getByText('Salvar Key');
+        fireEvent.click(saveBtn);
+
+        await waitFor(() => expect(screen.getByText('Salvo!')).toBeInTheDocument());
+
+        jest.advanceTimersByTime(1000);
+
+        await waitFor(() => expect(screen.getByText('Salvar Key')).toBeInTheDocument());
+        jest.useRealTimers();
+    });
+
+    it('should handle import progress', async () => {
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'importBookmarks') return new Promise(() => {}); // Hang to keep isImporting true
+            return Promise.resolve({ items: [] });
+        });
+
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+        fireEvent.click(screen.getByText('📥 Importar Favoritos do Firefox')); // Trigger import to set isImporting=true
+
+        // Ensure isImporting is true
+        expect(screen.getByText('Importando...')).toBeInTheDocument();
+
+        // Trigger progress update
+        if (listener) {
+             // Wrap in act if needed, but fireEvent handles act usually.
+             // Since listener is called from outside React, we might need act.
+             // But waitFor handles it.
+             React.act(() => {
+                listener({ action: 'importProgress', payload: { current: 50, total: 100 } });
+             });
+        }
+
+        await waitFor(() => expect(screen.getByText('50%')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText('50 de 100 itens processados')).toBeInTheDocument());
+    });
+
+    it('should handle filtered view empty states', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+        render(<Dashboard />);
+
+        // Home empty
+        await waitFor(() => expect(screen.getByText('Salve alguns links para começar!')).toBeInTheDocument());
+
+        // Favorites empty
+        fireEvent.click(screen.getByText('Favoritos'));
+        expect(screen.getByText('Salve alguns links para começar!')).toBeInTheDocument();
+
+        // Cleanup and new render
+        cleanup();
+
+        // Collection with tag empty
+        const tagItem = { ...mockItem, tags: ['tag1'] };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [tagItem] });
+        render(<Dashboard />); // Rerender with items
+
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('#tag1')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('#tag1'));
+
+        // Now simulate empty result for a tag (impossible in UI flow usually but component handles it)
+        // If we filter by a tag that no item has?
+        // But let's check empty state text for filteredItems === 0
+        expect(screen.queryByText('Nenhum item com a tag #tag1')).not.toBeInTheDocument(); // It has items
+    });
+
+    it('should handle delete confirmation cancel', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Delete'));
+        expect(screen.getByText('Excluir Item')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByText('Cancelar'));
+        await waitFor(() => expect(screen.queryByText('Excluir Item')).not.toBeInTheDocument());
+
+        expect(browser.runtime.sendMessage).not.toHaveBeenCalledWith(expect.objectContaining({ action: 'deleteLink' }));
     });
 
     it('should handle export to Firefox', async () => {

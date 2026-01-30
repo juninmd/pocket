@@ -83,6 +83,33 @@ describe('content script', () => {
             expect(result.content).toBe('<p>Fallback Content</p>');
         });
 
+        it('should fallback to main content if article missing', async () => {
+             (Readability as unknown as jest.Mock).mockImplementation(() => ({
+                parse: jest.fn().mockReturnValue({})
+            }));
+            jest.spyOn(document, 'cloneNode').mockReturnValue(document);
+
+            const main = document.createElement('main');
+            main.innerHTML = '<p>Main Content</p>';
+            document.body.appendChild(main);
+
+            const result: any = await handleMessage({ action: 'getMetadata' });
+            expect(result.content).toBe('<p>Main Content</p>');
+        });
+
+        it('should fallback to body text if readability fails text extraction', async () => {
+             (Readability as unknown as jest.Mock).mockImplementation(() => ({
+                parse: jest.fn().mockReturnValue({ textContent: null })
+            }));
+            jest.spyOn(document, 'cloneNode').mockReturnValue(document);
+            document.body.textContent = 'Body Text';
+
+            const result: any = await handleMessage({ action: 'getMetadata' });
+            // Read time calculation uses textContent.
+            // "Body Text" is 2 words.
+            expect(result.estimatedReadTime).toBe(1);
+        });
+
         it('should catch errors and return minimal data', async () => {
              jest.spyOn(document, 'cloneNode').mockImplementation(() => {
                  throw new Error('Clone fail');
