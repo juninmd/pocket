@@ -162,4 +162,54 @@ describe('Popup', () => {
         })));
         expect(closeSpy).toHaveBeenCalled();
     });
+
+    it('should handle error when checking saved status', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('Não foi possível acessar a página.')).toBeInTheDocument());
+    });
+
+    it('should handle save failure', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'getLink') return Promise.resolve({ success: false });
+            if (msg.action === 'saveLink') return Promise.resolve({ success: false }); // Save failed
+            return Promise.resolve({});
+        });
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('💾 Salvar Esta Página')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('💾 Salvar Esta Página'));
+
+        await waitFor(() => expect(screen.getByText('Não foi possível acessar a página.')).toBeInTheDocument());
+    });
+
+    it('should handle metadata fetch error during save', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'getLink') return Promise.resolve({ success: false });
+            if (msg.action === 'saveLink') return Promise.resolve({ success: true, item: { id: '1', title: 'Fallback', tags: [] } });
+            return Promise.resolve({});
+        });
+
+        // Mock metadata fetch failure
+        (browser.tabs.sendMessage as jest.Mock).mockRejectedValue(new Error('Metadata fail'));
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('💾 Salvar Esta Página')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('💾 Salvar Esta Página'));
+
+        // Should still save (fallback)
+        await waitFor(() => expect(screen.getByText('Link Salvo!')).toBeInTheDocument());
+        expect(browser.tabs.sendMessage).toHaveBeenCalled();
+        // Check that saveLink was called with fallback info (no metadata)
+        expect(browser.runtime.sendMessage).toHaveBeenCalledWith(expect.objectContaining({
+            action: 'saveLink',
+            payload: expect.not.objectContaining({ description: expect.anything() })
+        }));
+    });
 });

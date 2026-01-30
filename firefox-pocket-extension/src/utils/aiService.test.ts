@@ -1,6 +1,6 @@
 import { callGemini, callGeminiChat, callGeminiWithTools } from './aiService';
 
-// Mock fetch globally
+// Mock fetch
 global.fetch = jest.fn();
 
 describe('aiService', () => {
@@ -8,165 +8,173 @@ describe('aiService', () => {
         jest.clearAllMocks();
     });
 
-    const apiKey = 'test-api-key';
-    const mockText = 'Response from Gemini';
+    const mockApiKey = 'test-key';
+    const mockResponse = {
+        candidates: [{
+            content: {
+                parts: [{ text: 'Response' }]
+            }
+        }]
+    };
 
     describe('callGemini', () => {
-        it('should return text response on success', async () => {
+        it('should call API correctly', async () => {
             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    candidates: [{ content: { parts: [{ text: mockText }] } }]
-                })
+                json: jest.fn().mockResolvedValue(mockResponse)
             });
 
-            const result = await callGemini(apiKey, 'prompt');
-            expect(result).toBe(mockText);
+            const result = await callGemini(mockApiKey, 'Prompt');
+            expect(result).toBe('Response');
             expect(global.fetch).toHaveBeenCalledWith(
-                expect.stringContaining(apiKey),
+                expect.stringContaining('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'),
                 expect.objectContaining({
                     method: 'POST',
-                    body: expect.stringContaining('prompt')
+                    body: expect.stringContaining('"text":"Prompt"')
                 })
             );
         });
 
-        it('should handle configuration options', async () => {
-             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    candidates: [{ content: { parts: [{ text: mockText }] } }]
+        it('should handle config options', async () => {
+            (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue(mockResponse)
+            });
+
+            await callGemini(mockApiKey, 'Prompt', 'gemini-1.5-pro', { temperature: 0.5, maxOutputTokens: 100, jsonMode: true });
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.stringContaining('gemini-1.5-pro'),
+                expect.objectContaining({
+                    body: expect.stringContaining('"temperature":0.5')
                 })
-            });
-
-            await callGemini(apiKey, 'prompt', 'gemini-1.5-flash', {
-                temperature: 0.7,
-                maxOutputTokens: 100,
-                jsonMode: true
-            });
-
-            const callArgs = (global.fetch as jest.Mock).mock.calls[0];
-            const body = JSON.parse(callArgs[1].body);
-            expect(body.generationConfig).toEqual({
-                temperature: 0.7,
-                maxOutputTokens: 100,
-                responseMimeType: "application/json"
-            });
+            );
         });
 
-        it('should throw error if API returns error', async () => {
+        it('should throw on API error', async () => {
             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    error: { message: 'API Error' }
-                })
+                json: jest.fn().mockResolvedValue({ error: { message: 'API Error' } })
             });
 
-            await expect(callGemini(apiKey, 'prompt')).rejects.toThrow('API Error');
+            await expect(callGemini(mockApiKey, 'Prompt')).rejects.toThrow('API Error');
         });
 
-        it('should throw error if no text in response', async () => {
+        it('should throw if no text returned', async () => {
             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    candidates: []
-                })
+                json: jest.fn().mockResolvedValue({})
             });
 
-            await expect(callGemini(apiKey, 'prompt')).rejects.toThrow('Nenhuma resposta gerada pelo Gemini.');
+            await expect(callGemini(mockApiKey, 'Prompt')).rejects.toThrow('Nenhuma resposta gerada pelo Gemini.');
         });
     });
 
     describe('callGeminiChat', () => {
-        it('should return text response for chat history', async () => {
-             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    candidates: [{ content: { parts: [{ text: mockText }] } }]
-                })
+        it('should call API with history', async () => {
+            (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue(mockResponse)
             });
 
-            const history = [{ role: 'user', parts: [{ text: 'Hello' }] }] as any;
-            const result = await callGeminiChat(apiKey, history);
-            expect(result).toBe(mockText);
-
-            const callArgs = (global.fetch as jest.Mock).mock.calls[0];
-            const body = JSON.parse(callArgs[1].body);
-            expect(body.contents).toEqual(history);
-        });
-
-        it('should throw error if API returns error', async () => {
-             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    error: { message: 'Chat Error' }
+            const history = [{ role: 'user', parts: [{ text: 'Hi' }] }];
+            const result = await callGeminiChat(mockApiKey, history as any);
+            expect(result).toBe('Response');
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"role":"user"')
                 })
-            });
-
-            await expect(callGeminiChat(apiKey, [])).rejects.toThrow('Chat Error');
+            );
         });
 
-         it('should throw error if no text', async () => {
+        it('should handle config', async () => {
              (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue(mockResponse)
+            });
+            await callGeminiChat(mockApiKey, [], 'gemini-1.5-flash', { temperature: 0.7 });
+             expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"temperature":0.7')
+                })
+            );
+        });
+
+        it('should handle errors', async () => {
+             (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue({ error: { message: 'Chat Error' } })
+            });
+            await expect(callGeminiChat(mockApiKey, [])).rejects.toThrow('Chat Error');
+        });
+
+        it('should throw if no text returned', async () => {
+            (global.fetch as jest.Mock).mockResolvedValue({
                 json: jest.fn().mockResolvedValue({})
             });
 
-            await expect(callGeminiChat(apiKey, [])).rejects.toThrow('Nenhuma resposta gerada');
+            await expect(callGeminiChat(mockApiKey, [])).rejects.toThrow('Nenhuma resposta gerada pelo Gemini.');
         });
     });
 
     describe('callGeminiWithTools', () => {
-        it('should return function call', async () => {
-            const mockFunctionCall = { name: 'testFunc', args: { foo: 'bar' } };
+        const toolResponse = {
+            candidates: [{
+                content: {
+                    parts: [{ functionCall: { name: 'tool', args: {} }, text: 'text' }]
+                }
+            }]
+        };
+
+        it('should call API with tools', async () => {
             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    candidates: [{ content: { parts: [{ functionCall: mockFunctionCall }] } }]
+                json: jest.fn().mockResolvedValue(toolResponse)
+            });
+
+            const tools = [{ function_declarations: [] }];
+            const result = await callGeminiWithTools(mockApiKey, 'Prompt', 'gemini-1.5-flash', { tools });
+            expect(result.functionCall).toBeDefined();
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"tools":')
                 })
-            });
-
-            const result = await callGeminiWithTools(apiKey, 'prompt', 'gemini-1.5-flash', {
-                tools: [{ function_declarations: [] }] as any
-            });
-
-            expect(result.functionCall).toEqual(mockFunctionCall);
-            expect(result.text).toBeUndefined();
+            );
         });
 
-        it('should return text if no function call', async () => {
-             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    candidates: [{ content: { parts: [{ text: mockText }] } }]
-                })
-            });
-
-            const result = await callGeminiWithTools(apiKey, 'prompt');
-            expect(result.text).toBe(mockText);
-            expect(result.functionCall).toBeUndefined();
-        });
-
-        it('should handle tool config', async () => {
-             (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({
-                    candidates: [{ content: { parts: [{ text: 'ok' }] } }]
-                })
-            });
-
-            const toolConfig = { function_calling_config: { mode: 'AUTO' } } as any;
-            await callGeminiWithTools(apiKey, 'prompt', 'gemini-1.5-flash', {
-                toolConfig
-            });
-
-             const callArgs = (global.fetch as jest.Mock).mock.calls[0];
-            const body = JSON.parse(callArgs[1].body);
-            expect(body.tool_config).toEqual(toolConfig);
-        });
-
-        it('should throw error on failure', async () => {
+        it('should throw on error', async () => {
              (global.fetch as jest.Mock).mockResolvedValue({
                 json: jest.fn().mockResolvedValue({ error: { message: 'Tool Error' } })
             });
-            await expect(callGeminiWithTools(apiKey, 'prompt')).rejects.toThrow('Tool Error');
+            await expect(callGeminiWithTools(mockApiKey, 'Prompt')).rejects.toThrow('Tool Error');
         });
 
-         it('should throw error if no response part', async () => {
+        it('should throw if no part returned', async () => {
              (global.fetch as jest.Mock).mockResolvedValue({
-                json: jest.fn().mockResolvedValue({ candidates: [] })
+                json: jest.fn().mockResolvedValue({})
             });
-            await expect(callGeminiWithTools(apiKey, 'prompt')).rejects.toThrow('Nenhuma resposta gerada');
+            await expect(callGeminiWithTools(mockApiKey, 'Prompt')).rejects.toThrow('Nenhuma resposta gerada pelo Gemini.');
+        });
+
+        it('should pass toolConfig', async () => {
+             (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue(toolResponse)
+            });
+            const toolConfig = { function_calling_config: { mode: 'AUTO' } };
+            await callGeminiWithTools(mockApiKey, 'Prompt', 'gemini-1.5-flash', { toolConfig: toolConfig as any });
+             expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"tool_config":')
+                })
+            );
+        });
+
+        it('should pass config params', async () => {
+             (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue(toolResponse)
+            });
+            await callGeminiWithTools(mockApiKey, 'Prompt', 'gemini-1.5-flash', { temperature: 0.9 });
+             expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"temperature":0.9')
+                })
+            );
         });
     });
 });

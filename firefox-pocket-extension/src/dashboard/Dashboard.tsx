@@ -272,15 +272,6 @@ const Dashboard = () => {
         setSearchQuery('');
     };
 
-    // Helper to get direct items in the current folder ONLY (not subfolders) logic for display
-    const getItemsInCurrentFolder = () => {
-        if (!selectedFolder) return [];
-        return items.filter(item => {
-            const itemFolder = item.aiFolder || item.originalFolder || 'Outros';
-            return itemFolder === selectedFolder;
-        });
-    };
-
     const filteredItems = useMemo(() => {
         return items.filter(item => {
             if (activeView === 'home') {
@@ -321,15 +312,6 @@ const Dashboard = () => {
             item.aiTags && item.aiTags.forEach(tag => tags.add(tag));
         });
         return Array.from(tags).sort();
-    }, [items]);
-
-    const uniqueFolders = useMemo(() => {
-        const folders = new Set<string>();
-        items.forEach(item => {
-            if (item.aiFolder) folders.add(item.aiFolder);
-            else if (item.originalFolder) folders.add(item.originalFolder);
-        });
-        return Array.from(folders).sort();
     }, [items]);
 
     const renderContent = () => {
