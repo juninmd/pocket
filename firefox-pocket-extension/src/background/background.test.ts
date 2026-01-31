@@ -198,7 +198,7 @@ describe('background script', () => {
 
         it('previewOrganization should return items', async () => {
              (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
-            (aiOrganizer.organizeWithAI as jest.Mock).mockResolvedValue({ items: [mockItem] });
+            (aiOrganizer.organizeWithAI as jest.Mock).mockResolvedValue({ items: [mockItem], debugLogs: [] });
             const result = await handleMessage({ action: 'previewOrganization', payload: { apiKey: 'key' } }, {} as any);
             expect(result.items).toEqual([mockItem]);
         });

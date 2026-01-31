@@ -225,4 +225,11 @@ describe('Reader', () => {
         fireEvent.click(screen.getByText('Cancelar'));
         await waitFor(() => expect(screen.queryByText('Configuração Necessária')).not.toBeInTheDocument());
     });
+
+    it('should handle undefined savedItems', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: undefined }); // No items array
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Item não encontrado.')).toBeInTheDocument());
+    });
 });

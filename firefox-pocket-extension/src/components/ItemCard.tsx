@@ -13,9 +13,6 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
     const hasContent = !!item.content;
 
     const handleCardClick = (e: React.MouseEvent) => {
-        // Prevent navigation if clicking on actions
-        if ((e.target as HTMLElement).closest('.card-actions')) return;
-
         if (hasContent) {
             window.location.href = readerUrl;
         } else {
@@ -46,9 +43,9 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                         </div>
                     )}
                     {/* Tags handling */}
-                    {item.tags && item.tags.length > 0 && (
+                    {((item.tags && item.tags.length > 0) || (item.aiTags && item.aiTags.length > 0)) && (
                         <div className="card-tags">
-                            {item.tags.map(tag => (
+                            {item.tags && item.tags.map(tag => (
                                 <span key={tag} className="card-tag">{tag}</span>
                             ))}
                             {item.aiTags && item.aiTags.map(tag => (

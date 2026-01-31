@@ -73,4 +73,30 @@ describe('ItemCard', () => {
         fireEvent.click(screen.getByText('Test Title'));
         expect(window.open).toHaveBeenCalledWith('http://example.com', '_blank');
     });
+
+    it('should handle favicon error', () => {
+        const { container } = render(<ItemCard {...props} />);
+        const favicon = container.querySelector('img[src*="google.com"]');
+        if (favicon) {
+            fireEvent.error(favicon);
+            expect(favicon).toHaveStyle('display: none');
+        } else {
+            throw new Error('Favicon not found');
+        }
+    });
+
+    it('should render aiTags', () => {
+        render(<ItemCard {...props} item={{ ...mockItem, tags: [], aiTags: ['ai-tag'] }} />);
+        expect(screen.getByText('✨ ai-tag')).toBeInTheDocument();
+    });
+
+    it('should stop propagation on original link click', () => {
+        render(<ItemCard {...props} />);
+        const link = screen.getByTitle('Abrir original');
+
+        fireEvent.click(link);
+
+        // Ensure card click handler was NOT called (which calls window.open for this item)
+        expect(window.open).not.toHaveBeenCalled();
+    });
 });
