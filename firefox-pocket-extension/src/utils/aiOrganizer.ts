@@ -136,7 +136,6 @@ ${JSON.stringify(simplifyForAI, null, 0)}`;
                 return { ...item, aiFolder: 'Outros', aiTags: [] };
             });
             return { items: organized, debugLog: debugInfo };
-            return { items: organized, debugLog: debugInfo };
         }
 
         console.warn("[AI Organizer] AI did not call 'organize_items'. Response:", response);

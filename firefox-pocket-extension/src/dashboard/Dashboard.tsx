@@ -373,6 +373,16 @@ const Dashboard = () => {
             // If we have a selected tag, show tag view (flat list of items with that tag)
             if (selectedTag) {
                 const filtered = items.filter(i => i.tags?.includes(selectedTag) || i.aiTags?.includes(selectedTag));
+
+                if (filtered.length === 0) {
+                    return (
+                        <div className="empty-state">
+                            <h2>Nenhum item com a tag #{selectedTag}</h2>
+                            <button onClick={() => setSelectedTag(null)} style={{ marginTop: '10px', padding: '8px 16px', cursor: 'pointer' }}>Voltar para Coleções</button>
+                        </div>
+                    );
+                }
+
                 return (
                     <div>
                         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -392,6 +402,23 @@ const Dashboard = () => {
                         </div>
                     </div>
                 )
+            }
+
+            // If search query is active, show flat list of filtered items
+            if (searchQuery) {
+                return (
+                    <div className="grid">
+                        {filteredItems.map(item => (
+                            <ItemCard
+                                key={item.id}
+                                item={item}
+                                onToggleFavorite={handleToggleFavorite}
+                                onToggleArchive={handleToggleArchive}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                    </div>
+                );
             }
 
             // Folder Navigation Logic

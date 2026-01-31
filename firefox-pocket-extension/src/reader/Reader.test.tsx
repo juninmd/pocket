@@ -232,4 +232,16 @@ describe('Reader', () => {
         render(<Reader />);
         await waitFor(() => expect(screen.getByText('Item não encontrado.')).toBeInTheDocument());
     });
+
+    it('should show error if summarizing item with no content', async () => {
+        const itemNoContent = { ...mockItem, content: '' };
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [itemNoContent], geminiApiKey: 'key' });
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('✨ Resumir'));
+
+        expect(screen.getByText('Não há conteúdo textual suficiente para resumir.')).toBeInTheDocument();
+    });
 });

@@ -77,6 +77,10 @@ describe('Dashboard', () => {
         // Go back Home
         fireEvent.click(screen.getByText('Início'));
         expect(screen.getByText('Test Item')).toBeInTheDocument();
+
+        // Go to Archive
+        fireEvent.click(screen.getByText('Arquivo'));
+        expect(screen.queryByText('Test Item')).not.toBeInTheDocument();
     });
 
     it('should handle search', async () => {
@@ -215,6 +219,18 @@ describe('Dashboard', () => {
          // Navigate up button
          fireEvent.click(screen.getByText('⬆ Subir'));
          await waitFor(() => expect(screen.getByText('Tech')).toBeInTheDocument());
+
+         // Navigate via Breadcrumb "Coleções"
+         fireEvent.click(screen.getByText('Tech')); // Go deep again
+         await waitFor(() => expect(screen.getByText('Web')).toBeInTheDocument());
+
+         // Click root breadcrumb (might be multiple "Coleções" text, take the breadcrumb one)
+         const colTexts = screen.getAllByText('Coleções');
+         // Usually first is sidebar, second is breadcrumb. But safer to assume last if sidebar is before.
+         // Or just try the second one.
+         fireEvent.click(colTexts[colTexts.length - 1]);
+
+         await waitFor(() => expect(screen.getByText('#tech')).toBeInTheDocument()); // Back to root tags
     });
 
     it('should handle export JSON', async () => {
@@ -326,6 +342,32 @@ describe('Dashboard', () => {
         // If we filter by a tag that no item has?
         // But let's check empty state text for filteredItems === 0
         expect(screen.queryByText('Nenhum item com a tag #tag1')).not.toBeInTheDocument(); // It has items
+
+        // Force empty state by clearing items but keeping tag
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+    });
+
+    it('should handle empty tag result and back button', async () => {
+        const tagItem = { ...mockItem, tags: ['tag1'] };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [tagItem] });
+        render(<Dashboard />);
+
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('#tag1')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('#tag1'));
+
+        // Now mock empty items and trigger reload
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+
+        // Click delete on the item.
+        fireEvent.click(screen.getByText('Delete'));
+        fireEvent.click(screen.getByText('Excluir'));
+
+        await waitFor(() => expect(screen.getByText('Nenhum item com a tag #tag1')).toBeInTheDocument());
+
+        // Click back
+        fireEvent.click(screen.getByText('Voltar para Coleções'));
+        expect(screen.queryByText('Nenhum item com a tag #tag1')).not.toBeInTheDocument();
     });
 
     it('should handle delete confirmation cancel', async () => {
@@ -506,5 +548,88 @@ describe('Dashboard', () => {
 
         await waitFor(() => expect(screen.queryByText('Test Item')).not.toBeInTheDocument());
         expect(screen.getByText('Esta pasta está vazia.')).toBeInTheDocument();
+    });
+
+    it('should load selectedModel from storage', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key', selectedModel: 'gemini-1.5-pro' });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+
+        await waitFor(() => expect(screen.getByDisplayValue('Gemini 1.5 Pro (Grátis + Avançado)')).toBeInTheDocument());
+    });
+
+    it('should change selectedModel', async () => {
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+
+        // Find select by text label "Modelo de IA" or just verify existence of select
+        const select = screen.getByRole('combobox'); // Assuming only one select
+        fireEvent.change(select, { target: { value: 'gemini-2.5-pro' } });
+
+        await waitFor(() => expect(browser.storage.local.set).toHaveBeenCalledWith({ selectedModel: 'gemini-2.5-pro' }));
+    });
+
+    it('should search within collection folder', async () => {
+         const item1 = { ...mockItem, id: '1', title: 'FindMe', aiFolder: 'Tech' };
+         const item2 = { ...mockItem, id: '2', title: 'HideMe', aiFolder: 'Tech' };
+         (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [item1, item2] });
+
+         render(<Dashboard />);
+         fireEvent.click(screen.getByText('Coleções'));
+         await waitFor(() => expect(screen.getByText('Tech')).toBeInTheDocument());
+         fireEvent.click(screen.getByText('Tech'));
+
+         await waitFor(() => expect(screen.getByText('FindMe')).toBeInTheDocument());
+
+         const input = screen.getByPlaceholderText('Pesquisar...');
+         fireEvent.change(input, { target: { value: 'FindMe' } });
+
+         expect(screen.getByText('FindMe')).toBeInTheDocument();
+         expect(screen.queryByText('HideMe')).not.toBeInTheDocument();
+    });
+
+    it('should discover view with and without image', async () => {
+        const itemWithImg = { ...mockItem, id: '1', title: 'With Image', status: ItemStatus.Unread, imageUrl: 'http://img.com/1.jpg' };
+        const itemNoImg = { ...mockItem, id: '2', title: 'No Image', status: ItemStatus.Unread, imageUrl: undefined };
+
+        // Test With Image
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [itemWithImg] });
+        const { unmount } = render(<Dashboard />);
+        fireEvent.click(screen.getByText('Redescobrir'));
+        await waitFor(() => expect(screen.getByText('With Image')).toBeInTheDocument());
+
+        unmount();
+
+        // Test No Image
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [itemNoImg] });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Redescobrir'));
+        await waitFor(() => expect(screen.getByText('No Image')).toBeInTheDocument());
+    });
+
+    it('should click next item in discover', async () => {
+        const item1 = { ...mockItem, id: '1', status: ItemStatus.Unread };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [item1] });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Redescobrir'));
+        await waitFor(() => expect(screen.getByText('REDESCOBRIR')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Próximo Item'));
+        expect(browser.runtime.sendMessage).toHaveBeenCalled(); // Just checks interaction
+    });
+
+    it('should disable import button while importing', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+             if (msg.action === 'getLinks') return Promise.resolve({ items: [] });
+             if (msg.action === 'importBookmarks') return new Promise(() => {}); // Hang
+             return Promise.resolve({});
+        });
+
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+        const btn = screen.getByText('📥 Importar Favoritos do Firefox');
+        fireEvent.click(btn);
+
+        await waitFor(() => expect(btn).toBeDisabled());
     });
 });

@@ -99,4 +99,16 @@ describe('ItemCard', () => {
         // Ensure card click handler was NOT called (which calls window.open for this item)
         expect(window.open).not.toHaveBeenCalled();
     });
+
+    it('should stop propagation on card-actions click', () => {
+        render(<ItemCard {...props} />);
+        const favoriteBtn = screen.getByTitle('Favoritar');
+        const actionsContainer = favoriteBtn.parentElement;
+
+        if (!actionsContainer) throw new Error('Actions container not found');
+
+        fireEvent.click(actionsContainer);
+
+        expect(window.open).not.toHaveBeenCalled();
+    });
 });
