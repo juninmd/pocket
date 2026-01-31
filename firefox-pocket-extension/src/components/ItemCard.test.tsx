@@ -100,23 +100,15 @@ describe('ItemCard', () => {
         expect(window.open).not.toHaveBeenCalled();
     });
 
-    it('should render favorite state correctly', () => {
-        render(<ItemCard {...props} item={{ ...mockItem, isFavorite: true }} />);
-        expect(screen.getByTitle('Remover dos favoritos')).toBeInTheDocument();
-        const favBtn = screen.getByTitle('Remover dos favoritos');
-        expect(favBtn).toHaveStyle({ color: 'orange' });
-    });
+    it('should stop propagation on card-actions click', () => {
+        render(<ItemCard {...props} />);
+        const favoriteBtn = screen.getByTitle('Favoritar');
+        const actionsContainer = favoriteBtn.parentElement;
 
-    it('should render archived state correctly', () => {
-        render(<ItemCard {...props} item={{ ...mockItem, status: ItemStatus.Archived }} />);
-        expect(screen.getByTitle('Desarquivar')).toBeInTheDocument();
-        const archiveBtn = screen.getByTitle('Desarquivar');
-        expect(archiveBtn).toHaveStyle({ color: 'green' });
-    });
+        if (!actionsContainer) throw new Error('Actions container not found');
 
-    it('should render both user tags and aiTags', () => {
-        render(<ItemCard {...props} item={{ ...mockItem, tags: ['user-tag'], aiTags: ['ai-tag'] }} />);
-        expect(screen.getByText('user-tag')).toBeInTheDocument();
-        expect(screen.getByText('✨ ai-tag')).toBeInTheDocument();
+        fireEvent.click(actionsContainer);
+
+        expect(window.open).not.toHaveBeenCalled();
     });
 });

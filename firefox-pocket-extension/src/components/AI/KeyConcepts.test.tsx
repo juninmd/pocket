@@ -6,6 +6,10 @@ import { callGemini } from '../../utils/aiService';
 jest.mock('../../utils/aiService');
 
 describe('KeyConcepts', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     const apiKey = 'test-key';
     const content = 'Article content';
 
@@ -99,5 +103,19 @@ describe('KeyConcepts', () => {
         fireEvent.click(screen.getByText('Tentar Novamente'));
 
         await waitFor(() => expect(screen.getByText('Term 1')).toBeInTheDocument());
+    });
+
+    it('should not load if already loading', async () => {
+        (callGemini as jest.Mock).mockReturnValue(new Promise(() => {}));
+
+        render(<KeyConcepts apiKey={apiKey} articleContent={content} />);
+
+        const btn = screen.getByText('🧠 Extrair Conceitos-Chave');
+        fireEvent.click(btn);
+
+        // Click again
+        fireEvent.click(btn);
+
+        expect(callGemini).toHaveBeenCalledTimes(1);
     });
 });

@@ -275,6 +275,19 @@ describe('background script', () => {
             expect(storage.saveItem).toHaveBeenCalled(); // Should still save
         });
 
+        it('should trigger catch block when metadata fetch fails', async () => {
+            const info = { menuItemId: 'save-to-pocket-like', linkUrl: 'http://test.com' } as any;
+            const tab = { id: 1, url: 'http://test.com' } as any;
+
+            (browser.tabs.sendMessage as jest.Mock).mockRejectedValue(new Error('Meta Fail'));
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+
+            await handleContextMenu(info, tab);
+            await new Promise(r => setTimeout(r, 50));
+
+            expect(storage.saveItem).toHaveBeenCalled();
+        });
+
         it('should ignore unrelated context menu items', async () => {
             const info = { menuItemId: 'other-item', linkUrl: 'http://test.com' } as any;
             await handleContextMenu(info);

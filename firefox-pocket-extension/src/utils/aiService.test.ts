@@ -49,11 +49,14 @@ describe('aiService', () => {
         });
 
         it('should throw on API error', async () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
             (global.fetch as jest.Mock).mockResolvedValue({
                 json: jest.fn().mockResolvedValue({ error: { message: 'API Error' } })
             });
 
             await expect(callGemini(mockApiKey, 'Prompt')).rejects.toThrow('API Error');
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
         });
 
         it('should throw if no text returned', async () => {
@@ -96,10 +99,13 @@ describe('aiService', () => {
         });
 
         it('should handle errors', async () => {
+             const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
              (global.fetch as jest.Mock).mockResolvedValue({
                 json: jest.fn().mockResolvedValue({ error: { message: 'Chat Error' } })
             });
             await expect(callGeminiChat(mockApiKey, [])).rejects.toThrow('Chat Error');
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
         });
 
         it('should throw if no text returned', async () => {
@@ -137,10 +143,13 @@ describe('aiService', () => {
         });
 
         it('should throw on error', async () => {
+             const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
              (global.fetch as jest.Mock).mockResolvedValue({
                 json: jest.fn().mockResolvedValue({ error: { message: 'Tool Error' } })
             });
             await expect(callGeminiWithTools(mockApiKey, 'Prompt')).rejects.toThrow('Tool Error');
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
         });
 
         it('should throw if no part returned', async () => {

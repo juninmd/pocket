@@ -372,10 +372,112 @@ const Dashboard = () => {
         if (activeView === 'collections') {
             // If we have a selected tag, show tag view (flat list of items with that tag)
             if (selectedTag) {
-                // Use filteredItems to respect search and consistecy.
-                // If items exist, show custom header. If not, fall through to global empty state.
-                if (filteredItems.length > 0) {
+                const filtered = items.filter(i => i.tags?.includes(selectedTag) || i.aiTags?.includes(selectedTag));
+
+                if (filtered.length === 0) {
                     return (
+                        <div className="empty-state">
+                            <h2>Nenhum item com a tag #{selectedTag}</h2>
+                            <button onClick={() => setSelectedTag(null)} style={{ marginTop: '10px', padding: '8px 16px', cursor: 'pointer' }}>Voltar para Coleções</button>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div>
+                        <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <button className="btn" onClick={() => setSelectedTag(null)} style={{ background: 'var(--bg-secondary)' }}>← Voltar</button>
+                            <h2>#{selectedTag}</h2>
+                        </div>
+                        <div className="grid">
+                            {filtered.map(item => (
+                                <ItemCard
+                                    key={item.id}
+                                    item={item}
+                                    onToggleFavorite={handleToggleFavorite}
+                                    onToggleArchive={handleToggleArchive}
+                                    onDelete={handleDelete}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )
+            }
+
+            // If search query is active, show flat list of filtered items
+            if (searchQuery) {
+                return (
+                    <div className="grid">
+                        {filteredItems.map(item => (
+                            <ItemCard
+                                key={item.id}
+                                item={item}
+                                onToggleFavorite={handleToggleFavorite}
+                                onToggleArchive={handleToggleArchive}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                    </div>
+                );
+            }
+
+            // Folder Navigation Logic
+            const currentFolderNode = getCurrentFolderNode();
+            const subfolders = currentFolderNode ? Object.values(currentFolderNode.children) : Object.values(folderTree);
+
+            // Items directly in this folder (if specific folder selected)
+            // If at root (!selectedFolder), we usually don't show loose items unless they have no folder?
+            // "Outros" handles loose items usually.
+
+            const directItems = selectedFolder
+                ? items.filter(i => (i.aiFolder || i.originalFolder || 'Outros') === selectedFolder)
+                : []; // At root, show only folders. Everything should be in a folder (Outros included)
+
+            // Breadcrumbs UI
+            const breadcrumbs = getBreadcrumbs();
+
+            return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+
+                    {/* Navigation Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                        {selectedFolder && (
+                            <button className="btn" onClick={() => {
+                                const parts = selectedFolder.split('/');
+                                parts.pop();
+                                setSelectedFolder(parts.length > 0 ? parts.join('/') : null);
+                            }} style={{ background: 'var(--bg-secondary)', padding: '5px 10px' }}>
+                                ⬆ Subir
+                            </button>
+                        )}
+
+                        <div className="breadcrumbs" style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                            <span
+                                onClick={() => setSelectedFolder(null)}
+                                style={{ cursor: 'pointer', color: !selectedFolder ? 'var(--primary)' : 'inherit', textDecoration: !selectedFolder ? 'underline' : 'none' }}
+                            >
+                                Coleções
+                            </span>
+                            {breadcrumbs.map((crumb, idx) => (
+                                <React.Fragment key={crumb.path}>
+                                    <span>/</span>
+                                    <span
+                                        onClick={() => setSelectedFolder(crumb.path)}
+                                        style={{
+                                            cursor: 'pointer',
+                                            color: idx === breadcrumbs.length - 1 ? 'var(--primary)' : 'inherit',
+                                            fontWeight: idx === breadcrumbs.length - 1 ? 'bold' : 'normal'
+                                        }}
+                                    >
+                                        {crumb.name}
+                                    </span>
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Subfolders Grid */}
+                    {subfolders.length > 0 && (
                         <div>
                             <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <button className="btn" onClick={() => setSelectedTag(null)} style={{ background: 'var(--bg-secondary)' }}>← Voltar</button>
