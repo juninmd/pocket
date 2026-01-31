@@ -176,6 +176,9 @@ describe('Dashboard', () => {
 
         fireEvent.click(screen.getByText('Redescobrir'));
         await waitFor(() => expect(screen.getByText('REDESCOBRIR')).toBeInTheDocument());
+
+        // Verify search bar is NOT present
+        expect(screen.queryByPlaceholderText('Pesquisar...')).not.toBeInTheDocument();
     });
 
     it('should collections view', async () => {
