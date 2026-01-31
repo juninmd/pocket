@@ -4,6 +4,7 @@ import { SavedItem, ItemStatus } from '../utils/types';
 import { Modal } from '../components/Modal';
 import { ItemCard } from '../components/ItemCard';
 import { buildFolderTree, FolderNode } from '../utils/folderStructure';
+import { getItem } from '../utils/storage';
 import './index.css';
 
 // Define filter types
@@ -153,22 +154,34 @@ const Dashboard = () => {
         loadItems();
     }, [loadItems]);
 
-    const handleExport = () => {
-        const exportData = items.map(item => ({
-            ...item,
-            folder: item.aiFolder || item.originalFolder || 'Uncategorized'
-        }));
-        const jsonString = JSON.stringify(exportData, null, 2);
-        const blob = new Blob([jsonString], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            const fullItems = await Promise.all(items.map(async (item) => {
+                const full = await getItem(item.id);
+                return {
+                    ...(full || item),
+                    folder: item.aiFolder || item.originalFolder || 'Uncategorized'
+                };
+            }));
 
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", url);
-        downloadAnchorNode.setAttribute("download", "pocket_like_organized.json");
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-        URL.revokeObjectURL(url);
+            const jsonString = JSON.stringify(fullItems, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", url);
+            downloadAnchorNode.setAttribute("download", "pocket_like_organized.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error(e);
+            openModal('Erro', 'Falha ao exportar itens.', 'danger');
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const handleImport = async () => {
@@ -479,12 +492,36 @@ const Dashboard = () => {
                     {/* Subfolders Grid */}
                     {subfolders.length > 0 && (
                         <div>
-                            <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <button className="btn" onClick={() => setSelectedTag(null)} style={{ background: 'var(--bg-secondary)' }}>← Voltar</button>
-                                <h2>#{selectedTag}</h2>
+                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+                                {selectedFolder ? 'Subpastas' : 'Minhas Coleções'}
+                            </h3>
+                            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                                {subfolders.map(node => (
+                                    <div
+                                        key={node.fullPath}
+                                        className="card"
+                                        onClick={() => handleFolderClick(node.fullPath)}
+                                        style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}
+                                    >
+                                        <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>📁</div>
+                                        <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{node.name}</h3>
+                                        <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0', fontSize: '0.9rem' }}>
+                                            {node.totalItemCount} itens
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Direct Items Grid */}
+                    {directItems.length > 0 && (
+                        <div>
+                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+                                Itens em "{breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].name : '...'} "
+                            </h3>
                             <div className="grid">
-                                {filteredItems.map(item => (
+                                {directItems.map(item => (
                                     <ItemCard
                                         key={item.id}
                                         item={item}
@@ -495,136 +532,34 @@ const Dashboard = () => {
                                 ))}
                             </div>
                         </div>
-                    );
-                }
-            } else {
-                // Folder Navigation Logic
-                const currentFolderNode = getCurrentFolderNode();
-                const subfolders = currentFolderNode ? Object.values(currentFolderNode.children) : Object.values(folderTree);
+                    )}
 
-                // Items directly in this folder (if specific folder selected)
-                // If at root (!selectedFolder), we usually don't show loose items unless they have no folder?
-                // "Outros" handles loose items usually.
-
-                const directItems = selectedFolder
-                    ? items.filter(i => (i.aiFolder || i.originalFolder || 'Outros') === selectedFolder)
-                    : []; // At root, show only folders. Everything should be in a folder (Outros included)
-
-                // Breadcrumbs UI
-                const breadcrumbs = getBreadcrumbs();
-
-                return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-
-                        {/* Navigation Header */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                            {selectedFolder && (
-                                <button className="btn" onClick={() => {
-                                    const parts = selectedFolder.split('/');
-                                    parts.pop();
-                                    setSelectedFolder(parts.length > 0 ? parts.join('/') : null);
-                                }} style={{ background: 'var(--bg-secondary)', padding: '5px 10px' }}>
-                                    ⬆ Subir
-                                </button>
-                            )}
-
-                            <div className="breadcrumbs" style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                                <span
-                                    onClick={() => setSelectedFolder(null)}
-                                    style={{ cursor: 'pointer', color: !selectedFolder ? 'var(--primary)' : 'inherit', textDecoration: !selectedFolder ? 'underline' : 'none' }}
-                                >
-                                    Coleções
-                                </span>
-                                {breadcrumbs.map((crumb, idx) => (
-                                    <React.Fragment key={crumb.path}>
-                                        <span>/</span>
-                                        <span
-                                            onClick={() => setSelectedFolder(crumb.path)}
-                                            style={{
-                                                cursor: 'pointer',
-                                                color: idx === breadcrumbs.length - 1 ? 'var(--primary)' : 'inherit',
-                                                fontWeight: idx === breadcrumbs.length - 1 ? 'bold' : 'normal'
-                                            }}
-                                        >
-                                            {crumb.name}
-                                        </span>
-                                    </React.Fragment>
+                    {/* Tags Section - Only show at Root */}
+                    {!selectedFolder && (
+                        <div>
+                            <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Explorar por Tags</h3>
+                            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
+                                {uniqueTags.map(tag => (
+                                    <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{ cursor: 'pointer', padding: '15px', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                                        <h3 style={{ fontSize: '1rem', margin: 0 }}>#{tag}</h3>
+                                        <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0', fontSize: '0.8rem' }}>
+                                            {items.filter(i => (i.tags && i.tags.includes(tag)) || (i.aiTags && i.aiTags.includes(tag))).length}
+                                        </p>
+                                    </div>
                                 ))}
                             </div>
                         </div>
+                    )}
 
-                        {/* Subfolders Grid */}
-                        {subfolders.length > 0 && (
-                            <div>
-                                <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
-                                    {selectedFolder ? 'Subpastas' : 'Minhas Coleções'}
-                                </h3>
-                                <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
-                                    {subfolders.map(node => (
-                                        <div
-                                            key={node.fullPath}
-                                            className="card"
-                                            onClick={() => handleFolderClick(node.fullPath)}
-                                            style={{ cursor: 'pointer', padding: '20px', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}
-                                        >
-                                            <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>📁</div>
-                                            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{node.name}</h3>
-                                            <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0', fontSize: '0.9rem' }}>
-                                                {node.totalItemCount} itens
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                    {/* Empty State */}
+                    {subfolders.length === 0 && directItems.length === 0 && selectedFolder && (
+                        <div className="empty-state">
+                            <p>Esta pasta está vazia.</p>
+                        </div>
+                    )}
 
-                        {/* Direct Items Grid */}
-                        {directItems.length > 0 && (
-                            <div>
-                                <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
-                                    Itens em "{breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].name : '...'} "
-                                </h3>
-                                <div className="grid">
-                                    {directItems.map(item => (
-                                        <ItemCard
-                                            key={item.id}
-                                            item={item}
-                                            onToggleFavorite={handleToggleFavorite}
-                                            onToggleArchive={handleToggleArchive}
-                                            onDelete={handleDelete}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Tags Section - Only show at Root */}
-                        {!selectedFolder && (
-                            <div>
-                                <h3 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>Explorar por Tags</h3>
-                                <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
-                                    {uniqueTags.map(tag => (
-                                        <div key={tag} className="card" onClick={() => setSelectedTag(tag)} style={{ cursor: 'pointer', padding: '15px', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-                                            <h3 style={{ fontSize: '1rem', margin: 0 }}>#{tag}</h3>
-                                            <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0', fontSize: '0.8rem' }}>
-                                                {items.filter(i => (i.tags && i.tags.includes(tag)) || (i.aiTags && i.aiTags.includes(tag))).length}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Empty State */}
-                        {subfolders.length === 0 && directItems.length === 0 && selectedFolder && (
-                            <div className="empty-state">
-                                <p>Esta pasta está vazia.</p>
-                            </div>
-                        )}
-
-                    </div>
-                );
-            }
+                </div>
+            );
         }
 
         if (activeView === 'settings') {

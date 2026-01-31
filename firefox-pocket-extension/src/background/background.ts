@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus, ItemType, Message } from '../utils/types';
-import { getSavedItems, saveItem, updateItem, deleteItem, generateId } from '../utils/storage';
+import { getSavedItems, saveItem, updateItem, deleteItem, generateId, getItem } from '../utils/storage';
 import { organizeWithAI, importBookmarks, exportToFirefox, organizeAndExportToFirefox } from '../utils/aiOrganizer';
 
 export const resizeImage = (dataUrl: string): Promise<string> => {
@@ -74,8 +74,13 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
     case 'getLink': {
       const { url } = message.payload;
       const items = await getSavedItems();
-      const item = items.find(i => i.url === url);
-      return { success: !!item, item };
+      const found = items.find(i => i.url === url);
+
+      if (found) {
+          const fullItem = await getItem(found.id);
+          return { success: !!fullItem, item: fullItem };
+      }
+      return { success: false, item: null };
     }
     case 'updateLink': {
       const { id, updates } = message.payload;

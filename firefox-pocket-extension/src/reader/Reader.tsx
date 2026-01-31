@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 import DOMPurify from 'dompurify';
 import { SavedItem } from '../utils/types';
+import { getItem } from '../utils/storage';
 import { Modal } from '../components/Modal';
 import { ReadingProgressBar } from '../components/ReadingProgressBar';
 import { TTSPlayer } from '../components/TTSPlayer';
@@ -46,9 +47,7 @@ const Reader = () => {
           return;
         }
 
-        const data = await browser.storage.local.get(['savedItems', 'geminiApiKey']) as { savedItems?: SavedItem[], geminiApiKey?: string };
-        const items = (data.savedItems as SavedItem[]) || [];
-        const foundItem = items.find(i => i.id === id);
+        const foundItem = await getItem(id);
 
         if (foundItem) {
           setItem(foundItem);
@@ -56,6 +55,7 @@ const Reader = () => {
           setError('Item não encontrado.');
         }
 
+        const data = await browser.storage.local.get(['geminiApiKey']) as { geminiApiKey?: string };
         if (data.geminiApiKey) {
           setApiKey(data.geminiApiKey);
         }
