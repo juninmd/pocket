@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import { saveItem, getSavedItems, deleteItem, updateItem, generateId } from './storage';
+import { saveItem, getSavedItems, getItem, deleteItem, updateItem, generateId } from './storage';
 import { SavedItem, ItemStatus, ItemType } from './types';
 
 describe('storage utils', () => {
@@ -16,6 +16,7 @@ describe('storage utils', () => {
     type: ItemType.Article,
     tags: [],
     savedAt: '2023-01-01T00:00:00.000Z',
+    content: '<p>Some content</p>'
   };
 
   describe('getSavedItems', () => {
@@ -25,49 +26,119 @@ describe('storage utils', () => {
       expect(items).toEqual([]);
     });
 
-    it('should return saved items', async () => {
-      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+    it('should return saved items from metadata list', async () => {
+      // items in list might not have content
+      const listItems = [{ ...mockItem, content: undefined }];
+      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: listItems });
       const items = await getSavedItems();
-      expect(items).toEqual([mockItem]);
+      expect(items).toEqual(listItems);
+    });
+  });
+
+  describe('getItem', () => {
+    it('should return null if item does not exist', async () => {
+      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [] });
+      const item = await getItem('1');
+      expect(item).toBeNull();
+    });
+
+    it('should return item with content if it is a legacy item (content in metadata)', async () => {
+      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+      const item = await getItem('1');
+      expect(item).toEqual(mockItem);
+    });
+
+    it('should fetch content from separate key if not in metadata', async () => {
+      const metadataItem = { ...mockItem, content: undefined };
+
+      // Mock get implementations
+      (browser.storage.local.get as jest.Mock).mockImplementation((key) => {
+        if (key === 'savedItems') return Promise.resolve({ savedItems: [metadataItem] });
+        if (key === 'content_1') return Promise.resolve({ content_1: mockItem.content });
+        return Promise.resolve({});
+      });
+
+      const item = await getItem('1');
+      expect(item).toEqual(mockItem);
+      expect(browser.storage.local.get).toHaveBeenCalledWith('content_1');
     });
   });
 
   describe('saveItem', () => {
-    it('should add a new item to the list', async () => {
+    it('should add a new item to the list without content and save content separately', async () => {
       (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [] });
+
       await saveItem(mockItem);
-      expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: [mockItem] });
+
+      const { content, ...metadata } = mockItem;
+      const expectedMetadata = { ...metadata, content: undefined };
+
+      // Verify content saved
+      expect(browser.storage.local.set).toHaveBeenCalledWith({ [`content_${mockItem.id}`]: content });
+
+      // Verify metadata list saved
+      expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: [expectedMetadata] });
     });
 
-    it('should update an existing item if url matches', async () => {
-      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+    it('should update an existing item and migrate content if needed', async () => {
+      const existingItem = { ...mockItem, title: 'Old Title', content: undefined };
+      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [existingItem] });
+
       const updatedItem = { ...mockItem, title: 'New Title' };
       await saveItem(updatedItem);
-      expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: [updatedItem] });
+
+      const { content, ...metadata } = updatedItem;
+      const expectedMetadata = { ...metadata, content: undefined };
+
+      expect(browser.storage.local.set).toHaveBeenCalledWith({ [`content_${mockItem.id}`]: content });
+      expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: [expectedMetadata] });
     });
   });
 
   describe('deleteItem', () => {
-    it('should remove an item by id', async () => {
+    it('should remove an item by id and delete its content', async () => {
       (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+
       await deleteItem('1');
+
       expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: [] });
+      expect(browser.storage.local.remove).toHaveBeenCalledWith('content_1');
     });
   });
 
   describe('updateItem', () => {
-    it('should update fields of an item', async () => {
-      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+    it('should update fields of an item and strip content from metadata', async () => {
+      const metadataItem = { ...mockItem, content: undefined };
+      (browser.storage.local.get as jest.Mock).mockImplementation((key) => {
+        if (key === 'savedItems') return Promise.resolve({ savedItems: [metadataItem] });
+        if (key === 'content_1') return Promise.resolve({ content_1: mockItem.content }); // for getItem at the end
+        return Promise.resolve({});
+      });
+
       await updateItem('1', { isFavorite: true });
+
       expect(browser.storage.local.set).toHaveBeenCalledWith({
-        savedItems: [{ ...mockItem, isFavorite: true }]
+        savedItems: [{ ...metadataItem, isFavorite: true }]
       });
     });
 
-    it('should return null if item not found', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [] });
-        const result = await updateItem('999', { isFavorite: true });
-        expect(result).toBeNull();
+    it('should save content separately if content is updated', async () => {
+      const metadataItem = { ...mockItem, content: undefined };
+      (browser.storage.local.get as jest.Mock).mockImplementation((key) => {
+        if (key === 'savedItems') return Promise.resolve({ savedItems: [metadataItem] });
+        return Promise.resolve({});
+      });
+
+      await updateItem('1', { content: '<p>New Content</p>' });
+
+      expect(browser.storage.local.set).toHaveBeenCalledWith({ 'content_1': '<p>New Content</p>' });
+
+      // Verify it was not added to metadata
+      // The mock calls will show savedItems set with content: undefined
+      const expectedMetadata = { ...metadataItem };
+      delete expectedMetadata.content;
+
+      expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: [expectedMetadata] });
     });
   });
 
@@ -100,8 +171,6 @@ describe('storage utils', () => {
       });
 
       jest.spyOn(Math, 'random').mockReturnValue(0.123456789);
-      // 0.123456789.toString(36) -> "0.4fzzzxj..."
-      // substr(2, 9) -> "4fzzzxj..."
 
       const id = generateId();
       expect(id).toHaveLength(9);

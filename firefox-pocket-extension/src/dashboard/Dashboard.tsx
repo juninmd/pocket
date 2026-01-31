@@ -4,6 +4,7 @@ import { SavedItem, ItemStatus } from '../utils/types';
 import { Modal } from '../components/Modal';
 import { ItemCard } from '../components/ItemCard';
 import { buildFolderTree, FolderNode } from '../utils/folderStructure';
+import { getItem } from '../utils/storage';
 import './index.css';
 
 // Define filter types
@@ -153,22 +154,34 @@ const Dashboard = () => {
         loadItems();
     }, [loadItems]);
 
-    const handleExport = () => {
-        const exportData = items.map(item => ({
-            ...item,
-            folder: item.aiFolder || item.originalFolder || 'Uncategorized'
-        }));
-        const jsonString = JSON.stringify(exportData, null, 2);
-        const blob = new Blob([jsonString], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            const fullItems = await Promise.all(items.map(async (item) => {
+                const full = await getItem(item.id);
+                return {
+                    ...(full || item),
+                    folder: item.aiFolder || item.originalFolder || 'Uncategorized'
+                };
+            }));
 
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", url);
-        downloadAnchorNode.setAttribute("download", "pocket_like_organized.json");
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-        URL.revokeObjectURL(url);
+            const jsonString = JSON.stringify(fullItems, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", url);
+            downloadAnchorNode.setAttribute("download", "pocket_like_organized.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error(e);
+            openModal('Erro', 'Falha ao exportar itens.', 'danger');
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const handleImport = async () => {

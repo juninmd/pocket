@@ -3,9 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Reader from './Reader';
 import browser from 'webextension-polyfill';
 import { callGemini } from '../utils/aiService';
+import { getItem } from '../utils/storage';
 
 jest.mock('webextension-polyfill');
 jest.mock('../utils/aiService');
+jest.mock('../utils/storage');
 jest.mock('../components/ReadingProgressBar', () => ({ ReadingProgressBar: () => <div>ProgressBar</div> }));
 jest.mock('../components/TTSPlayer', () => ({ TTSPlayer: () => <div>TTSPlayer</div> }));
 jest.mock('../components/AI/ChatPanel', () => ({ ChatPanel: () => <div>ChatPanel</div> }));
@@ -23,6 +25,9 @@ describe('Reader', () => {
             },
             writable: true
         });
+
+        // Default mocks
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({});
     });
 
     const mockItem = {
@@ -37,17 +42,18 @@ describe('Reader', () => {
     };
 
     it('should render item content', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
 
         render(<Reader />);
 
         await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
         expect(screen.getByText('Content')).toBeInTheDocument();
         expect(screen.getByText('ProgressBar')).toBeInTheDocument();
+        expect(getItem).toHaveBeenCalledWith('1');
     });
 
     it('should show error if item not found', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [] });
+        (getItem as jest.Mock).mockResolvedValue(null);
 
         render(<Reader />);
 
@@ -70,8 +76,8 @@ describe('Reader', () => {
     });
 
     it('should handle summarization', async () => {
+         (getItem as jest.Mock).mockResolvedValue(mockItem);
          (browser.storage.local.get as jest.Mock).mockResolvedValue({
-             savedItems: [mockItem],
              geminiApiKey: 'key'
          });
          (callGemini as jest.Mock).mockResolvedValue('Summary Text');
@@ -86,8 +92,8 @@ describe('Reader', () => {
     });
 
     it('should show config modal if no api key for summarize', async () => {
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
         (browser.storage.local.get as jest.Mock).mockResolvedValue({
-             savedItems: [mockItem]
              // no key
          });
 
@@ -100,8 +106,8 @@ describe('Reader', () => {
     });
 
     it('should handle sidebar toggle', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({
-             savedItems: [mockItem],
+         (getItem as jest.Mock).mockResolvedValue(mockItem);
+         (browser.storage.local.get as jest.Mock).mockResolvedValue({
              geminiApiKey: 'key'
          });
 
@@ -119,17 +125,18 @@ describe('Reader', () => {
 
          // Close
          fireEvent.click(screen.getAllByText('✕')[0]);
-         // Checking class or state might be hard, but we can check if sidebar is visible via class if we could
     });
 
     it('should handle load data error', async () => {
-        (browser.storage.local.get as jest.Mock).mockRejectedValue(new Error('Storage Fail'));
+        (getItem as jest.Mock).mockRejectedValue(new Error('Storage Fail'));
         render(<Reader />);
         await waitFor(() => expect(screen.getByText('Erro ao carregar o item.')).toBeInTheDocument());
     });
 
     it('should cleanup sidebar class on unmount', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem], geminiApiKey: 'key' });
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
+
         const { unmount } = render(<Reader />);
         await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
 
@@ -141,7 +148,8 @@ describe('Reader', () => {
     });
 
     it('should handle summarize error', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem], geminiApiKey: 'key' });
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
         (callGemini as jest.Mock).mockRejectedValue(new Error('AI Fail'));
 
         render(<Reader />);
@@ -152,7 +160,8 @@ describe('Reader', () => {
     });
 
     it('should handle empty summary response', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem], geminiApiKey: 'key' });
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
         (callGemini as jest.Mock).mockResolvedValue(''); // Empty response
 
         render(<Reader />);
@@ -163,11 +172,8 @@ describe('Reader', () => {
     });
 
     it('should redirect to settings if no key for summarize', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
-        // Mock window.location.href setter?
-        // We can spy on window.location assignment if we use Object.defineProperty
-        // But we already mocked window.location in beforeEach.
-        // We can make href a setter spy.
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+
         const hrefSpy = jest.fn();
         Object.defineProperty(window, 'location', {
             value: {
@@ -190,7 +196,8 @@ describe('Reader', () => {
     });
 
     it('should redirect to settings if no key for sidebar', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+
         const hrefSpy = jest.fn();
         Object.defineProperty(window, 'location', {
             value: {
@@ -213,7 +220,8 @@ describe('Reader', () => {
     });
 
     it('should close modal', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [mockItem] });
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+
         render(<Reader />);
         await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
 
@@ -226,16 +234,10 @@ describe('Reader', () => {
         await waitFor(() => expect(screen.queryByText('Configuração Necessária')).not.toBeInTheDocument());
     });
 
-    it('should handle undefined savedItems', async () => {
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: undefined }); // No items array
-
-        render(<Reader />);
-        await waitFor(() => expect(screen.getByText('Item não encontrado.')).toBeInTheDocument());
-    });
-
     it('should show error if summarizing item with no content', async () => {
         const itemNoContent = { ...mockItem, content: '' };
-        (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [itemNoContent], geminiApiKey: 'key' });
+        (getItem as jest.Mock).mockResolvedValue(itemNoContent);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
 
         render(<Reader />);
         await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());

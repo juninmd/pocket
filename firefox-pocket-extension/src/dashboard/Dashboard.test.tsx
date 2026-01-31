@@ -3,6 +3,11 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import Dashboard from './Dashboard';
 import browser from 'webextension-polyfill';
 import { ItemStatus } from '../utils/types';
+import { getItem } from '../utils/storage';
+
+jest.mock('../utils/storage', () => ({
+    getItem: jest.fn()
+}));
 
 jest.mock('webextension-polyfill', () => ({
     storage: {
@@ -229,8 +234,6 @@ describe('Dashboard', () => {
 
          // Click root breadcrumb (might be multiple "Coleções" text, take the breadcrumb one)
          const colTexts = screen.getAllByText('Coleções');
-         // Usually first is sidebar, second is breadcrumb. But safer to assume last if sidebar is before.
-         // Or just try the second one.
          fireEvent.click(colTexts[colTexts.length - 1]);
 
          await waitFor(() => expect(screen.getByText('#tech')).toBeInTheDocument()); // Back to root tags
@@ -238,6 +241,8 @@ describe('Dashboard', () => {
 
     it('should handle export JSON', async () => {
          (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+         (getItem as jest.Mock).mockResolvedValue(mockItem);
+
          const createObjectURLMock = jest.fn().mockReturnValue('blob:url');
          const revokeObjectURLMock = jest.fn();
          global.URL.createObjectURL = createObjectURLMock;
@@ -246,11 +251,14 @@ describe('Dashboard', () => {
          const clickSpy = jest.spyOn(HTMLElement.prototype, 'click');
 
          render(<Dashboard />);
+         await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
          fireEvent.click(screen.getByText('Configurações'));
          fireEvent.click(screen.getByText('📤 Exportar (JSON)'));
 
-         expect(createObjectURLMock).toHaveBeenCalled();
+         await waitFor(() => expect(createObjectURLMock).toHaveBeenCalled());
          expect(clickSpy).toHaveBeenCalled();
+         expect(getItem).toHaveBeenCalledWith('1');
 
          clickSpy.mockRestore();
     });
@@ -306,9 +314,6 @@ describe('Dashboard', () => {
 
         // Trigger progress update
         if (listener) {
-             // Wrap in act if needed, but fireEvent handles act usually.
-             // Since listener is called from outside React, we might need act.
-             // But waitFor handles it.
              React.act(() => {
                 listener({ action: 'importProgress', payload: { current: 50, total: 100 } });
              });
