@@ -172,6 +172,9 @@ describe('Dashboard', () => {
 
         fireEvent.click(screen.getByText('Redescobrir'));
         await waitFor(() => expect(screen.getByText('REDESCOBRIR')).toBeInTheDocument());
+
+        // Verify search bar is NOT present
+        expect(screen.queryByPlaceholderText('Pesquisar...')).not.toBeInTheDocument();
     });
 
     it('should collections view', async () => {
@@ -506,5 +509,98 @@ describe('Dashboard', () => {
 
         await waitFor(() => expect(screen.queryByText('Test Item')).not.toBeInTheDocument());
         expect(screen.getByText('Esta pasta está vazia.')).toBeInTheDocument();
+    });
+
+    it('should load selectedModel from storage', async () => {
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({
+            geminiApiKey: 'key',
+            selectedModel: 'gemini-1.5-pro'
+        });
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+        await waitFor(() => expect(screen.getByDisplayValue('key')).toBeInTheDocument());
+
+        const select = screen.getByRole('combobox');
+        expect((select as HTMLSelectElement).value).toBe('gemini-1.5-pro');
+    });
+
+    it('should search by URL only (Explicit)', async () => {
+        const item = { ...mockItem, title: 'Unique Title', url: 'http://specific-url.com' };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [item] });
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Unique Title')).toBeInTheDocument());
+
+        const input = screen.getByPlaceholderText('Pesquisar...');
+        // Search for something only in URL, not title
+        fireEvent.change(input, { target: { value: 'specific-url' } });
+
+        await waitFor(() => expect(screen.getByText('Unique Title')).toBeInTheDocument());
+    });
+
+    it('should filter by aiTags only', async () => {
+        // Item with AI tag but undefined regular tag
+        const item = { ...mockItem, tags: undefined, aiTags: ['magic'] };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [item] });
+        render(<Dashboard />);
+
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('#magic')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('#magic'));
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+    });
+
+    it('should handle empty filtered result with selected tag', async () => {
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+        const item = { ...mockItem, tags: ['temp'] };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [item] });
+        render(<Dashboard />);
+
+        // Go to collection
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('#temp')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('#temp'));
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        // Now empty items (background update)
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+        if (listener) {
+            React.act(() => {
+                listener({ action: 'itemsUpdated' });
+            });
+        }
+
+        // Should see empty state
+        await waitFor(() => expect(screen.getByText('Nenhum item com a tag #temp')).toBeInTheDocument());
+
+        // Go back button
+        const backBtn = screen.getByText('Voltar para Coleções');
+        fireEvent.click(backBtn);
+
+        // Should be back to main Collections view (which is now empty too, but correct view)
+        expect(screen.queryByText('Nenhum item com a tag #temp')).not.toBeInTheDocument();
+    });
+
+    it('should handle import progress bar width with zero total', async () => {
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'importBookmarks') return new Promise(() => {});
+            return Promise.resolve({ items: [] });
+        });
+
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+        fireEvent.click(screen.getByText('📥 Importar Favoritos do Firefox'));
+
+        if (listener) {
+             React.act(() => {
+                // total 0 to trigger division by 1 fallback
+                listener({ action: 'importProgress', payload: { current: 0, total: 0 } });
+             });
+        }
+
+        await waitFor(() => expect(screen.getByText('0%')).toBeInTheDocument());
     });
 });
