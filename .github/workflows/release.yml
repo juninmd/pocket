@@ -2,44 +2,65 @@ name: Release Extension
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch
 
       - name: Setup Node.js
+        if: steps.tag_version.outputs.new_tag
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install pnpm
+        if: steps.tag_version.outputs.new_tag
         uses: pnpm/action-setup@v3
         with:
           version: 8
 
       - name: Install dependencies
+        if: steps.tag_version.outputs.new_tag
         run: cd firefox-pocket-extension && pnpm install
 
-      - name: Build extension
-        run: cd firefox-pocket-extension && pnpm run build
+      - name: Run tests
+        if: steps.tag_version.outputs.new_tag
+        run: cd firefox-pocket-extension && pnpm test
+
+      - name: Build production
+        if: steps.tag_version.outputs.new_tag
+        run: cd firefox-pocket-extension && pnpm run build:prod
 
       - name: Package extension
+        if: steps.tag_version.outputs.new_tag
         run: |
           cd firefox-pocket-extension
-          npx web-ext build --source-dir dist --artifacts-dir web-ext-artifacts
+          npx web-ext build --source-dir dist --artifacts-dir web-ext-artifacts --overwrite-dest
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
+        if: steps.tag_version.outputs.new_tag
         with:
+          tag_name: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
           files: |
             firefox-pocket-extension/web-ext-artifacts/*.zip
             firefox-pocket-extension/web-ext-artifacts/*.xpi
