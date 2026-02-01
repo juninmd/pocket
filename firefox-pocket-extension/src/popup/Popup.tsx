@@ -56,7 +56,7 @@ const Popup = () => {
       try {
         metadata = await browser.tabs.sendMessage(currentTab.id, { action: 'getMetadata' });
       } catch (err) {
-        console.log('Could not get metadata, falling back to basic info', err);
+        // Could not get metadata, falling back to basic info
       }
     }
 
