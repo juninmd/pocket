@@ -140,6 +140,25 @@ describe('storage utils', () => {
 
       expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: [expectedMetadata] });
     });
+
+    it('should migrate legacy content during update if not updating content', async () => {
+      const legacyItem = { ...mockItem, content: '<p>Legacy</p>' };
+      (browser.storage.local.get as jest.Mock).mockImplementation((key) => {
+        if (key === 'savedItems') return Promise.resolve({ savedItems: [legacyItem] });
+        return Promise.resolve({});
+      });
+
+      await updateItem('1', { isFavorite: true });
+
+      // Should save content separately
+      expect(browser.storage.local.set).toHaveBeenCalledWith({ 'content_1': '<p>Legacy</p>' });
+    });
+
+    it('should return null if item to update not found', async () => {
+      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [] });
+      const result = await updateItem('1', { title: 'New' });
+      expect(result).toBeNull();
+    });
   });
 
   describe('generateId', () => {

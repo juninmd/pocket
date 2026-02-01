@@ -202,6 +202,18 @@ describe('Dashboard', () => {
          expect(screen.getByText('#tech')).toBeInTheDocument();
     });
 
+    it('should filter by AI tags', async () => {
+        const aiTagItem = { ...mockItem, id: '2', title: 'AI Tag Item', tags: [], aiTags: ['ai-tech'] };
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [aiTagItem] });
+        render(<Dashboard />);
+
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('#ai-tech')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('#ai-tech'));
+        expect(screen.getByText('AI Tag Item')).toBeInTheDocument();
+    });
+
     it('should navigate folder structure', async () => {
          const folderItem = { ...mockItem, aiFolder: 'Tech/Web' };
          (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [folderItem] });
@@ -249,6 +261,7 @@ describe('Dashboard', () => {
          global.URL.revokeObjectURL = revokeObjectURLMock;
 
          const clickSpy = jest.spyOn(HTMLElement.prototype, 'click');
+         const removeSpy = jest.spyOn(HTMLElement.prototype, 'remove');
 
          render(<Dashboard />);
          await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
@@ -258,9 +271,11 @@ describe('Dashboard', () => {
 
          await waitFor(() => expect(createObjectURLMock).toHaveBeenCalled());
          expect(clickSpy).toHaveBeenCalled();
+         expect(removeSpy).toHaveBeenCalled();
          expect(getItem).toHaveBeenCalledWith('1');
 
          clickSpy.mockRestore();
+         removeSpy.mockRestore();
     });
 
     it('should handle import bookmarks', async () => {

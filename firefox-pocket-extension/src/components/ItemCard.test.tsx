@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, createEvent } from '@testing-library/react';
 import { ItemCard } from './ItemCard';
 import { ItemStatus, ItemType } from '../utils/types';
 
@@ -93,9 +93,12 @@ describe('ItemCard', () => {
     it('should stop propagation on original link click', () => {
         render(<ItemCard {...props} />);
         const link = screen.getByTitle('Abrir original');
+        const clickEvent = createEvent.click(link);
+        const stopPropagation = jest.spyOn(clickEvent, 'stopPropagation');
 
-        fireEvent.click(link);
+        fireEvent(link, clickEvent);
 
+        expect(stopPropagation).toHaveBeenCalled();
         // Ensure card click handler was NOT called (which calls window.open for this item)
         expect(window.open).not.toHaveBeenCalled();
     });
