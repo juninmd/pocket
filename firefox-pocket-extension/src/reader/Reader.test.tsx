@@ -105,7 +105,7 @@ describe('Reader', () => {
          expect(screen.getByText('Configuração Necessária')).toBeInTheDocument();
     });
 
-    it('should handle sidebar toggle', async () => {
+    it('should handle sidebar toggle and tabs', async () => {
          (getItem as jest.Mock).mockResolvedValue(mockItem);
          (browser.storage.local.get as jest.Mock).mockResolvedValue({
              geminiApiKey: 'key'
@@ -122,6 +122,10 @@ describe('Reader', () => {
          // Toggle concepts
          fireEvent.click(screen.getByText('Conceitos'));
          expect(screen.getByText('KeyConcepts')).toBeInTheDocument();
+
+         // Toggle back to chat
+         fireEvent.click(screen.getByText('Chat'));
+         expect(screen.getByText('ChatPanel')).toBeInTheDocument();
 
          // Close
          fireEvent.click(screen.getAllByText('✕')[0]);

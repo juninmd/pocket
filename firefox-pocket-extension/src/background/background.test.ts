@@ -169,6 +169,13 @@ describe('background script', () => {
             expect(result.success).toBe(true);
         });
 
+        it('updateLink should handle sendMessage error', async () => {
+            (storage.updateItem as jest.Mock).mockResolvedValue(mockItem);
+            (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Fail'));
+            const result = await handleMessage({ action: 'updateLink', payload: { id: '1', updates: {} } }, {} as any);
+            expect(result.success).toBe(true);
+        });
+
         it('deleteLink should delete item', async () => {
             (storage.deleteItem as jest.Mock).mockResolvedValue(undefined);
             const result = await handleMessage({ action: 'deleteLink', payload: { id: '1' } }, {} as any);
@@ -183,6 +190,13 @@ describe('background script', () => {
             expect(storage.deleteItem).toHaveBeenCalledWith('1');
         });
 
+        it('deleteLink should handle sendMessage error', async () => {
+            (storage.deleteItem as jest.Mock).mockResolvedValue(undefined);
+            (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Fail'));
+            const result = await handleMessage({ action: 'deleteLink', payload: { id: '1' } }, {} as any);
+            expect(result.success).toBe(true);
+        });
+
         it('importBookmarks should import', async () => {
             (aiOrganizer.importBookmarks as jest.Mock).mockResolvedValue([mockItem]);
             const result = await handleMessage({ action: 'importBookmarks' }, {} as any);
@@ -190,9 +204,24 @@ describe('background script', () => {
             expect(result.count).toBe(1);
         });
 
+        it('importBookmarks should handle sendMessage error', async () => {
+            (aiOrganizer.importBookmarks as jest.Mock).mockResolvedValue([mockItem]);
+            (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Fail'));
+            const result = await handleMessage({ action: 'importBookmarks' }, {} as any);
+            expect(result.success).toBe(true);
+        });
+
         it('organizeWithAI should organize', async () => {
             (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
             (aiOrganizer.organizeWithAI as jest.Mock).mockResolvedValue({ items: [mockItem] });
+            const result = await handleMessage({ action: 'organizeWithAI', payload: { apiKey: 'key' } }, {} as any);
+            expect(result.success).toBe(true);
+        });
+
+        it('organizeWithAI should handle sendMessage error', async () => {
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
+            (aiOrganizer.organizeWithAI as jest.Mock).mockResolvedValue({ items: [mockItem] });
+            (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Fail'));
             const result = await handleMessage({ action: 'organizeWithAI', payload: { apiKey: 'key' } }, {} as any);
             expect(result.success).toBe(true);
         });
@@ -211,6 +240,13 @@ describe('background script', () => {
             expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: items });
         });
 
+        it('applyOrganization should handle sendMessage error', async () => {
+            const items = [mockItem];
+            (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Fail'));
+            const result = await handleMessage({ action: 'applyOrganization', payload: { items } }, {} as any);
+            expect(result.success).toBe(true);
+        });
+
         it('exportToFirefox should export', async () => {
             (aiOrganizer.exportToFirefox as jest.Mock).mockResolvedValue(5);
             const result = await handleMessage({ action: 'exportToFirefox' }, {} as any);
@@ -222,9 +258,27 @@ describe('background script', () => {
              const result = await handleMessage({ action: 'organizeAndExportAI', payload: { apiKey: 'key' } }, {} as any);
              expect(result.success).toBe(true);
         });
+
+        it('organizeAndExportAI should handle sendMessage error', async () => {
+             (aiOrganizer.organizeAndExportToFirefox as jest.Mock).mockResolvedValue({ success: true });
+             (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Fail'));
+             const result = await handleMessage({ action: 'organizeAndExportAI', payload: { apiKey: 'key' } }, {} as any);
+             expect(result.success).toBe(true);
+        });
     });
 
     describe('handleContextMenu', () => {
+        it('should handle sendMessage error in performSave', async () => {
+            const info = { menuItemId: 'save-to-pocket-like', linkUrl: 'http://test.com' } as any;
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Fail'));
+
+            await handleContextMenu(info);
+            await new Promise(r => setTimeout(r, 10));
+
+            expect(storage.saveItem).toHaveBeenCalled();
+        });
+
         it('should save link from context menu', async () => {
             const info = { menuItemId: 'save-to-pocket-like', linkUrl: 'http://test.com' } as any;
             (storage.saveItem as jest.Mock).mockResolvedValue(undefined);

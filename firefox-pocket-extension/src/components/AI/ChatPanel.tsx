@@ -65,9 +65,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ apiKey, articleContent }) 
 
     const handleSuggestion = (text: string) => {
         setInput(text);
-        // Optional: auto send
-        // handleSend();
-        // But setting state is async, so better let user click send or handle it via a dedicated function that takes text
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
