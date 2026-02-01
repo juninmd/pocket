@@ -95,8 +95,6 @@ REGRAS:
 Input (${items.length} itens):
 ${JSON.stringify(simplifyForAI, null, 0)}`;
 
-    console.log("[AI Organizer] Prompting Gemini with:", items.length, "items");
-
     let debugInfo: any = {
         promptInfo: { itemCount: items.length },
         rawResponse: null,
@@ -111,11 +109,8 @@ ${JSON.stringify(simplifyForAI, null, 0)}`;
 
         debugInfo.rawResponse = response;
 
-        console.log("[AI Organizer] Raw Response:", response);
-
         if (response.functionCall && response.functionCall.name === 'organize_items') {
             const suggestions = response.functionCall.args.organizedItems;
-            console.log("[AI Organizer] Suggestions received:", suggestions?.length);
 
             if (!suggestions || !Array.isArray(suggestions)) {
                 console.error("[AI Organizer] Invalid function call arguments:", response.functionCall.args);
@@ -125,7 +120,6 @@ ${JSON.stringify(simplifyForAI, null, 0)}`;
             const organized = items.map(item => {
                 const suggestion = suggestions.find((s: any) => s.id === item.id);
                 if (suggestion) {
-                    console.log(`[AI Organizer] Matched item ${item.id} to folder: ${suggestion.folderPath}`);
                     return {
                         ...item,
                         aiFolder: suggestion.folderPath || 'Outros',
@@ -190,11 +184,9 @@ export const organizeAndExportToFirefox = async (
 ): Promise<OrganizationResult> => {
     try {
         // Step 1: Analyze items with AI
-        console.log(`[AI Organizer] Analyzing ${items.length} items...`);
         const { items: organizedItems } = await organizeWithAI(items, apiKey);
 
         // Step 2: Export to Firefox
-        console.log(`[AI Organizer] Creating Firefox bookmark structure...`);
         const result = await exportToFirefoxWithStats(organizedItems);
 
         // Step 3: Save organized items back to storage

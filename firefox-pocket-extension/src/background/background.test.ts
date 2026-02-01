@@ -157,6 +157,7 @@ describe('background script', () => {
 
         it('getLink should return item', async () => {
             (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
+            (storage.getItem as jest.Mock).mockResolvedValue(mockItem);
             const result = await handleMessage({ action: 'getLink', payload: { url: 'http://test.com' } }, {} as any);
             expect(result.success).toBe(true);
             expect(result.item).toEqual(mockItem);

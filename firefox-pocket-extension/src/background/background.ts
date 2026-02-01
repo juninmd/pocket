@@ -35,7 +35,6 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
   const message = msg as Message;
   switch (message.action) {
     case 'saveLink': {
-      console.log('Saving link:', message.payload.url);
       const { url, title, imageUrl, description, siteName, author, estimatedReadTime, content, favicon } = message.payload;
       const newItem: SavedItem = {
         id: generateId(),
@@ -63,7 +62,6 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
       }
 
       await saveItem(newItem);
-      console.log('Link saved.');
       browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: true, item: newItem };
     }
@@ -202,7 +200,6 @@ export const handleContextMenu = async (info: browser.Menus.OnClickData, tab?: b
         }
 
         await saveItem(newItem);
-        console.log('Saved via context menu');
         browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       };
 
