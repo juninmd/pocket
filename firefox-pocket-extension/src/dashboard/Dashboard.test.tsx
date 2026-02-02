@@ -464,7 +464,7 @@ describe('Dashboard', () => {
         consoleSpy.mockRestore();
     });
 
-    it.skip('should handle import error', async () => {
+    it('should handle import error', async () => {
         (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
              if (msg.action === 'getLinks') return Promise.resolve({ items: [] });
              if (msg.action === 'importBookmarks') return Promise.reject(new Error('Import Fail'));
@@ -476,7 +476,7 @@ describe('Dashboard', () => {
         await waitFor(() => expect(screen.getByText('Erro')).toBeInTheDocument());
     });
 
-    it.skip('should handle export to Firefox error', async () => {
+    it('should handle export to Firefox error', async () => {
         (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
              if (msg.action === 'getLinks') return Promise.resolve({ items: [] });
              if (msg.action === 'exportToFirefox') return Promise.reject(new Error('Export Fail'));
@@ -488,7 +488,7 @@ describe('Dashboard', () => {
         await waitFor(() => expect(screen.getByText('Erro')).toBeInTheDocument());
     });
 
-    it.skip('should handle organize preview error', async () => {
+    it('should handle organize preview error', async () => {
         (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
         (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
              if (msg.action === 'getLinks') return Promise.resolve({ items: [mockItem] });
@@ -499,6 +499,19 @@ describe('Dashboard', () => {
         fireEvent.click(screen.getByText('Configurações'));
         await waitFor(() => expect(screen.getByDisplayValue('key')).toBeInTheDocument());
         fireEvent.click(screen.getByText('✨ Organizar TUDO com IA'));
+        await waitFor(() => expect(screen.getByText('Erro')).toBeInTheDocument());
+    });
+
+    it('should handle export JSON error', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        (getItem as jest.Mock).mockRejectedValue(new Error('Export JSON Fail'));
+
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Configurações'));
+        fireEvent.click(screen.getByText('📤 Exportar (JSON)'));
+
         await waitFor(() => expect(screen.getByText('Erro')).toBeInTheDocument());
     });
 

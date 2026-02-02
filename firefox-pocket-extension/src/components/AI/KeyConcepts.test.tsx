@@ -118,4 +118,21 @@ describe('KeyConcepts', () => {
 
         expect(callGemini).toHaveBeenCalledTimes(1);
     });
+
+    it('should not load if already loaded', async () => {
+        const mockResponse = JSON.stringify([{ term: 'T', definition: 'D' }]);
+        (callGemini as jest.Mock).mockResolvedValue(mockResponse);
+
+        render(<KeyConcepts apiKey={apiKey} articleContent={content} />);
+        const btn = screen.getByText('🧠 Extrair Conceitos-Chave');
+
+        fireEvent.click(btn);
+
+        await waitFor(() => expect(screen.getByText('T')).toBeInTheDocument());
+
+        // Now it is loaded. Try clicking the old button reference (detached)
+        fireEvent.click(btn);
+
+        expect(callGemini).toHaveBeenCalledTimes(1);
+    });
 });

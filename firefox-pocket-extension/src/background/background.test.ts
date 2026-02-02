@@ -147,6 +147,7 @@ describe('background script', () => {
 
             // Should not throw
             await handleMessage({ action: 'saveLink', payload }, {} as any);
+            await new Promise(resolve => setTimeout(resolve, 0));
         });
 
         it('getLinks should return items', async () => {
