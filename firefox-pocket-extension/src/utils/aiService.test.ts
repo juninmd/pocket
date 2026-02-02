@@ -59,6 +59,25 @@ describe('aiService', () => {
             consoleSpy.mockRestore();
         });
 
+        it('should use default error message if missing', async () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+            (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue({ error: {} })
+            });
+
+            await expect(callGemini(mockApiKey, 'Prompt')).rejects.toThrow('Erro na API do Gemini');
+            consoleSpy.mockRestore();
+        });
+
+        it('should use default error message if missing', async () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+            (global.fetch as jest.Mock).mockResolvedValue({
+               json: jest.fn().mockResolvedValue({ error: {} })
+           });
+           await expect(callGeminiChat(mockApiKey, [])).rejects.toThrow('Erro na API do Gemini');
+           consoleSpy.mockRestore();
+       });
+
         it('should throw if no text returned', async () => {
             (global.fetch as jest.Mock).mockResolvedValue({
                 json: jest.fn().mockResolvedValue({})
@@ -151,6 +170,15 @@ describe('aiService', () => {
             expect(consoleSpy).toHaveBeenCalled();
             consoleSpy.mockRestore();
         });
+
+        it('should use default error message if missing', async () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+            (global.fetch as jest.Mock).mockResolvedValue({
+               json: jest.fn().mockResolvedValue({ error: {} })
+           });
+           await expect(callGeminiWithTools(mockApiKey, 'Prompt')).rejects.toThrow('Erro na API do Gemini');
+           consoleSpy.mockRestore();
+       });
 
         it('should throw if no part returned', async () => {
              (global.fetch as jest.Mock).mockResolvedValue({

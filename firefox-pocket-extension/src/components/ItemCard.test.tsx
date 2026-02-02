@@ -110,8 +110,11 @@ describe('ItemCard', () => {
 
         if (!actionsContainer) throw new Error('Actions container not found');
 
-        fireEvent.click(actionsContainer);
+        const clickEvent = createEvent.click(actionsContainer);
+        const stopPropagation = jest.spyOn(clickEvent, 'stopPropagation');
+        fireEvent(actionsContainer, clickEvent);
 
+        expect(stopPropagation).toHaveBeenCalled();
         expect(window.open).not.toHaveBeenCalled();
     });
 });
