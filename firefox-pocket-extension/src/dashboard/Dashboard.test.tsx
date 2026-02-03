@@ -386,10 +386,45 @@ describe('Dashboard', () => {
         fireEvent.click(screen.getByText('Delete'));
         fireEvent.click(screen.getByText('Excluir'));
 
+        // The component optimistically updates or re-fetches?
+        // If it re-fetches, we need to ensure the promise resolves.
+        // Assuming optimistic update or auto-reload on delete success.
+
         await waitFor(() => expect(screen.getByText('Nenhum item com a tag #tag1')).toBeInTheDocument());
 
         // Click back
         fireEvent.click(screen.getByText('Voltar para Coleções'));
+        expect(screen.queryByText('Nenhum item com a tag #tag1')).not.toBeInTheDocument();
+    });
+
+    it('should handle empty tag result and back button robustly', async () => {
+        const tagItem = { ...mockItem, tags: ['tag1'] };
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [tagItem] });
+        render(<Dashboard />);
+
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('#tag1')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('#tag1'));
+
+        // Mock empty items for next fetch
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+
+        // Trigger update
+        if (listener) {
+             React.act(() => {
+                listener({ action: 'itemsUpdated' });
+             });
+        }
+
+        await waitFor(() => expect(screen.getByText('Nenhum item com a tag #tag1')).toBeInTheDocument());
+
+        // This button is line 689
+        const backBtn = screen.getByText('Voltar para Coleções');
+        fireEvent.click(backBtn);
+
         expect(screen.queryByText('Nenhum item com a tag #tag1')).not.toBeInTheDocument();
     });
 

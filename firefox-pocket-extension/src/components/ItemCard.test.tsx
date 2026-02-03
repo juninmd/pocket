@@ -90,6 +90,18 @@ describe('ItemCard', () => {
         expect(screen.getByText('✨ ai-tag')).toBeInTheDocument();
     });
 
+    it('should render both tags and aiTags', () => {
+        render(<ItemCard {...props} item={{ ...mockItem, tags: ['user-tag'], aiTags: ['ai-tag'] }} />);
+        expect(screen.getByText('user-tag')).toBeInTheDocument();
+        expect(screen.getByText('✨ ai-tag')).toBeInTheDocument();
+    });
+
+    it('should render aiTags when tags is undefined', () => {
+        const itemWithoutTags = { ...mockItem, tags: undefined, aiTags: ['ai-tag'] };
+        render(<ItemCard {...props} item={itemWithoutTags} />);
+        expect(screen.getByText('✨ ai-tag')).toBeInTheDocument();
+    });
+
     it('should stop propagation on original link click', () => {
         render(<ItemCard {...props} />);
         const link = screen.getByTitle('Abrir original');

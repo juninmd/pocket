@@ -135,4 +135,18 @@ describe('KeyConcepts', () => {
 
         expect(callGemini).toHaveBeenCalledTimes(1);
     });
+
+    it('should handle empty content', async () => {
+        const mockResponse = JSON.stringify([{ term: 'Term 1', definition: 'Def 1' }]);
+        (callGemini as jest.Mock).mockResolvedValue(mockResponse);
+
+        render(<KeyConcepts apiKey={apiKey} articleContent="" />);
+        fireEvent.click(screen.getByText('🧠 Extrair Conceitos-Chave'));
+
+        await waitFor(() => expect(screen.getByText('Term 1')).toBeInTheDocument());
+
+        // Verify callGemini was called with empty/truncated text context
+        const prompt = (callGemini as jest.Mock).mock.calls[0][1];
+        expect(prompt).toContain('Texto: ');
+    });
 });

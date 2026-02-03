@@ -48,6 +48,20 @@ describe('ChatPanel', () => {
         expect(input.value).toBe('Quais são os pontos principais?');
     });
 
+    it('should handle all suggestion clicks', async () => {
+        render(<ChatPanel apiKey={apiKey} articleContent={content} />);
+        const input = screen.getByPlaceholderText('Faça uma pergunta sobre o artigo...') as HTMLTextAreaElement;
+
+        fireEvent.click(screen.getByText('Quais são os pontos principais?'));
+        expect(input.value).toBe('Quais são os pontos principais?');
+
+        fireEvent.click(screen.getByText('Explique como se eu tivesse 5 anos'));
+        expect(input.value).toBe('Explique como se eu tivesse 5 anos');
+
+        fireEvent.click(screen.getByText('O que o autor conclui?'));
+        expect(input.value).toBe('O que o autor conclui?');
+    });
+
     it('should handle errors', async () => {
         (callGeminiChat as jest.Mock).mockRejectedValue(new Error('Fail'));
         render(<ChatPanel apiKey={apiKey} articleContent={content} />);

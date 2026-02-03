@@ -185,6 +185,34 @@ describe('aiOrganizer', () => {
             );
             consoleSpy.mockRestore();
         });
+
+        it('should handle invalid URL in batch (triggering outer catch)', async () => {
+            // Create 20 items. Item 16 has invalid URL.
+            const items = Array.from({ length: 20 }, (_, i) => ({
+                ...mockItem,
+                id: `${i}`,
+                url: i === 16 ? 'invalid-url' : 'https://valid.com'
+            }));
+
+            // Mock Gemini for valid calls
+             const mockResponse = {
+                functionCall: {
+                    name: 'organize_items',
+                    args: { organizedItems: [] }
+                }
+            };
+            (callGeminiWithTools as jest.Mock).mockResolvedValue(mockResponse);
+
+            const result = await organizeWithAI(items, 'key');
+
+            expect(result.items).toHaveLength(20);
+            // Debug logs should contain error for batch 2
+            const errorLog = result.debugLogs.find((l: any) => l.error);
+            expect(errorLog).toBeDefined();
+            // Error message depends on environment (node vs browser), typically "Invalid URL"
+            // We check if it has error property.
+            expect(errorLog.batchSize).toBeDefined();
+        });
     });
 
     describe('organizeAndExportToFirefox', () => {
