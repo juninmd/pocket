@@ -13,6 +13,8 @@
     - No basic UI.
     - Use `theme.common.css` variables.
     - Animate everything (Framer Motion).
+- **Documentation:** All exported functions must have JSDoc comments.
+- **Testing:** Maintain 100% test coverage.
 
 ## 3. Technology Stack
 - **Framework:** React 19
@@ -29,8 +31,9 @@
 
 ## 5. Development Workflow
 1.  **Modify:** Edit React components in `src/`.
-2.  **Build:** Run `npm run build` (or `pnpm run build`).
-3.  **Verify:** Load `dist/manifest.json` in `about:debugging` in Firefox.
+2.  **Build:** Run `pnpm run build` (or `pnpm run build:prod`).
+3.  **Test:** Run `pnpm test`.
+4.  **Verify:** Load `dist/manifest.json` in `about:debugging` in Firefox.
 
 ## 6. Project structure
 - `src/background`: Service workers.
@@ -38,3 +41,8 @@
 - `src/popup`: Extension popup UI.
 - `src/dashboard`: Full-page management UI.
 - `src/reader`: Distraction-free reading view.
+
+## 7. Repository Standards
+- **AGENTS.md:** Contains future roadmap and agent directives.
+- **CONTRIBUTING.md:** Guidelines for contributors.
+- **Issue Templates:** Use provided templates for bugs and features.

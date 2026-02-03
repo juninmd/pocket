@@ -1,11 +1,25 @@
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus, ItemType } from './types';
 
+/**
+ * Retrieves all saved items metadata from local storage.
+ * Note: This does not include the full content of the items.
+ * Use getItem(id) to retrieve the full item including content.
+ *
+ * @returns {Promise<SavedItem[]>} A promise that resolves to an array of SavedItem objects.
+ */
 export const getSavedItems = async (): Promise<SavedItem[]> => {
   const data = await browser.storage.local.get('savedItems');
   return (data.savedItems as SavedItem[]) || [];
 };
 
+/**
+ * Retrieves a specific saved item by its ID, including its content.
+ * Handles fetching content from separate storage keys if necessary.
+ *
+ * @param {string} id - The unique identifier of the item.
+ * @returns {Promise<SavedItem | null>} A promise that resolves to the SavedItem or null if not found.
+ */
 export const getItem = async (id: string): Promise<SavedItem | null> => {
   const items = await getSavedItems();
   const item = items.find(i => i.id === id);
@@ -26,6 +40,13 @@ export const getItem = async (id: string): Promise<SavedItem | null> => {
   return item;
 };
 
+/**
+ * Saves a new item or updates an existing one based on URL.
+ * Content is stored separately from metadata to optimize storage usage.
+ *
+ * @param {SavedItem} item - The item to save.
+ * @returns {Promise<void>}
+ */
 export const saveItem = async (item: SavedItem): Promise<void> => {
   const items = await getSavedItems();
 
@@ -52,6 +73,14 @@ export const saveItem = async (item: SavedItem): Promise<void> => {
   await browser.storage.local.set({ savedItems: items });
 };
 
+/**
+ * Updates specific fields of a saved item.
+ * Handles content updates separately and legacy content migration.
+ *
+ * @param {string} id - The unique identifier of the item to update.
+ * @param {Partial<SavedItem>} updates - The fields to update.
+ * @returns {Promise<SavedItem | null>} A promise that resolves to the updated item or null if not found.
+ */
 export const updateItem = async (id: string, updates: Partial<SavedItem>): Promise<SavedItem | null> => {
   const items = await getSavedItems();
   const index = items.findIndex(i => i.id === id);
@@ -83,6 +112,12 @@ export const updateItem = async (id: string, updates: Partial<SavedItem>): Promi
   return null;
 };
 
+/**
+ * Deletes an item by its ID, removing both metadata and separate content storage.
+ *
+ * @param {string} id - The unique identifier of the item to delete.
+ * @returns {Promise<void>}
+ */
 export const deleteItem = async (id: string): Promise<void> => {
   const items = await getSavedItems();
   const newItems = items.filter(i => i.id !== id);
@@ -90,6 +125,11 @@ export const deleteItem = async (id: string): Promise<void> => {
   await browser.storage.local.remove(`content_${id}`);
 };
 
+/**
+ * Generates a unique identifier using crypto.randomUUID or a fallback.
+ *
+ * @returns {string} A unique string ID.
+ */
 export const generateId = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();

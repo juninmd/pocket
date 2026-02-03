@@ -3,6 +3,13 @@ import { SavedItem, ItemStatus, ItemType, Message } from '../utils/types';
 import { getSavedItems, saveItem, updateItem, deleteItem, generateId, getItem } from '../utils/storage';
 import { organizeWithAI, importBookmarks, exportToFirefox, organizeAndExportToFirefox } from '../utils/aiOrganizer';
 
+/**
+ * Resizes an image data URL to a maximum width of 320px.
+ * Used for creating thumbnails of saved pages.
+ *
+ * @param {string} dataUrl - The original image data URL.
+ * @returns {Promise<string>} A promise that resolves to the resized image data URL.
+ */
 export const resizeImage = (dataUrl: string): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -21,6 +28,12 @@ export const resizeImage = (dataUrl: string): Promise<string> => {
   });
 };
 
+/**
+ * Captures a visible tab snapshot and resizes it.
+ *
+ * @param {number} [windowId] - The ID of the window to capture.
+ * @returns {Promise<string | undefined>} The resized snapshot data URL or undefined if failed.
+ */
 export const captureSnapshot = async (windowId?: number): Promise<string | undefined> => {
   try {
     const dataUrl = await browser.tabs.captureVisibleTab(windowId, { format: 'jpeg', quality: 50 });
@@ -31,6 +44,14 @@ export const captureSnapshot = async (windowId?: number): Promise<string | undef
   }
 };
 
+/**
+ * Handles incoming messages from other parts of the extension.
+ * Supports actions like saveLink, getLinks, updateLink, etc.
+ *
+ * @param {any} msg - The message object.
+ * @param {browser.Runtime.MessageSender} sender - The sender of the message.
+ * @returns {Promise<any>} A promise resolving to the response.
+ */
 export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSender) => {
   const message = msg as Message;
   switch (message.action) {
@@ -164,6 +185,12 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
   }
 };
 
+/**
+ * Context menu handler for saving pages/links.
+ *
+ * @param {browser.Menus.OnClickData} info - Information about the context menu click.
+ * @param {browser.Tabs.Tab} [tab] - The tab where the click occurred.
+ */
 export const handleContextMenu = async (info: browser.Menus.OnClickData, tab?: browser.Tabs.Tab) => {
   if (info.menuItemId === "save-to-pocket-like") {
     let url = info.linkUrl;
