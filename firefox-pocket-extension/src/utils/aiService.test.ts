@@ -69,15 +69,6 @@ describe('aiService', () => {
             consoleSpy.mockRestore();
         });
 
-        it('should use default error message if missing', async () => {
-            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-            (global.fetch as jest.Mock).mockResolvedValue({
-               json: jest.fn().mockResolvedValue({ error: {} })
-           });
-           await expect(callGeminiChat(mockApiKey, [])).rejects.toThrow('Erro na API do Gemini');
-           consoleSpy.mockRestore();
-       });
-
         it('should throw if no text returned', async () => {
             (global.fetch as jest.Mock).mockResolvedValue({
                 json: jest.fn().mockResolvedValue({})
@@ -116,6 +107,40 @@ describe('aiService', () => {
                 })
             );
         });
+
+        it('should handle all config options', async () => {
+             (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue(mockResponse)
+            });
+            await callGeminiChat(mockApiKey, [], 'gemini-1.5-flash', { temperature: 0.7, maxOutputTokens: 100, jsonMode: true });
+             expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"temperature":0.7')
+                })
+            );
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"maxOutputTokens":100')
+                })
+            );
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"responseMimeType":"application/json"')
+                })
+            );
+        });
+
+        it('should use default error message if missing', async () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+            (global.fetch as jest.Mock).mockResolvedValue({
+               json: jest.fn().mockResolvedValue({ error: {} })
+           });
+           await expect(callGeminiChat(mockApiKey, [])).rejects.toThrow('Erro na API do Gemini');
+           consoleSpy.mockRestore();
+       });
 
         it('should handle errors', async () => {
              const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -157,6 +182,31 @@ describe('aiService', () => {
                 expect.anything(),
                 expect.objectContaining({
                     body: expect.stringContaining('"tools":')
+                })
+            );
+        });
+
+        it('should pass all config params', async () => {
+             (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue(toolResponse)
+            });
+            await callGeminiWithTools(mockApiKey, 'Prompt', 'gemini-1.5-flash', { temperature: 0.9, maxOutputTokens: 50, jsonMode: true });
+             expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"temperature":0.9')
+                })
+            );
+             expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"maxOutputTokens":50')
+                })
+            );
+             expect(global.fetch).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    body: expect.stringContaining('"responseMimeType":"application/json"')
                 })
             );
         });

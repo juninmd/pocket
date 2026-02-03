@@ -164,6 +164,13 @@ describe('background script', () => {
             expect(result.item).toEqual(mockItem);
         });
 
+        it('getLink should return null item if not found', async () => {
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([]);
+            const result = await handleMessage({ action: 'getLink', payload: { url: 'http://test.com' } }, {} as any);
+            expect(result.success).toBe(false);
+            expect(result.item).toBeNull();
+        });
+
          it('updateLink should update item', async () => {
             (storage.updateItem as jest.Mock).mockResolvedValue(mockItem);
             const result = await handleMessage({ action: 'updateLink', payload: { id: '1', updates: {} } }, {} as any);

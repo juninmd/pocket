@@ -137,6 +137,41 @@ describe('Reader', () => {
          fireEvent.click(screen.getByLabelText('Fechar barra lateral'));
     });
 
+    it('should toggle sidebar using floating button', async () => {
+         (getItem as jest.Mock).mockResolvedValue(mockItem);
+         (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
+
+         render(<Reader />);
+         await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+         const floatingBtn = screen.getByLabelText('Alternar barra lateral');
+         fireEvent.click(floatingBtn);
+
+         expect(document.body.classList.contains('has-sidebar')).toBe(true);
+
+         // Click again to close
+         fireEvent.click(floatingBtn);
+         expect(document.body.classList.contains('has-sidebar')).toBe(false);
+    });
+
+    it('should close sidebar using close button in sidebar header', async () => {
+         (getItem as jest.Mock).mockResolvedValue(mockItem);
+         (browser.storage.local.get as jest.Mock).mockResolvedValue({ geminiApiKey: 'key' });
+
+         render(<Reader />);
+         await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+         // Open sidebar
+         fireEvent.click(screen.getByText('💬 Chat & Conceitos'));
+         expect(document.body.classList.contains('has-sidebar')).toBe(true);
+
+         // Close using header button
+         const closeBtn = screen.getByLabelText('Fechar barra lateral');
+         fireEvent.click(closeBtn);
+
+         expect(document.body.classList.contains('has-sidebar')).toBe(false);
+    });
+
     it('should handle load data error', async () => {
         (getItem as jest.Mock).mockRejectedValue(new Error('Storage Fail'));
         render(<Reader />);

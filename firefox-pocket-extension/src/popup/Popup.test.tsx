@@ -34,6 +34,12 @@ describe('Popup', () => {
         await waitFor(() => expect(screen.getByText('Não foi possível acessar a página.')).toBeInTheDocument());
     });
 
+    it('should show error if tab has no url', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ id: 1 }]); // No URL
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('Não foi possível acessar a página.')).toBeInTheDocument());
+    });
+
     it('should show not saved view if item not found', async () => {
         (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
         (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ success: false });
@@ -211,6 +217,23 @@ describe('Popup', () => {
             action: 'saveLink',
             payload: expect.not.objectContaining({ description: expect.anything() })
         }));
+    });
+
+    it('should save without metadata if tab id is missing', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com' }]); // No ID
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'getLink') return Promise.resolve({ success: false });
+            if (msg.action === 'saveLink') return Promise.resolve({ success: true, item: { id: '1', title: 'Fallback', tags: [] } });
+            return Promise.resolve({});
+        });
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('💾 Salvar Esta Página')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('💾 Salvar Esta Página'));
+
+        await waitFor(() => expect(screen.getByText('Link Salvo!')).toBeInTheDocument());
+        expect(browser.tabs.sendMessage).not.toHaveBeenCalled(); // No ID, so no message
     });
 
     it('should handle empty response from check saved', async () => {
