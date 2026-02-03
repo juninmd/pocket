@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 import DOMPurify from 'dompurify';
-import { SavedItem } from '../utils/types';
+import { SavedItem, ItemStatus } from '../utils/types';
 import { getItem } from '../utils/storage';
 import { Modal } from '../components/Modal';
 import { ReadingProgressBar } from '../components/ReadingProgressBar';
@@ -80,6 +80,27 @@ const Reader = () => {
           document.body.classList.remove('has-sidebar');
       };
   }, [showSidebar]);
+
+  const handleToggleFavorite = async () => {
+    if (!item) return;
+    const newItem = { ...item, isFavorite: !item.isFavorite };
+    setItem(newItem); // Optimistic update
+    await browser.runtime.sendMessage({
+      action: 'updateLink',
+      payload: { id: item.id, updates: { isFavorite: newItem.isFavorite } }
+    });
+  };
+
+  const handleToggleArchive = async () => {
+    if (!item) return;
+    const newStatus = item.status === ItemStatus.Archived ? ItemStatus.Unread : ItemStatus.Archived;
+    const newItem = { ...item, status: newStatus };
+    setItem(newItem); // Optimistic update
+    await browser.runtime.sendMessage({
+        action: 'updateLink',
+        payload: { id: item.id, updates: { status: newStatus } }
+    });
+  };
 
   const handleSummarize = async () => {
     if (!apiKey) {
@@ -167,6 +188,24 @@ const Reader = () => {
         </div>
 
         <div style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+              className="ai-btn"
+              onClick={handleToggleFavorite}
+              style={{ background: item.isFavorite ? '#ff9800' : 'rgba(255,255,255,0.1)', color: item.isFavorite ? 'white' : 'var(--text-main)' }}
+              title={item.isFavorite ? "Remover dos Favoritos" : "Favoritar"}
+              aria-label={item.isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+          >
+              {item.isFavorite ? "★ Favorito" : "☆ Favoritar"}
+          </button>
+          <button
+              className="ai-btn"
+              onClick={handleToggleArchive}
+              style={{ background: item.status === ItemStatus.Archived ? '#4caf50' : 'rgba(255,255,255,0.1)', color: item.status === ItemStatus.Archived ? 'white' : 'var(--text-main)' }}
+              title={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
+              aria-label={item.status === ItemStatus.Archived ? "Desarquivar item" : "Arquivar item"}
+          >
+              {item.status === ItemStatus.Archived ? "📥 Arquivado" : "📥 Arquivar"}
+          </button>
           {!summary && (
             <button
               onClick={handleSummarize}
