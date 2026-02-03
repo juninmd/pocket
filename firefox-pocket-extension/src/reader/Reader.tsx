@@ -158,7 +158,7 @@ const Reader = () => {
       <ReadingProgressBar />
 
       <div className="header">
-        <a href="dashboard.html" className="back-btn">← Voltar para Minha Lista</a>
+        <a href="dashboard.html" className="back-btn" aria-label="Voltar para Minha Lista">← Voltar para Minha Lista</a>
         <h1 className="article-title">{item.title}</h1>
         <div className="article-meta">
           {item.siteName ? <span>{item.siteName}</span> : <span>{new URL(item.url).hostname}</span>}
@@ -172,6 +172,7 @@ const Reader = () => {
               onClick={handleSummarize}
               disabled={isSummarizing}
               className="ai-btn"
+              aria-label="Resumir artigo com IA"
             >
               {isSummarizing ? (
                 <>Aguarde...</>
@@ -180,7 +181,7 @@ const Reader = () => {
               )}
             </button>
           )}
-          <button className="ai-btn" onClick={toggleSidebar}>
+          <button className="ai-btn" onClick={toggleSidebar} aria-label="Alternar Chat e Conceitos">
               💬 Chat & Conceitos
           </button>
 
@@ -248,23 +249,37 @@ const Reader = () => {
     </div>
 
     {/* Floating Toggle Button */}
-    <button className={`toggle-sidebar-btn ${showSidebar ? 'active' : ''}`} onClick={toggleSidebar}>
+    <button className={`toggle-sidebar-btn ${showSidebar ? 'active' : ''}`} onClick={toggleSidebar} aria-label="Alternar barra lateral">
         {showSidebar ? '✕' : '💬'}
     </button>
 
     {/* AI Sidebar */}
-    <div className={`ai-sidebar ${showSidebar ? 'open' : ''}`}>
-        <div className="sidebar-header">
+    <aside className={`ai-sidebar ${showSidebar ? 'open' : ''}`}>
+        <header className="sidebar-header">
             <div className="sidebar-title">
                 <span>🤖</span> Assistente
             </div>
-            <button className="sidebar-close" onClick={() => setShowSidebar(false)}>✕</button>
+            <button className="sidebar-close" onClick={() => setShowSidebar(false)} aria-label="Fechar barra lateral">✕</button>
+        </header>
+        <div className="sidebar-tabs" role="tablist">
+            <button
+                className={`sidebar-tab ${sidebarTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setSidebarTab('chat')}
+                role="tab"
+                aria-selected={sidebarTab === 'chat'}
+            >
+                Chat
+            </button>
+            <button
+                className={`sidebar-tab ${sidebarTab === 'concepts' ? 'active' : ''}`}
+                onClick={() => setSidebarTab('concepts')}
+                role="tab"
+                aria-selected={sidebarTab === 'concepts'}
+            >
+                Conceitos
+            </button>
         </div>
-        <div className="sidebar-tabs">
-            <button className={`sidebar-tab ${sidebarTab === 'chat' ? 'active' : ''}`} onClick={() => setSidebarTab('chat')}>Chat</button>
-            <button className={`sidebar-tab ${sidebarTab === 'concepts' ? 'active' : ''}`} onClick={() => setSidebarTab('concepts')}>Conceitos</button>
-        </div>
-        <div className="sidebar-content">
+        <div className="sidebar-content" role="tabpanel">
             {apiKey && item?.content ? (
                 <>
                     {sidebarTab === 'chat' && <ChatPanel apiKey={apiKey} articleContent={item.content} />}
@@ -276,7 +291,7 @@ const Reader = () => {
                 </div>
             )}
         </div>
-    </div>
+    </aside>
     </>
   );
 };
