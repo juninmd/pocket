@@ -12,4 +12,5 @@ This repository contains a Firefox extension designed to be a privacy-focused "r
 ## Future Roadmap
 1.  **Syncing:** Implement a mechanism to sync data between devices (possibly using a private cloud or encrypted file export/import) without compromising the "local-first" privacy promise.
 2.  **Advanced AI:** Enhance the Gemini integration to support "Chat with Page" functionality, allowing users to ask questions about the saved content.
-3.  **Accessibility Audit:** Conduct a full accessibility audit (WCAG 2.1) on the `Reader` and `Dashboard` views to ensure full keyboard navigation and screen reader support.
+3.  **Accessibility Audit (Dashboard):** Conduct a full accessibility audit (WCAG 2.1) on the `Dashboard` view. (Note: `Reader` view audit and improvements completed).
+4.  **Full Keyboard Navigation:** Ensure every interactive element in the extension is accessible via keyboard, including focus traps for modals and logical tab order.

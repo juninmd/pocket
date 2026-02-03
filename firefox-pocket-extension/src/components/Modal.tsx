@@ -45,6 +45,9 @@ export const Modal: React.FC<ModalProps> = ({
             onClick={onClose}
           >
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={title ? "modal-title" : undefined}
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -62,7 +65,7 @@ export const Modal: React.FC<ModalProps> = ({
             >
               {title && (
                 <div className="mb-4">
-                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                  <h3 id="modal-title" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)' }}>
                     {title}
                   </h3>
                 </div>
@@ -80,6 +83,7 @@ export const Modal: React.FC<ModalProps> = ({
               
               <button 
                 onClick={onClose}
+                aria-label="Fechar"
                 style={{
                   position: 'absolute',
                   top: '16px',
