@@ -127,8 +127,14 @@ describe('Reader', () => {
          fireEvent.click(screen.getByText('Chat'));
          expect(screen.getByText('ChatPanel')).toBeInTheDocument();
 
-         // Close
+         // Close via toggle
          fireEvent.click(screen.getAllByText('✕')[0]);
+
+         // Re-open
+         fireEvent.click(screen.getByText('💬'));
+
+         // Close via header button
+         fireEvent.click(screen.getByLabelText('Fechar barra lateral'));
     });
 
     it('should handle load data error', async () => {
@@ -249,5 +255,41 @@ describe('Reader', () => {
         fireEvent.click(screen.getByText('✨ Resumir'));
 
         expect(screen.getByText('Não há conteúdo textual suficiente para resumir.')).toBeInTheDocument();
+    });
+
+    it('should toggle favorite status', async () => {
+        const itemUnfavorited = { ...mockItem, isFavorite: false };
+        (getItem as jest.Mock).mockResolvedValue(itemUnfavorited);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({});
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        const favBtn = screen.getByText('☆ Favoritar');
+        fireEvent.click(favBtn);
+
+        await waitFor(() => expect(screen.getByText('★ Favorito')).toBeInTheDocument());
+        expect(browser.runtime.sendMessage).toHaveBeenCalledWith({
+            action: 'updateLink',
+            payload: { id: '1', updates: { isFavorite: true } }
+        });
+    });
+
+    it('should toggle archive status', async () => {
+        const itemUnarchived = { ...mockItem, status: 'unread' };
+        (getItem as jest.Mock).mockResolvedValue(itemUnarchived);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({});
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        const archiveBtn = screen.getByText('📥 Arquivar');
+        fireEvent.click(archiveBtn);
+
+        await waitFor(() => expect(screen.getByText('📥 Arquivado')).toBeInTheDocument());
+        expect(browser.runtime.sendMessage).toHaveBeenCalledWith({
+            action: 'updateLink',
+            payload: { id: '1', updates: { status: 'archived' } }
+        });
     });
 });
