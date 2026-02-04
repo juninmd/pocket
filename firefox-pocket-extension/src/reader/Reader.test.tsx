@@ -9,7 +9,7 @@ jest.mock('webextension-polyfill');
 jest.mock('../utils/aiService');
 jest.mock('../utils/storage');
 jest.mock('../components/ReadingProgressBar', () => ({ ReadingProgressBar: () => <div>ProgressBar</div> }));
-jest.mock('../components/TTSPlayer', () => ({ TTSPlayer: () => <div>TTSPlayer</div> }));
+jest.mock('../components/TTSPlayer', () => ({ TTSPlayer: ({ text }: { text: string }) => <div data-testid="tts-player" data-text={text}>TTSPlayer</div> }));
 jest.mock('../components/AI/ChatPanel', () => ({ ChatPanel: () => <div>ChatPanel</div> }));
 jest.mock('../components/AI/KeyConcepts', () => ({ KeyConcepts: () => <div>KeyConcepts</div> }));
 

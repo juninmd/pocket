@@ -659,7 +659,7 @@ const Dashboard = () => {
                                     }}>
                                         <div style={{
                                             height: '100%',
-                                            width: `${(importProgress.current / (importProgress.total || 1)) * 100}%`,
+                                        width: `${(importProgress.current / (importProgress.total > 0 ? importProgress.total : 1)) * 100}%`,
                                             background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
                                             transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                             boxShadow: '0 0 10px rgba(102, 126, 234, 0.5)'

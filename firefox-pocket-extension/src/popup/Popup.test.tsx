@@ -244,6 +244,30 @@ describe('Popup', () => {
         await waitFor(() => expect(screen.getByText('O que deseja fazer?')).toBeInTheDocument());
     });
 
+    it('should handle missing item in check saved response', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ success: true }); // No item
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('O que deseja fazer?')).toBeInTheDocument());
+    });
+
+    it('should handle missing item in save response', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'getLink') return Promise.resolve({ success: false });
+            if (msg.action === 'saveLink') return Promise.resolve({ success: true }); // No item
+            return Promise.resolve({});
+        });
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('💾 Salvar Esta Página')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('💾 Salvar Esta Página'));
+
+        await waitFor(() => expect(screen.getByText('Não foi possível acessar a página.')).toBeInTheDocument());
+    });
+
     it('should handle empty response from save', async () => {
         (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
         (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {

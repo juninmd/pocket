@@ -75,6 +75,14 @@ describe('background script', () => {
         jest.spyOn(document, 'createElement').mockReturnValue(mockCanvas as any);
     });
 
+    it('should register listeners on load', () => {
+        jest.isolateModules(() => {
+            const bg = require('./background');
+            expect(browser.contextMenus.onClicked.addListener).toHaveBeenCalledWith(bg.handleContextMenu);
+            expect(browser.runtime.onMessage.addListener).toHaveBeenCalledWith(bg.handleMessage);
+        });
+    });
+
     describe('resizeImage', () => {
         it('should resize image', async () => {
             const result = await resizeImage('data:image/jpeg;base64,original');
@@ -98,6 +106,20 @@ describe('background script', () => {
             expect(result).toBe('data:image/jpeg;base64,original');
 
             global.Image = originalImage;
+        });
+
+        it('should handle missing canvas context', async () => {
+            const mockCanvas = {
+                getContext: jest.fn().mockReturnValue(null),
+                toDataURL: jest.fn().mockReturnValue('data:image/jpeg;base64,empty'),
+                width: 0,
+                height: 0
+            };
+            jest.spyOn(document, 'createElement').mockReturnValue(mockCanvas as any);
+
+            const result = await resizeImage('data:image/jpeg;base64,original');
+            // If ctx is null, it proceeds to resolve with canvas.toDataURL
+            expect(result).toBe('data:image/jpeg;base64,empty');
         });
     });
 

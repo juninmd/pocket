@@ -111,23 +111,21 @@ const Reader = () => {
   }, [showSidebar]);
 
   const handleToggleFavorite = async () => {
-    if (!item) return;
-    const newItem = { ...item, isFavorite: !item.isFavorite };
+    const newItem = { ...item!, isFavorite: !item!.isFavorite };
     setItem(newItem); // Optimistic update
     await browser.runtime.sendMessage({
       action: 'updateLink',
-      payload: { id: item.id, updates: { isFavorite: newItem.isFavorite } }
+      payload: { id: item!.id, updates: { isFavorite: newItem.isFavorite } }
     });
   };
 
   const handleToggleArchive = async () => {
-    if (!item) return;
-    const newStatus = item.status === ItemStatus.Archived ? ItemStatus.Unread : ItemStatus.Archived;
-    const newItem = { ...item, status: newStatus };
+    const newStatus = item!.status === ItemStatus.Archived ? ItemStatus.Unread : ItemStatus.Archived;
+    const newItem = { ...item!, status: newStatus };
     setItem(newItem); // Optimistic update
     await browser.runtime.sendMessage({
         action: 'updateLink',
-        payload: { id: item.id, updates: { status: newStatus } }
+        payload: { id: item!.id, updates: { status: newStatus } }
     });
   };
 
@@ -196,9 +194,8 @@ const Reader = () => {
   if (!item) return <div className="error">Item não encontrado</div>;
 
   const getPlainText = () => {
-    if (!item.content) return "";
     const temp = document.createElement('div');
-    temp.innerHTML = item.content;
+    temp.innerHTML = item!.content || "";
     return temp.textContent || temp.innerText || "";
   };
 
