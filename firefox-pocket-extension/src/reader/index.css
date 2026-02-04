@@ -549,3 +549,114 @@ body.has-sidebar .reader-container {
         z-index: 101;
     }
 }
+
+/* Themes */
+.theme-light {
+    --bg-dark: #ffffff;
+    --text-main: #333333;
+    --text-secondary: #555555;
+    --bg-reader: #f8f9fa;
+    --glass-border: 1px solid rgba(0, 0, 0, 0.1);
+    --bg-card: #f8f9fa;
+}
+
+.theme-sepia {
+    --bg-dark: #f4ecd8;
+    --text-main: #5b4636;
+    --text-secondary: #7e6a57;
+    --bg-reader: #f8f1e3;
+    --glass-border: 1px solid rgba(91, 70, 54, 0.1);
+    --bg-card: #f8f1e3;
+}
+
+.theme-dark {
+    /* Uses defaults from theme.css */
+}
+
+/* Settings Menu */
+.settings-menu {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 280px;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 16px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.settings-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-family: var(--font-main);
+    font-weight: 600;
+}
+
+.theme-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.theme-btn:hover {
+    transform: scale(1.1);
+}
+
+.theme-btn.active {
+    border-color: var(--primary);
+}
+
+.theme-btn.light { background: #ffffff; border: 1px solid #ddd; }
+.theme-btn.sepia { background: #f4ecd8; border: 1px solid #dcc; }
+.theme-btn.dark { background: #0f1115; border: 1px solid #333; }
+
+.font-size-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--border-light);
+    color: var(--text-main);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-family: var(--font-main);
+}
+
+.font-size-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.font-family-btn {
+    flex: 1;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.font-family-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
