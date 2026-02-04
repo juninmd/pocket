@@ -183,4 +183,24 @@ describe('ChatPanel', () => {
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', charCode: 13 });
         expect(callGeminiChat).toHaveBeenCalledTimes(1);
     });
+
+    it('should handle empty content and messages', async () => {
+        (callGeminiChat as jest.Mock).mockResolvedValue('');
+
+        const { container } = render(<ChatPanel apiKey={apiKey} articleContent="" />);
+
+        const input = screen.getByPlaceholderText('Faça uma pergunta sobre o artigo...');
+        fireEvent.change(input, { target: { value: 'Q' } });
+        fireEvent.click(screen.getByText('➤'));
+
+        await waitFor(() => expect(callGeminiChat).toHaveBeenCalled());
+
+        const messages = container.getElementsByClassName('chat-message');
+        expect(messages.length).toBeGreaterThan(0);
+
+        expect(screen.getByText('Q')).toBeInTheDocument();
+
+        const modelMessages = container.getElementsByClassName('model');
+        expect(modelMessages.length).toBeGreaterThan(0);
+    });
 });

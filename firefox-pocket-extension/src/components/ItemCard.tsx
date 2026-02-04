@@ -20,6 +20,8 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
         }
     };
 
+    const stopProp = (e: React.MouseEvent) => e.stopPropagation();
+
     return (
         <div className="card" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }} onClick={handleCardClick}>
             <div style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -54,14 +56,14 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                         </div>
                     )}
                     <div style={{ flex: 1 }}></div>
-                    <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+                    <div className="card-actions" onClick={stopProp}>
                         <a
                             href={item.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="icon-btn"
                             title="Abrir original"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={stopProp}
                             style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                             🔗

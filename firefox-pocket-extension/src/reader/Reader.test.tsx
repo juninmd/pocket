@@ -9,7 +9,7 @@ jest.mock('webextension-polyfill');
 jest.mock('../utils/aiService');
 jest.mock('../utils/storage');
 jest.mock('../components/ReadingProgressBar', () => ({ ReadingProgressBar: () => <div>ProgressBar</div> }));
-jest.mock('../components/TTSPlayer', () => ({ TTSPlayer: () => <div>TTSPlayer</div> }));
+jest.mock('../components/TTSPlayer', () => ({ TTSPlayer: ({ text }: { text: string }) => <div data-testid="tts-player" data-text={text}>TTSPlayer</div> }));
 jest.mock('../components/AI/ChatPanel', () => ({ ChatPanel: () => <div>ChatPanel</div> }));
 jest.mock('../components/AI/KeyConcepts', () => ({ KeyConcepts: () => <div>KeyConcepts</div> }));
 
@@ -326,5 +326,16 @@ describe('Reader', () => {
             action: 'updateLink',
             payload: { id: '1', updates: { status: 'archived' } }
         });
+    });
+
+    it('should render TTS with empty text if content has no text', async () => {
+        const itemNoText = { ...mockItem, content: '<div></div>' };
+        (getItem as jest.Mock).mockResolvedValue(itemNoText);
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        const tts = screen.getByTestId('tts-player');
+        expect(tts).toHaveAttribute('data-text', '');
     });
 });

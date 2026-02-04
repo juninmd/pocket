@@ -338,6 +338,27 @@ describe('Dashboard', () => {
         await waitFor(() => expect(screen.getByText('50 de 100 itens processados')).toBeInTheDocument());
     });
 
+    it('should handle import progress with zero total', async () => {
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'importBookmarks') return new Promise(() => {}); // Hang
+            return Promise.resolve({ items: [] });
+        });
+
+        render(<Dashboard />);
+        fireEvent.click(screen.getByText('Configurações'));
+        fireEvent.click(screen.getByText('📥 Importar Favoritos do Firefox'));
+
+        if (listener) {
+             React.act(() => {
+                listener({ action: 'importProgress', payload: { current: 0, total: 0 } });
+             });
+        }
+
+        await waitFor(() => expect(screen.getByText('0 de 0 itens processados')).toBeInTheDocument());
+    });
+
     it('should handle filtered view empty states', async () => {
         (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
         render(<Dashboard />);
