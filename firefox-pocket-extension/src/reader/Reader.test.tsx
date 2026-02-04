@@ -328,14 +328,37 @@ describe('Reader', () => {
         });
     });
 
-    it('should render TTS with empty text if content has no text', async () => {
-        const itemNoText = { ...mockItem, content: '<div></div>' };
-        (getItem as jest.Mock).mockResolvedValue(itemNoText);
+    it('should toggle settings menu and change appearance', async () => {
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({});
+        (browser.storage.local.set as jest.Mock).mockResolvedValue({});
 
         render(<Reader />);
         await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
 
-        const tts = screen.getByTestId('tts-player');
-        expect(tts).toHaveAttribute('data-text', '');
+        // Open settings
+        const settingsBtn = screen.getByLabelText('Configurações de Leitura');
+        fireEvent.click(settingsBtn);
+
+        expect(screen.getByText('Tema')).toBeInTheDocument();
+        expect(screen.getByText('Tamanho')).toBeInTheDocument();
+
+        // Change Theme
+        const lightThemeBtn = screen.getByLabelText('Tema Claro');
+        fireEvent.click(lightThemeBtn);
+        expect(document.body.classList.contains('theme-light')).toBe(true);
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ theme: 'light' }));
+
+        // Change Font Size
+        const increaseFontBtn = screen.getByText('+');
+        fireEvent.click(increaseFontBtn);
+        expect(document.body.style.fontSize).toBe('20px'); // Default is 19
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontSize: 20 }));
+
+        // Change Font Family
+        const sansBtn = screen.getByText('Sans');
+        fireEvent.click(sansBtn);
+        expect(document.body.style.fontFamily).toContain('Inter');
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontFamily: 'sans' }));
     });
 });

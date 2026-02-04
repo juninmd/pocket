@@ -24,6 +24,12 @@ const Reader = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'chat' | 'concepts'>('chat');
 
+  // Appearance Settings
+  const [theme, setTheme] = useState<'light' | 'dark' | 'sepia'>('dark');
+  const [fontSize, setFontSize] = useState(19);
+  const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>('serif');
+  const [showSettings, setShowSettings] = useState(false);
+
   const [modal, setModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -69,6 +75,29 @@ const Reader = () => {
 
     loadData();
   }, []);
+
+  // Load Appearance Settings
+  useEffect(() => {
+    browser.storage.local.get(['theme', 'fontSize', 'fontFamily']).then((res) => {
+      if (res.theme) setTheme(res.theme as any);
+      if (res.fontSize) setFontSize(res.fontSize as number);
+      if (res.fontFamily) setFontFamily(res.fontFamily as any);
+    });
+  }, []);
+
+  // Apply Appearance Settings
+  useEffect(() => {
+    document.body.classList.remove('theme-light', 'theme-dark', 'theme-sepia');
+    document.body.classList.add(`theme-${theme}`);
+
+    document.body.style.fontSize = `${fontSize}px`;
+    document.body.style.fontFamily = fontFamily === 'serif'
+      ? '"Charter", "Bitstream Charter", "Sitka Text", Cambria, serif'
+      : '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+    // Save settings (debounced by nature of React updates usually, but direct set is fine here)
+    browser.storage.local.set({ theme, fontSize, fontFamily });
+  }, [theme, fontSize, fontFamily]);
 
   useEffect(() => {
       if (showSidebar) {
@@ -184,7 +213,72 @@ const Reader = () => {
           {item.estimatedReadTime && <span> • {item.estimatedReadTime} min de leitura</span>}
         </div>
 
-        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap', position: 'relative' }}>
+          {/* Settings Button */}
+          <div style={{ position: 'relative' }}>
+            <button
+              className="ai-btn"
+              onClick={() => setShowSettings(!showSettings)}
+              aria-label="Configurações de Leitura"
+              title="Configurações de Leitura"
+              style={{ background: showSettings ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)' }}
+            >
+              Aa
+            </button>
+
+            {showSettings && (
+              <div className="settings-menu">
+                <div className="settings-group">
+                  <span className="settings-label">Tema</span>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      className={`theme-btn light ${theme === 'light' ? 'active' : ''}`}
+                      onClick={() => setTheme('light')}
+                      aria-label="Tema Claro"
+                    />
+                    <button
+                      className={`theme-btn sepia ${theme === 'sepia' ? 'active' : ''}`}
+                      onClick={() => setTheme('sepia')}
+                      aria-label="Tema Sépia"
+                    />
+                    <button
+                      className={`theme-btn dark ${theme === 'dark' ? 'active' : ''}`}
+                      onClick={() => setTheme('dark')}
+                      aria-label="Tema Escuro"
+                    />
+                  </div>
+                </div>
+
+                <div className="settings-group">
+                  <span className="settings-label">Tamanho</span>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="font-size-btn" onClick={() => setFontSize(Math.max(14, fontSize - 1))}>-</button>
+                    <span style={{ minWidth: '24px', textAlign: 'center', color: 'var(--text-main)' }}>{fontSize}</span>
+                    <button className="font-size-btn" onClick={() => setFontSize(Math.min(32, fontSize + 1))}>+</button>
+                  </div>
+                </div>
+
+                <div className="settings-group">
+                  <span className="settings-label">Fonte</span>
+                  <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                    <button
+                      className={`font-family-btn ${fontFamily === 'serif' ? 'active' : ''}`}
+                      onClick={() => setFontFamily('serif')}
+                    >
+                      Serif
+                    </button>
+                    <button
+                      className={`font-family-btn ${fontFamily === 'sans' ? 'active' : ''}`}
+                      onClick={() => setFontFamily('sans')}
+                    >
+                      Sans
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
               className="ai-btn"
               onClick={handleToggleFavorite}
