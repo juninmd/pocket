@@ -195,7 +195,7 @@ const Reader = () => {
 
   const getPlainText = () => {
     const temp = document.createElement('div');
-    temp.innerHTML = item?.content || "";
+    temp.innerHTML = item!.content || "";
     return temp.textContent || temp.innerText || "";
   };
 
