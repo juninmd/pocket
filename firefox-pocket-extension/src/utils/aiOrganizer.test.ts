@@ -290,5 +290,38 @@ describe('aiOrganizer', () => {
             // 1 root + 1 folder + 2 items = 4 calls.
             expect(browser.bookmarks.create).toHaveBeenCalledTimes(4);
         });
+
+        it('should export nested folders', async () => {
+            const items = [{ ...mockItem, aiFolder: 'Tech/Web/React' }];
+
+            (browser.bookmarks.create as jest.Mock)
+                .mockResolvedValueOnce({ id: 'root' })
+                .mockResolvedValueOnce({ id: 'tech' })
+                .mockResolvedValueOnce({ id: 'web' })
+                .mockResolvedValueOnce({ id: 'react' })
+                .mockResolvedValueOnce({ id: 'bm' });
+
+            const count = await exportToFirefox(items);
+            expect(count).toBe(1);
+            expect(browser.bookmarks.create).toHaveBeenCalledTimes(5); // Root + 3 folders + 1 item
+        });
+
+        it('should handle empty list', async () => {
+            // Only root folder is created
+            (browser.bookmarks.create as jest.Mock).mockResolvedValue({ id: 'root' });
+            const count = await exportToFirefox([]);
+            expect(count).toBe(0);
+        });
+
+        it('should use originalFolder fallback', async () => {
+            const items = [{ ...mockItem, aiFolder: undefined, originalFolder: 'Original' }];
+            (browser.bookmarks.create as jest.Mock)
+                .mockResolvedValueOnce({ id: 'root' })
+                .mockResolvedValueOnce({ id: 'orig' })
+                .mockResolvedValueOnce({ id: 'bm' });
+
+            const count = await exportToFirefox(items);
+            expect(count).toBe(1);
+        });
     });
 });
