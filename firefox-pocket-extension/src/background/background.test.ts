@@ -347,6 +347,22 @@ describe('background script', () => {
              expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({ siteName: 'Meta Site' }));
         });
 
+        it('should get metadata when linkUrl is same as tab url', async () => {
+            const url = 'http://test.com';
+            const info = { menuItemId: 'save-to-pocket-like', linkUrl: url } as any;
+            const tab = { id: 1, active: true, windowId: 123, url: url } as any;
+
+            (browser.tabs.sendMessage as jest.Mock).mockResolvedValue({ title: 'Meta Title', siteName: 'Meta Site' });
+            (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+
+            await handleContextMenu(info, tab);
+            await new Promise(r => setTimeout(r, 50));
+
+            expect(browser.tabs.sendMessage).toHaveBeenCalled();
+            expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({ siteName: 'Meta Site' }));
+        });
+
         it('should handle metadata fetch failure', async () => {
             const info = { menuItemId: 'save-to-pocket-like', linkUrl: 'http://test.com' } as any;
             const tab = { id: 1 } as any;

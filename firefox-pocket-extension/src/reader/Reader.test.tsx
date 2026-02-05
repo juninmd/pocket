@@ -361,4 +361,25 @@ describe('Reader', () => {
         expect(document.body.style.fontFamily).toContain('Inter');
         expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontFamily: 'sans' }));
     });
+
+    it('should handle font size bounds', async () => {
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ fontSize: 32 }); // Max
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        const settingsBtn = screen.getByLabelText('Configurações de Leitura');
+        fireEvent.click(settingsBtn);
+
+        const increaseFontBtn = screen.getByText('+');
+        fireEvent.click(increaseFontBtn);
+        // Should stay at 32
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontSize: 32 }));
+
+        // Decrease
+        const decreaseFontBtn = screen.getByText('-');
+        fireEvent.click(decreaseFontBtn);
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontSize: 31 }));
+    });
 });

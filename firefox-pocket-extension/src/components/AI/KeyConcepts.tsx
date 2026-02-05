@@ -16,9 +16,11 @@ export const KeyConcepts: React.FC<KeyConceptsProps> = ({ apiKey, articleContent
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasLoaded, setHasLoaded] = useState(false);
+    const loadingRef = React.useRef(false);
 
     const loadConcepts = async () => {
-        if (loading || hasLoaded) return;
+        if (loadingRef.current || hasLoaded) return;
+        loadingRef.current = true;
         setLoading(true);
         setError(null);
 
@@ -64,6 +66,7 @@ export const KeyConcepts: React.FC<KeyConceptsProps> = ({ apiKey, articleContent
         } catch (err: any) {
             setError(err.message);
         } finally {
+            loadingRef.current = false;
             setLoading(false);
         }
     };

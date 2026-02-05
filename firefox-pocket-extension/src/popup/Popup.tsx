@@ -91,29 +91,26 @@ const Popup = () => {
   };
 
   const removeTag = async (tagToRemove: string) => {
-    if (!item) return;
     const newTags = tags.filter(t => t !== tagToRemove);
     setTags(newTags);
     await browser.runtime.sendMessage({
       action: 'updateLink',
-      payload: { id: item.id, updates: { tags: newTags } }
+      payload: { id: item!.id, updates: { tags: newTags } }
     });
   };
 
   const handleArchive = async () => {
-    if (!item) return;
     await browser.runtime.sendMessage({
       action: 'updateLink',
-      payload: { id: item.id, updates: { status: ItemStatus.Archived } }
+      payload: { id: item!.id, updates: { status: ItemStatus.Archived } }
     });
     window.close();
   };
 
   const handleDelete = async () => {
-    if (!item) return;
     await browser.runtime.sendMessage({
       action: 'deleteLink',
-      payload: { id: item.id }
+      payload: { id: item!.id }
     });
     window.close();
   };
