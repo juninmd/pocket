@@ -309,4 +309,23 @@ describe('Popup', () => {
             action: 'updateLink'
         }));
     });
+
+    it('should handle undefined tags', async () => {
+        const mockItem = {
+            id: '1',
+            title: 'Test',
+            url: 'http://example.com',
+            // tags undefined
+        };
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ success: true, item: mockItem });
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('Link Salvo!')).toBeInTheDocument());
+        // Verify tags is empty by checking no tags are rendered
+        // .tag class is used for tags
+        expect(screen.queryByText((content, element) => {
+            return element?.classList.contains('tag');
+        })).not.toBeInTheDocument();
+    });
 });

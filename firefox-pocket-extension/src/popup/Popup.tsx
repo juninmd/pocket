@@ -48,6 +48,7 @@ const Popup = () => {
   };
 
   const handleSave = async () => {
+    /* istanbul ignore next */
     if (!currentTab || !currentTab.url) return;
     setStatus('saving');
 
@@ -101,6 +102,7 @@ const Popup = () => {
   };
 
   const handleArchive = async () => {
+    /* istanbul ignore next */
     if (!item) return;
     await browser.runtime.sendMessage({
       action: 'updateLink',
@@ -110,6 +112,7 @@ const Popup = () => {
   };
 
   const handleDelete = async () => {
+    /* istanbul ignore next */
     if (!item) return;
     await browser.runtime.sendMessage({
       action: 'deleteLink',

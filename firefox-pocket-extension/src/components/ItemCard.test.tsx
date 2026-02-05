@@ -129,4 +129,18 @@ describe('ItemCard', () => {
         expect(stopPropagation).toHaveBeenCalled();
         expect(window.open).not.toHaveBeenCalled();
     });
+
+    it('should use snapshotUrl if available', () => {
+        const item = { ...mockItem, snapshotUrl: 'http://example.com/snap.jpg' };
+        const { container } = render(<ItemCard {...props} item={item} />);
+        const cardImage = container.querySelector('.card-image');
+        expect(cardImage).toHaveStyle('background-image: url(http://example.com/snap.jpg)');
+    });
+
+    it('should use imageUrl if snapshotUrl is missing', () => {
+        const item = { ...mockItem, imageUrl: 'http://example.com/image.jpg' };
+        const { container } = render(<ItemCard {...props} item={item} />);
+        const cardImage = container.querySelector('.card-image');
+        expect(cardImage).toHaveStyle('background-image: url(http://example.com/image.jpg)');
+    });
 });
