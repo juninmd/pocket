@@ -203,4 +203,15 @@ describe('ChatPanel', () => {
         const modelMessages = container.getElementsByClassName('model');
         expect(modelMessages.length).toBeGreaterThan(0);
     });
+
+    it('should scroll to bottom on message update', async () => {
+        (callGeminiChat as jest.Mock).mockResolvedValue('Response');
+        render(<ChatPanel apiKey={apiKey} articleContent={content} />);
+
+        const input = screen.getByPlaceholderText('Faça uma pergunta sobre o artigo...');
+        fireEvent.change(input, { target: { value: 'Q' } });
+        fireEvent.click(screen.getByText('➤'));
+
+        await waitFor(() => expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled());
+    });
 });

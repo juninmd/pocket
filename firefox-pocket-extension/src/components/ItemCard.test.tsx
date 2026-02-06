@@ -102,6 +102,18 @@ describe('ItemCard', () => {
         expect(screen.getByText('✨ ai-tag')).toBeInTheDocument();
     });
 
+    it('should handle empty tag arrays', () => {
+         render(<ItemCard {...props} item={{ ...mockItem, tags: [], aiTags: [] }} />);
+         const tagElements = screen.queryByText(/tag/i);
+         // "tag1" shouldn't be there.
+         expect(screen.queryByText('tag1')).not.toBeInTheDocument();
+    });
+
+    it('should handle empty tags and undefined aiTags', () => {
+        render(<ItemCard {...props} item={{ ...mockItem, tags: [], aiTags: undefined }} />);
+        expect(screen.queryByText('tag1')).not.toBeInTheDocument();
+   });
+
     it('should stop propagation on original link click', () => {
         render(<ItemCard {...props} />);
         const link = screen.getByTitle('Abrir original');
