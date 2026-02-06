@@ -24,6 +24,11 @@ const Dashboard = () => {
     const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
     const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
 
+    // Edit Item State
+    const [editingItem, setEditingItem] = useState<SavedItem | null>(null);
+    const [editTags, setEditTags] = useState<string[]>([]);
+    const [editFolder, setEditFolder] = useState<string>('');
+
     // Derived state for foldertree
     const folderTree = React.useMemo(() => buildFolderTree(items), [items]);
 
@@ -132,6 +137,36 @@ const Dashboard = () => {
             'Excluir'
         );
     }, [loadItems]);
+
+    const handleEditClick = useCallback((e: React.MouseEvent, item: SavedItem) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditingItem(item);
+        setEditTags(item.tags || []);
+        setEditFolder(item.aiFolder || item.originalFolder || '');
+    }, []);
+
+    const handleUpdateItem = async () => {
+        if (!editingItem) return;
+
+        try {
+            await browser.runtime.sendMessage({
+                action: 'updateLink',
+                payload: {
+                    id: editingItem.id,
+                    updates: {
+                        tags: editTags,
+                        aiFolder: editFolder
+                    }
+                }
+            });
+            loadItems();
+            setEditingItem(null);
+        } catch (e) {
+            console.error("Failed to update item", e);
+            openModal('Erro', 'Falha ao atualizar item.', 'danger');
+        }
+    };
 
     const handleToggleFavorite = useCallback(async (e: React.MouseEvent, id: string, isFavorite: boolean) => {
         e.preventDefault();
@@ -409,7 +444,7 @@ const Dashboard = () => {
                                     item={item}
                                     onToggleFavorite={handleToggleFavorite}
                                     onToggleArchive={handleToggleArchive}
-                                    onDelete={handleDelete}
+                                    onDelete={handleDelete} onEdit={handleEditClick}
                                 />
                             ))}
                         </div>
@@ -427,7 +462,7 @@ const Dashboard = () => {
                                 item={item}
                                 onToggleFavorite={handleToggleFavorite}
                                 onToggleArchive={handleToggleArchive}
-                                onDelete={handleDelete}
+                                onDelete={handleDelete} onEdit={handleEditClick}
                             />
                         ))}
                     </div>
@@ -527,7 +562,7 @@ const Dashboard = () => {
                                         item={item}
                                         onToggleFavorite={handleToggleFavorite}
                                         onToggleArchive={handleToggleArchive}
-                                        onDelete={handleDelete}
+                                        onDelete={handleDelete} onEdit={handleEditClick}
                                     />
                                 ))}
                             </div>
@@ -699,7 +734,7 @@ const Dashboard = () => {
                         item={item}
                         onToggleFavorite={handleToggleFavorite}
                         onToggleArchive={handleToggleArchive}
-                        onDelete={handleDelete}
+                        onDelete={handleDelete} onEdit={handleEditClick}
                     />
                 ))}
             </div>
@@ -748,6 +783,64 @@ const Dashboard = () => {
                 </div>
 
                 {renderContent()}
+
+                {/* Edit Item Modal */}
+                <Modal
+                    isOpen={!!editingItem}
+                    onClose={() => setEditingItem(null)}
+                    title="Editar Item"
+                    footer={
+                        <>
+                            <button className="secondary-btn" onClick={() => setEditingItem(null)}>Cancelar</button>
+                            <button className="primary-btn" onClick={handleUpdateItem}>Salvar</button>
+                        </>
+                    }
+                >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Pasta</label>
+                            <input
+                                type="text"
+                                className="search-bar"
+                                value={editFolder}
+                                onChange={(e) => setEditFolder(e.target.value)}
+                                placeholder="Ex: Tecnologia/React"
+                                style={{ width: '100%' }}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Tags</label>
+                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                                {editTags.map(tag => (
+                                    <span key={tag} className="tag" style={{ background: '#eee', padding: '2px 8px', borderRadius: '12px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        {tag}
+                                        <button
+                                            onClick={() => setEditTags(editTags.filter(t => t !== tag))}
+                                            style={{ border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#666' }}
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                            <input
+                                type="text"
+                                className="search-bar"
+                                placeholder="Adicionar tag e pressione Enter"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        const val = (e.target as HTMLInputElement).value.trim();
+                                        if (val && !editTags.includes(val)) {
+                                            setEditTags([...editTags, val]);
+                                            (e.target as HTMLInputElement).value = '';
+                                        }
+                                    }
+                                }}
+                                style={{ width: '100%' }}
+                            />
+                        </div>
+                    </div>
+                </Modal>
 
                 {/* Modal logic remains the same */}
                 <Modal

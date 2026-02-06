@@ -6,9 +6,10 @@ interface ItemCardProps {
     onToggleFavorite: (e: React.MouseEvent, id: string, isFavorite: boolean) => void;
     onToggleArchive: (e: React.MouseEvent, id: string, currentStatus: ItemStatus) => void;
     onDelete: (e: React.MouseEvent, id: string) => void;
+    onEdit?: (e: React.MouseEvent, item: SavedItem) => void;
 }
 
-export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, onDelete }: ItemCardProps) => {
+export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, onDelete, onEdit }: ItemCardProps) => {
     const readerUrl = `reader.html?id=${item.id}`;
     const hasContent = !!item.content;
 
@@ -84,6 +85,15 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                         >
                             📥
                         </button>
+                        {onEdit && (
+                            <button
+                                className="icon-btn"
+                                title="Editar tags e pasta"
+                                onClick={(e) => onEdit(e, item)}
+                            >
+                                ✏️
+                            </button>
+                        )}
                         <button
                             className="icon-btn"
                             title="Excluir"

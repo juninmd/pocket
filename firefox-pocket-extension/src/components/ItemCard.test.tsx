@@ -20,7 +20,8 @@ describe('ItemCard', () => {
         item: mockItem,
         onToggleFavorite: jest.fn(),
         onToggleArchive: jest.fn(),
-        onDelete: jest.fn()
+        onDelete: jest.fn(),
+        onEdit: jest.fn()
     };
 
     // Mock window.open and location
@@ -60,6 +61,9 @@ describe('ItemCard', () => {
 
         fireEvent.click(screen.getByTitle('Excluir'));
         expect(props.onDelete).toHaveBeenCalled();
+
+        fireEvent.click(screen.getByTitle('Editar tags e pasta'));
+        expect(props.onEdit).toHaveBeenCalled();
     });
 
     it('should navigate to reader if content exists', () => {
