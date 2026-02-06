@@ -30,12 +30,13 @@ jest.mock('webextension-polyfill', () => ({
 
 // Mock ItemCard since it's tested separately
 jest.mock('../components/ItemCard', () => ({
-    ItemCard: ({ item, onDelete, onToggleFavorite, onToggleArchive }: any) => (
+    ItemCard: ({ item, onDelete, onToggleFavorite, onToggleArchive, onEdit }: any) => (
         <div data-testid="item-card">
             <span>{item.title}</span>
             <button onClick={(e) => onDelete(e, item.id)}>Delete</button>
             <button onClick={(e) => onToggleFavorite(e, item.id, item.isFavorite)}>Favorite</button>
             <button onClick={(e) => onToggleArchive(e, item.id, item.status)}>Archive</button>
+            {onEdit && <button onClick={(e) => onEdit(e, item)}>Edit</button>}
         </div>
     )
 }));
@@ -130,6 +131,91 @@ describe('Dashboard', () => {
             action: 'deleteLink',
             payload: { id: '1' }
         }));
+    });
+
+    it('should handle edit item flow', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        // Open Edit Modal
+        fireEvent.click(screen.getByText('Edit'));
+        await waitFor(() => expect(screen.getByText('Editar Item')).toBeInTheDocument());
+
+        // Change Folder
+        const folderInput = screen.getByDisplayValue('Technology');
+        fireEvent.change(folderInput, { target: { value: 'NewFolder' } });
+
+        // Add Tag
+        const tagInput = screen.getByPlaceholderText('Adicionar tag e pressione Enter');
+        fireEvent.keyDown(tagInput, { key: 'Enter', target: { value: 'newtag' } });
+        expect(screen.getByText('newtag')).toBeInTheDocument();
+
+        // Remove Tag
+        // Finding the remove button for 'tech' tag. It's inside a span with 'tech'.
+        // The mock structure in Modal is: <span>{tag}<button>×</button></span>
+        const tagSpan = screen.getByText('tech').closest('span');
+        const removeBtn = tagSpan?.querySelector('button');
+        if (removeBtn) fireEvent.click(removeBtn);
+
+        expect(screen.queryByText('tech')).not.toBeInTheDocument();
+
+        // Save
+        fireEvent.click(screen.getByText('Salvar'));
+
+        await waitFor(() => expect(browser.runtime.sendMessage).toHaveBeenCalledWith({
+            action: 'updateLink',
+            payload: {
+                id: '1',
+                updates: {
+                    tags: ['newtag'],
+                    aiFolder: 'NewFolder'
+                }
+            }
+        }));
+
+        // Modal should close
+        await waitFor(() => expect(screen.queryByText('Editar Item')).not.toBeInTheDocument());
+    });
+
+    it('should handle edit item failure', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Edit'));
+
+        // Mock failure on update
+        (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Update Fail'));
+
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+        fireEvent.click(screen.getByText('Salvar'));
+
+        await waitFor(() => expect(screen.getByText('Erro')).toBeInTheDocument());
+        consoleSpy.mockRestore();
+    });
+
+    it('should not add duplicate or empty tags', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Edit'));
+
+        const tagInput = screen.getByPlaceholderText('Adicionar tag e pressione Enter');
+
+        // Try duplicate
+        fireEvent.keyDown(tagInput, { key: 'Enter', target: { value: 'tech' } });
+        // Should still be 1 'tech' tag (mockItem has 'tech')
+        // In the UI, tags are rendered.
+        // We can count them.
+        const tags = screen.getAllByText('tech');
+        expect(tags.length).toBe(1); // One in the list
+
+        // Try empty
+        fireEvent.keyDown(tagInput, { key: 'Enter', target: { value: '   ' } });
+        expect(screen.getAllByText('tech').length).toBe(1);
     });
 
     it('should handle settings API Key', async () => {
