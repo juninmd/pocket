@@ -136,6 +136,27 @@ describe('KeyConcepts', () => {
         expect(callGemini).toHaveBeenCalledTimes(1);
     });
 
+    it('should prevent concurrent loading calls via ref', async () => {
+        let resolve: any;
+        const promise = new Promise(r => { resolve = r; });
+        (callGemini as jest.Mock).mockReturnValue(promise);
+
+        render(<KeyConcepts apiKey={apiKey} articleContent={content} />);
+        const btn = screen.getByText('🧠 Extrair Conceitos-Chave');
+
+        // First click sets loadingRef to true
+        fireEvent.click(btn);
+
+        // Second click should be ignored because loadingRef is true
+        fireEvent.click(btn);
+
+        expect(callGemini).toHaveBeenCalledTimes(1);
+
+        // Finish first call
+        resolve(JSON.stringify([{ term: 'T', definition: 'D' }]));
+        await waitFor(() => expect(screen.getByText('T')).toBeInTheDocument());
+    });
+
     it('should handle empty content', async () => {
         const mockResponse = JSON.stringify([{ term: 'Term 1', definition: 'Def 1' }]);
         (callGemini as jest.Mock).mockResolvedValue(mockResponse);
