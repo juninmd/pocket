@@ -810,4 +810,49 @@ describe('Dashboard', () => {
 
         await waitFor(() => expect(btn).toBeDisabled());
     });
+
+    it('should search within collection folder with non-empty query', async () => {
+         const item1 = { ...mockItem, id: '1', title: 'FindMe', aiFolder: 'Tech' };
+         (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [item1] });
+
+         render(<Dashboard />);
+         fireEvent.click(screen.getByText('Coleções'));
+         await waitFor(() => expect(screen.getByText('Tech')).toBeInTheDocument());
+         fireEvent.click(screen.getByText('Tech'));
+
+         // Wait for items to show
+         await waitFor(() => expect(screen.getByText('FindMe')).toBeInTheDocument());
+
+         const input = screen.getByPlaceholderText('Pesquisar...');
+         fireEvent.change(input, { target: { value: 'FindMe' } });
+
+         // This should hit line 724: if (searchQuery) return true;
+         expect(screen.getByText('FindMe')).toBeInTheDocument();
+    });
+
+    it('should show empty state for tag filtering', async () => {
+        const tagItem = { ...mockItem, tags: ['tag1'] };
+        let listener: any;
+        (browser.runtime.onMessage.addListener as jest.Mock).mockImplementation((l) => { listener = l; });
+
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [tagItem] });
+        render(<Dashboard />);
+
+        fireEvent.click(screen.getByText('Coleções'));
+        await waitFor(() => expect(screen.getByText('#tag1')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('#tag1'));
+
+        // Now update items to empty
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [] });
+        if (listener) {
+             React.act(() => {
+                listener({ action: 'itemsUpdated' });
+             });
+        }
+
+        // Wait for empty state text
+        await waitFor(() => expect(screen.getByText('Nenhum item com a tag #tag1')).toBeInTheDocument());
+        // Verify line 790-794 (empty state rendering)
+        expect(screen.getByText('Voltar para Coleções')).toBeInTheDocument();
+    });
 });

@@ -214,4 +214,17 @@ describe('ChatPanel', () => {
 
         await waitFor(() => expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled());
     });
+
+    it('should scroll with smooth behavior', async () => {
+        (callGeminiChat as jest.Mock).mockResolvedValue('Response');
+        render(<ChatPanel apiKey={apiKey} articleContent={content} />);
+
+        const input = screen.getByPlaceholderText('Faça uma pergunta sobre o artigo...');
+        fireEvent.change(input, { target: { value: 'Q' } });
+        fireEvent.click(screen.getByText('➤'));
+
+        await waitFor(() => {
+            expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth" });
+        });
+    });
 });

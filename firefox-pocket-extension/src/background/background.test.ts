@@ -389,6 +389,25 @@ describe('background script', () => {
             expect(storage.saveItem).toHaveBeenCalled();
         });
 
+        it('should retry save without metadata if save with metadata fails', async () => {
+            const url = 'http://test.com';
+            const info = { menuItemId: 'save-to-pocket-like', linkUrl: url } as any;
+            const tab = { id: 1, active: true, windowId: 123, url: url, title: 'Tab Title' } as any;
+
+            (browser.tabs.sendMessage as jest.Mock).mockResolvedValue({ title: 'Meta Title' });
+            (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');
+
+            // First call (with metadata) fails, second call (no metadata) succeeds
+            (storage.saveItem as jest.Mock)
+                .mockRejectedValueOnce(new Error('Save Fail'))
+                .mockResolvedValueOnce(undefined);
+
+            await handleContextMenu(info, tab);
+            await new Promise(r => setTimeout(r, 50));
+
+            expect(storage.saveItem).toHaveBeenCalledTimes(2);
+        });
+
         it('should ignore unrelated context menu items', async () => {
             const info = { menuItemId: 'other-item', linkUrl: 'http://test.com' } as any;
             await handleContextMenu(info);

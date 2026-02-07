@@ -159,4 +159,24 @@ describe('ItemCard', () => {
         const cardImage = container.querySelector('.card-image');
         expect(cardImage).toHaveStyle('background-image: url(http://example.com/image.jpg)');
     });
+
+    it('should render tags when aiTags is undefined', () => {
+        render(<ItemCard {...props} item={{ ...mockItem, tags: ['user-tag'], aiTags: undefined }} />);
+        expect(screen.getByText('user-tag')).toBeInTheDocument();
+    });
+
+    it('should handle both undefined', () => {
+        render(<ItemCard {...props} item={{ ...mockItem, tags: undefined, aiTags: undefined }} />);
+        expect(screen.queryByText('tag1')).not.toBeInTheDocument();
+    });
+
+    it('should handle undefined tags and empty aiTags', () => {
+        render(<ItemCard {...props} item={{ ...mockItem, tags: undefined, aiTags: [] }} />);
+        expect(screen.queryByText('tag1')).not.toBeInTheDocument();
+    });
+
+    it('should render tags when aiTags is empty', () => {
+        render(<ItemCard {...props} item={{ ...mockItem, tags: ['user-tag'], aiTags: [] }} />);
+        expect(screen.getByText('user-tag')).toBeInTheDocument();
+    });
 });

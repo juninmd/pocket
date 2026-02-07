@@ -382,4 +382,38 @@ describe('Reader', () => {
         fireEvent.click(decreaseFontBtn);
         expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontSize: 31 }));
     });
+
+    it('should handle font size lower bounds', async () => {
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ fontSize: 14 }); // Min
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        const settingsBtn = screen.getByLabelText('Configurações de Leitura');
+        fireEvent.click(settingsBtn);
+
+        const decreaseFontBtn = screen.getByText('-');
+        fireEvent.click(decreaseFontBtn);
+        // Should stay at 14
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontSize: 14 }));
+    });
+
+    it('should change font family to serif', async () => {
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+        // Start with Sans
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({ fontFamily: 'sans' });
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        const settingsBtn = screen.getByLabelText('Configurações de Leitura');
+        fireEvent.click(settingsBtn);
+
+        const serifBtn = screen.getByText('Serif');
+        fireEvent.click(serifBtn);
+
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontFamily: 'serif' }));
+        expect(document.body.style.fontFamily).toContain('Charter');
+    });
 });
