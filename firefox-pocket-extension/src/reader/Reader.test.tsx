@@ -416,4 +416,35 @@ describe('Reader', () => {
         expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ fontFamily: 'serif' }));
         expect(document.body.style.fontFamily).toContain('Charter');
     });
+
+    it('should change to sepia and dark themes', async () => {
+        (getItem as jest.Mock).mockResolvedValue(mockItem);
+        (browser.storage.local.get as jest.Mock).mockResolvedValue({});
+
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        // Open settings
+        const settingsBtn = screen.getByLabelText('Configurações de Leitura');
+        fireEvent.click(settingsBtn);
+
+        // Sepia
+        const sepiaBtn = screen.getByLabelText('Tema Sépia');
+        fireEvent.click(sepiaBtn);
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ theme: 'sepia' }));
+
+        // Dark
+        const darkBtn = screen.getByLabelText('Tema Escuro');
+        fireEvent.click(darkBtn);
+        expect(browser.storage.local.set).toHaveBeenCalledWith(expect.objectContaining({ theme: 'dark' }));
+    });
+
+    it('should show unarchive button for archived item', async () => {
+        const itemArchived = { ...mockItem, status: 'archived' };
+        (getItem as jest.Mock).mockResolvedValue(itemArchived);
+        render(<Reader />);
+        await waitFor(() => expect(screen.getByText('Test Article')).toBeInTheDocument());
+
+        expect(screen.getByTitle('Desarquivar')).toBeInTheDocument();
+    });
 });

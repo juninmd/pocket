@@ -1,0 +1,1419 @@
+
+> firefox-pocket-extension@1.0.0 test
+> jest
+
+FAIL src/background/background.test.ts
+  ● Console
+
+    console.error
+      Failed to capture snapshot Error: Fail
+          at /app/firefox-pocket-extension/src/background/background.test.ts:134:77
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/background/background.test.ts:41:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/background/background.test.ts:37:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/background/background.test.ts:133:47)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      40 |     return await resizeImage(dataUrl);
+      41 |   } catch (e) {
+    > 42 |     console.error('Failed to capture snapshot', e);
+         |             ^
+      43 |     return undefined;
+      44 |   }
+      45 | };
+
+      at error (src/background/background.ts:42:13)
+          at Generator.throw (<anonymous>)
+      at rejected (src/background/background.ts:3880:32)
+
+  ● background script › handleMessage › saveLink should use metadata title if tab title equals url
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"title": "Real Title"}
+    Received: {"author": undefined, "content": undefined, "estimatedReadTime": 5, "excerpt": undefined, "favicon": "https://www.google.com/s2/favicons?domain=test.com&sz=32", "id": "123", "imageUrl": undefined, "isFavorite": false, "savedAt": "2026-02-08T09:08:20.925Z", "siteName": undefined, "snapshotUrl": "data:image/jpeg;base64,resized", "status": "unread", "tags": [], "title": "http://test.com", "type": "article", "url": "http://test.com"}
+
+    Number of calls: 1
+
+      192 |             await handleMessage({ action: 'saveLink', payload }, {} as any);
+      193 |
+    > 194 |             expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({
+          |                                      ^
+      195 |                 title: metaTitle
+      196 |             }));
+      197 |         });
+
+      at src/background/background.test.ts:194:38
+      at fulfilled (src/background/background.test.ts:38:58)
+
+PASS src/reader/Reader.test.tsx
+  ● Console
+
+    console.error
+      Error: Storage Fail
+          at /app/firefox-pocket-extension/src/reader/Reader.test.tsx:176:50
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/reader/Reader.test.tsx:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/reader/Reader.test.tsx:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/reader/Reader.test.tsx:175:52)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      67 |         }
+      68 |       } catch (err) {
+    > 69 |         console.error(err);
+         |                 ^
+      70 |         setError('Erro ao carregar o item.');
+      71 |       } finally {
+      72 |         setLoading(false);
+
+      at error (src/reader/Reader.tsx:69:17)
+          at Generator.throw (<anonymous>)
+      at rejected (src/reader/Reader.tsx:6602:32)
+
+    console.error
+      Erro ao resumir Error: AI Fail
+          at /app/firefox-pocket-extension/src/reader/Reader.test.tsx:198:53
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/reader/Reader.test.tsx:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/reader/Reader.test.tsx:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/reader/Reader.test.tsx:195:52)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      169 |
+      170 |     } catch (e: any) {
+    > 171 |       console.error("Erro ao resumir", e);
+          |               ^
+      172 |       setSummarizeError(`Erro ao gerar resumo: ${e.message}`);
+      173 |     } finally {
+      174 |       setIsSummarizing(false);
+
+      at error (src/reader/Reader.tsx:171:15)
+          at Generator.throw (<anonymous>)
+      at rejected (src/reader/Reader.tsx:6602:32)
+
+    console.error
+      Erro ao resumir Error: Nenhuma resposta gerada.
+          at /app/firefox-pocket-extension/src/reader/Reader.tsx:167:15
+          at Generator.next (<anonymous>)
+          at fulfilled (/app/firefox-pocket-extension/src/reader/Reader.tsx:6588:24)
+
+      169 |
+      170 |     } catch (e: any) {
+    > 171 |       console.error("Erro ao resumir", e);
+          |               ^
+      172 |       setSummarizeError(`Erro ao gerar resumo: ${e.message}`);
+      173 |     } finally {
+      174 |       setIsSummarizing(false);
+
+      at error (src/reader/Reader.tsx:171:15)
+      at fulfilled (src/reader/Reader.tsx:6588:24)
+
+PASS src/components/AI/ChatPanel.test.tsx
+  ● Console
+
+    console.error
+      Chat Error Error: Fail
+          at /app/firefox-pocket-extension/src/components/AI/ChatPanel.test.tsx:66:57
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/components/AI/ChatPanel.test.tsx:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/components/AI/ChatPanel.test.tsx:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/components/AI/ChatPanel.test.tsx:65:43)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      58 |
+      59 |         } catch (error: any) {
+    > 60 |             console.error("Chat Error", error);
+         |                     ^
+      61 |             setMessages(prev => [...prev, { role: 'model', parts: [{ text: "Desculpe, ocorreu um erro ao processar sua mensagem." }] }]);
+      62 |         } finally {
+      63 |             setIsLoading(false);
+
+      at error (src/components/AI/ChatPanel.tsx:60:21)
+          at Generator.throw (<anonymous>)
+      at rejected (src/components/AI/ChatPanel.tsx:3530:32)
+
+PASS src/components/AI/KeyConcepts.test.tsx
+  ● Console
+
+    console.error
+      JSON Parse error SyntaxError: Unexpected token 'i', "invalid json" is not valid JSON
+          at JSON.parse (<anonymous>)
+          at parse (/app/firefox-pocket-extension/src/components/AI/KeyConcepts.tsx:45:29)
+          at Generator.next (<anonymous>)
+          at fulfilled (/app/firefox-pocket-extension/src/components/AI/KeyConcepts.tsx:3108:24)
+
+      53 |                 }
+      54 |             } catch (e) {
+    > 55 |                 console.error("JSON Parse error", e);
+         |                         ^
+      56 |                 throw new Error("Falha ao processar resposta da IA.");
+      57 |             }
+      58 |
+
+      at error (src/components/AI/KeyConcepts.tsx:55:25)
+      at fulfilled (src/components/AI/KeyConcepts.tsx:3108:24)
+
+PASS src/popup/Popup.test.tsx
+  ● Console
+
+    console.error
+      Error: Network error
+          at /app/firefox-pocket-extension/src/popup/Popup.test.tsx:174:70
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/popup/Popup.test.tsx:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/popup/Popup.test.tsx:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/popup/Popup.test.tsx:172:69)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      43 |       }
+      44 |     } catch (e) {
+    > 45 |       console.error(e);
+         |               ^
+      46 |       setStatus('error');
+      47 |     }
+      48 |   };
+
+      at error (src/popup/Popup.tsx:45:15)
+          at Generator.throw (<anonymous>)
+      at rejected (src/popup/Popup.tsx:4160:32)
+
+PASS src/components/ItemCard.test.tsx
+PASS src/reader/Reader.a11y.test.tsx
+PASS src/content/content.test.ts
+  ● Console
+
+    console.error
+      Readability parsing failed Error: Clone fail
+          at Document.<anonymous> (/app/firefox-pocket-extension/src/content/content.test.ts:115:24)
+          at /app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:397:39
+          at Document.<anonymous> (/app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:404:13)
+          at Document.mockConstructor [as cloneNode] (/app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:148:19)
+          at cloneNode (/app/firefox-pocket-extension/src/content/content.ts:23:38)
+          at /app/firefox-pocket-extension/src/content/content.test.ts:119:53
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/content/content.test.ts:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/content/content.test.ts:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/content/content.test.ts:113:70)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      59 |       });
+      60 |     } catch (e) {
+    > 61 |       console.error("Readability parsing failed", e);
+         |               ^
+      62 |       // Fallback to minimal data
+      63 |       return Promise.resolve({
+      64 |         title: document.title,
+
+      at error (src/content/content.ts:61:15)
+      at src/content/content.test.ts:119:53
+      at src/content/content.test.ts:8:71
+      at Object.<anonymous>.__awaiter (src/content/content.test.ts:4:12)
+      at Object.<anonymous> (src/content/content.test.ts:113:70)
+
+PASS src/components/TTSPlayer.test.tsx
+PASS src/utils/storage.test.ts
+PASS src/utils/aiOrganizer.test.ts
+  ● Console
+
+    console.error
+      [AI Organizer] AI Analysis Failed Critical: Error: AI Error
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:92:66
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:90:63)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      137 |
+      138 |     } catch (e) {
+    > 139 |         console.error("[AI Organizer] AI Analysis Failed Critical:", e);
+          |                 ^
+      140 |         debugInfo.error = String(e);
+      141 |         return { items, debugLog: debugInfo };
+      142 |     }
+
+      at error (src/utils/aiOrganizer.ts:139:17)
+          at Generator.throw (<anonymous>)
+      at rejected (src/utils/aiOrganizer.ts:2996:32)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 0 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 1 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 2 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 3 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 4 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 5 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 6 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 7 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 8 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 9 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 10 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 11 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 12 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 13 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 14 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 15 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 16 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 17 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 18 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 19 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.error
+      [AI Organizer] AI Analysis Failed Critical: Error: Batch Fail
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:118:66
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:116:53)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      137 |
+      138 |     } catch (e) {
+    > 139 |         console.error("[AI Organizer] AI Analysis Failed Critical:", e);
+          |                 ^
+      140 |         debugInfo.error = String(e);
+      141 |         return { items, debugLog: debugInfo };
+      142 |     }
+
+      at error (src/utils/aiOrganizer.ts:139:17)
+          at Generator.throw (<anonymous>)
+      at rejected (src/utils/aiOrganizer.ts:2996:32)
+
+    console.error
+      [AI Organizer] AI Analysis Failed Critical: Error: Batch Fail
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:118:66
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:116:53)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      137 |
+      138 |     } catch (e) {
+    > 139 |         console.error("[AI Organizer] AI Analysis Failed Critical:", e);
+          |                 ^
+      140 |         debugInfo.error = String(e);
+      141 |         return { items, debugLog: debugInfo };
+      142 |     }
+
+      at error (src/utils/aiOrganizer.ts:139:17)
+          at Generator.throw (<anonymous>)
+      at rejected (src/utils/aiOrganizer.ts:2996:32)
+
+    console.warn
+      [AI Organizer] AI did not call 'organize_items'. Response: { functionCall: { name: 'wrong_func', args: {} } }
+
+      133 |         }
+      134 |
+    > 135 |         console.warn("[AI Organizer] AI did not call 'organize_items'. Response:", response);
+          |                 ^
+      136 |         return { items, debugLog: debugInfo };
+      137 |
+      138 |     } catch (e) {
+
+      at warn (src/utils/aiOrganizer.ts:135:17)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.error
+      [AI Organizer] Invalid function call arguments: { organizedItems: null }
+
+      114 |
+      115 |             if (!suggestions || !Array.isArray(suggestions)) {
+    > 116 |                 console.error("[AI Organizer] Invalid function call arguments:", response.functionCall.args);
+          |                         ^
+      117 |                 return { items, debugLog: debugInfo };
+      118 |             }
+      119 |
+
+      at error (src/utils/aiOrganizer.ts:116:25)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 0 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 1 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 2 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 3 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 4 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 5 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 6 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 7 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 8 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 9 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 10 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 11 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 12 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 13 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.warn
+      [AI Organizer] No suggestion found for item 14 (Example)
+
+      127 |                     };
+      128 |                 }
+    > 129 |                 console.warn(`[AI Organizer] No suggestion found for item ${item.id} (${item.title})`);
+          |                         ^
+      130 |                 return { ...item, aiFolder: 'Outros', aiTags: [] };
+      131 |             });
+      132 |             return { items: organized, debugLog: debugInfo };
+
+      at warn (src/utils/aiOrganizer.ts:129:25)
+          at Array.map (<anonymous>)
+      at map (src/utils/aiOrganizer.ts:120:37)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.error
+      Error analyzing batch TypeError: Invalid URL: invalid-url
+          at new URLImpl (/app/firefox-pocket-extension/node_modules/whatwg-url/lib/URL-impl.js:21:13)
+          at Object.exports.setup (/app/firefox-pocket-extension/node_modules/whatwg-url/lib/URL.js:54:12)
+          at new URL (/app/firefox-pocket-extension/node_modules/whatwg-url/lib/URL.js:115:22)
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.ts:82:17
+          at Array.map (<anonymous>)
+          at map (/app/firefox-pocket-extension/src/utils/aiOrganizer.ts:78:33)
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.ts:3019:40
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/utils/aiOrganizer.ts:2968:10)
+          at __awaiter (/app/firefox-pocket-extension/src/utils/aiOrganizer.ts:77:154)
+          at analyzeAllItems (/app/firefox-pocket-extension/src/utils/aiOrganizer.ts:165:62)
+          at Generator.next (<anonymous>)
+          at fulfilled (/app/firefox-pocket-extension/src/utils/aiOrganizer.ts:2982:24)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+      167 |             allDebugLogs.push(debugLog);
+      168 |         } catch (e) {
+    > 169 |             console.error("Error analyzing batch", e);
+          |                     ^
+      170 |             processedItems = [...processedItems, ...batch];
+      171 |             allDebugLogs.push({ error: String(e), batchSize: batch.length });
+      172 |         }
+
+      at error (src/utils/aiOrganizer.ts:169:21)
+          at Generator.throw (<anonymous>)
+      at rejected (src/utils/aiOrganizer.ts:2996:32)
+
+    console.warn
+      [AI Organizer] AI did not call 'organize_items'. Response: {}
+
+      133 |         }
+      134 |
+    > 135 |         console.warn("[AI Organizer] AI did not call 'organize_items'. Response:", response);
+          |                 ^
+      136 |         return { items, debugLog: debugInfo };
+      137 |
+      138 |     } catch (e) {
+
+      at warn (src/utils/aiOrganizer.ts:135:17)
+      at fulfilled (src/utils/aiOrganizer.ts:2982:24)
+
+    console.error
+      [AI Organizer] Failed: Error: Fail
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:252:71
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/utils/aiOrganizer.test.ts:250:47)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:105:5)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      199 |         };
+      200 |     } catch (error) {
+    > 201 |         console.error("[AI Organizer] Failed:", error);
+          |                 ^
+      202 |         return {
+      203 |             success: false,
+      204 |             itemsOrganized: 0,
+
+      at error (src/utils/aiOrganizer.ts:201:17)
+          at Generator.throw (<anonymous>)
+      at rejected (src/utils/aiOrganizer.ts:2996:32)
+
+PASS src/components/ReadingProgressBar.test.tsx
+PASS src/components/Modal.test.tsx
+PASS src/utils/aiService.test.ts
+PASS src/dashboard/Dashboard.test.tsx
+  ● Console
+
+    console.error
+      Error: Not implemented: navigation (except hash changes)
+          at module.exports (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+          at navigateFetch (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+          at exports.navigate (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+          at Timeout._onTimeout (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/nodes/HTMLHyperlinkElementUtils-impl.js:81:7)
+          at listOnTimeout (node:internal/timers:588:17)
+          at processTimers (node:internal/timers:523:7) {
+        type: 'not implemented'
+      }
+
+      at VirtualConsole.<anonymous> (node_modules/jest-environment-jsdom/build/index.js:63:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at Timeout._onTimeout (node_modules/jsdom/lib/jsdom/living/nodes/HTMLHyperlinkElementUtils-impl.js:81:7)
+
+    console.error
+      Error: Import Fail
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:612:74)
+          at /app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:397:39
+          at Object.<anonymous> (/app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:404:13)
+          at Object.mockConstructor [as sendMessage] (/app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:148:19)
+          at sendMessage (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:226:47)
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:11444:41
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:11393:10)
+          at __awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:222:37)
+          at executeDispatch (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19116:9)
+          at runWithFiberInDEV (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+          at processDispatchQueue (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19166:19)
+          at /app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19767:9
+          at batchedUpdates$1 (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:3255:40)
+          at dispatchEventForPluginEventSystem (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19320:7)
+          at dispatchEvent (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:23585:11)
+          at dispatchDiscreteEvent (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:23553:11)
+          at HTMLDivElement.callTheUserObjectsOperation (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
+          at innerInvokeEventListeners (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
+          at invokeEventListeners (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+          at HTMLButtonElementImpl._dispatch (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+          at HTMLButtonElementImpl.dispatchEvent (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+          at HTMLButtonElement.dispatchEvent (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+          at /app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:19:20
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/pure.js:107:16
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/act-compat.js:47:24
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/app/firefox-pocket-extension/node_modules/react/cjs/react.development.js:814:22)
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/act-compat.js:46:25
+          at Object.eventWrapper (/app/firefox-pocket-extension/node_modules/@testing-library/react/dist/pure.js:106:28)
+          at fireEvent (/app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:12:35)
+          at Function.fireEvent.<computed> [as click] (/app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:110:36)
+          at Function.fireEvent.<computed> [as click] (/app/firefox-pocket-extension/node_modules/@testing-library/react/dist/fire-event.js:15:52)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:617:19
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:609:49)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      230 |             }
+      231 |         } catch (e) {
+    > 232 |             console.error(e);
+          |                     ^
+      233 |             openModal('Erro', 'Falha ao importar favoritos. Tente novamente.', 'danger');
+      234 |         } finally {
+      235 |             setIsImporting(false);
+
+      at error (src/dashboard/Dashboard.tsx:232:21)
+          at Generator.throw (<anonymous>)
+      at rejected (src/dashboard/Dashboard.tsx:11421:32)
+
+    console.error
+      Error: Export Fail
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:624:74)
+          at /app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:397:39
+          at Object.<anonymous> (/app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:404:13)
+          at Object.mockConstructor [as sendMessage] (/app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:148:19)
+          at sendMessage (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:327:47)
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:11444:41
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:11393:10)
+          at __awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:324:46)
+          at executeDispatch (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19116:9)
+          at runWithFiberInDEV (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+          at processDispatchQueue (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19166:19)
+          at /app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19767:9
+          at batchedUpdates$1 (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:3255:40)
+          at dispatchEventForPluginEventSystem (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19320:7)
+          at dispatchEvent (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:23585:11)
+          at dispatchDiscreteEvent (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:23553:11)
+          at HTMLDivElement.callTheUserObjectsOperation (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
+          at innerInvokeEventListeners (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
+          at invokeEventListeners (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+          at HTMLButtonElementImpl._dispatch (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+          at HTMLButtonElementImpl.dispatchEvent (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+          at HTMLButtonElement.dispatchEvent (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+          at /app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:19:20
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/pure.js:107:16
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/act-compat.js:47:24
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/app/firefox-pocket-extension/node_modules/react/cjs/react.development.js:814:22)
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/act-compat.js:46:25
+          at Object.eventWrapper (/app/firefox-pocket-extension/node_modules/@testing-library/react/dist/pure.js:106:28)
+          at fireEvent (/app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:12:35)
+          at Function.fireEvent.<computed> [as click] (/app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:110:36)
+          at Function.fireEvent.<computed> [as click] (/app/firefox-pocket-extension/node_modules/@testing-library/react/dist/fire-event.js:15:52)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:629:19
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:621:60)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at runNextTicks (node:internal/process/task_queues:65:5)
+          at processTimers (node:internal/timers:520:9)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      330 |             }
+      331 |         } catch (e) {
+    > 332 |             console.error(e);
+          |                     ^
+      333 |             openModal('Erro', 'Falha ao exportar, verifique o console do browser.', 'danger');
+      334 |         } finally {
+      335 |             setIsExporting(false);
+
+      at error (src/dashboard/Dashboard.tsx:332:21)
+          at Generator.throw (<anonymous>)
+      at rejected (src/dashboard/Dashboard.tsx:11421:32)
+
+    console.error
+      Error: Preview Fail
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:637:78)
+          at /app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:397:39
+          at Object.<anonymous> (/app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:404:13)
+          at Object.mockConstructor [as sendMessage] (/app/firefox-pocket-extension/node_modules/jest-mock/build/index.js:148:19)
+          at sendMessage (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:252:52)
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:11444:41
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:11393:10)
+          at __awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.tsx:240:41)
+          at executeDispatch (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19116:9)
+          at runWithFiberInDEV (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+          at processDispatchQueue (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19166:19)
+          at /app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19767:9
+          at batchedUpdates$1 (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:3255:40)
+          at dispatchEventForPluginEventSystem (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:19320:7)
+          at dispatchEvent (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:23585:11)
+          at dispatchDiscreteEvent (/app/firefox-pocket-extension/node_modules/react-dom/cjs/react-dom-client.development.js:23553:11)
+          at HTMLDivElement.callTheUserObjectsOperation (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
+          at innerInvokeEventListeners (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
+          at invokeEventListeners (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+          at HTMLButtonElementImpl._dispatch (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+          at HTMLButtonElementImpl.dispatchEvent (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+          at HTMLButtonElement.dispatchEvent (/app/firefox-pocket-extension/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+          at /app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:19:20
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/pure.js:107:16
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/act-compat.js:47:24
+          at Object.<anonymous>.process.env.NODE_ENV.exports.act (/app/firefox-pocket-extension/node_modules/react/cjs/react.development.js:814:22)
+          at /app/firefox-pocket-extension/node_modules/@testing-library/react/dist/act-compat.js:46:25
+          at Object.eventWrapper (/app/firefox-pocket-extension/node_modules/@testing-library/react/dist/pure.js:106:28)
+          at fireEvent (/app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:12:35)
+          at Function.fireEvent.<computed> [as click] (/app/firefox-pocket-extension/node_modules/@testing-library/dom/dist/events.js:110:36)
+          at Function.fireEvent.<computed> [as click] (/app/firefox-pocket-extension/node_modules/@testing-library/react/dist/fire-event.js:15:52)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:643:19
+          at Generator.next (<anonymous>)
+          at fulfilled (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:5:58)
+
+      315 |             }
+      316 |         } catch (e) {
+    > 317 |             console.error(e);
+          |                     ^
+      318 |             openModal('Erro', 'Falha ao gerar prévia da organização.', 'danger');
+      319 |         } finally {
+      320 |             setIsOrganizing(false);
+
+      at error (src/dashboard/Dashboard.tsx:317:21)
+          at Generator.throw (<anonymous>)
+      at rejected (src/dashboard/Dashboard.tsx:11421:32)
+
+    console.error
+      Error: Export JSON Fail
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:649:50
+          at Generator.next (<anonymous>)
+          at /app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:8:71
+          at new Promise (<anonymous>)
+          at Object.<anonymous>.__awaiter (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:4:12)
+          at Object.<anonymous> (/app/firefox-pocket-extension/src/dashboard/Dashboard.test.tsx:647:54)
+          at Promise.then.completed (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/app/firefox-pocket-extension/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:121:9)
+          at run (/app/firefox-pocket-extension/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/app/firefox-pocket-extension/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/app/firefox-pocket-extension/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/app/firefox-pocket-extension/node_modules/jest-runner/build/testWorker.js:106:12)
+
+      213 |             URL.revokeObjectURL(url);
+      214 |         } catch (e) {
+    > 215 |             console.error(e);
+          |                     ^
+      216 |             openModal('Erro', 'Falha ao exportar itens.', 'danger');
+      217 |         } finally {
+      218 |             setIsExporting(false);
+
+      at error (src/dashboard/Dashboard.tsx:215:21)
+          at Generator.throw (<anonymous>)
+      at rejected (src/dashboard/Dashboard.tsx:11421:32)
+
+    console.error
+      An update to Dashboard inside a test was not wrapped in act(...).
+
+      When testing, code that causes React state updates should be wrapped into act(...):
+
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      83 |             const response = await browser.runtime.sendMessage({ action: 'getLinks' }) as { items: SavedItem[] };
+      84 |             if (response && response.items) {
+    > 85 |                 setItems(response.items);
+         |                 ^
+      86 |             }
+      87 |         } catch (err) {
+      88 |             console.error("Failed to load items", err);
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at setItems (src/dashboard/Dashboard.tsx:85:17)
+      at fulfilled (src/dashboard/Dashboard.tsx:11407:24)
+
+    console.error
+      An update to Dashboard inside a test was not wrapped in act(...).
+
+      When testing, code that causes React state updates should be wrapped into act(...):
+
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      110 |         const data = await browser.storage.local.get(['geminiApiKey', 'selectedModel']) as { geminiApiKey?: string; selectedModel?: string };
+      111 |         if (data && data.geminiApiKey) {
+    > 112 |             setApiKey(data.geminiApiKey);
+          |             ^
+      113 |         }
+      114 |         if (data && data.selectedModel) {
+      115 |             setSelectedModel(data.selectedModel);
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at setApiKey (src/dashboard/Dashboard.tsx:112:13)
+      at fulfilled (src/dashboard/Dashboard.tsx:11407:24)
+
+PASS src/reader/index.test.tsx
+PASS src/popup/Mascot.test.tsx
+PASS src/utils/folderStructure.test.ts
+PASS src/popup/index.test.tsx
+PASS src/dashboard/index.test.tsx
+-------------------------|---------|----------|---------|---------|------------------------------------------------
+File                     | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+-------------------------|---------|----------|---------|---------|------------------------------------------------
+All files                |   99.57 |    94.15 |    99.6 |     100 |
+ background              |     100 |    98.33 |     100 |     100 |
+  background.ts          |     100 |    98.33 |     100 |     100 | 209
+ components              |     100 |      100 |     100 |     100 |
+  ItemCard.tsx           |     100 |      100 |     100 |     100 |
+  Modal.tsx              |     100 |      100 |     100 |     100 |
+  ReadingProgressBar.tsx |     100 |      100 |     100 |     100 |
+  TTSPlayer.tsx          |     100 |      100 |     100 |     100 |
+ components/AI           |   99.01 |    94.59 |     100 |     100 |
+  ChatPanel.tsx          |     100 |       95 |     100 |     100 | 48
+  KeyConcepts.tsx        |   98.03 |    94.11 |     100 |     100 | 22
+ content                 |     100 |      100 |     100 |     100 |
+  content.ts             |     100 |      100 |     100 |     100 |
+ dashboard               |   99.35 |    88.82 |   98.88 |     100 |
+  Dashboard.tsx          |   99.33 |    88.82 |   98.88 |     100 | 75,145-199,263,282,363,409,423,481,496,556,723
+  index.tsx              |     100 |      100 |     100 |     100 |
+ popup                   |     100 |    96.77 |     100 |     100 |
+  Mascot.tsx             |     100 |      100 |     100 |     100 |
+  Popup.tsx              |     100 |    96.66 |     100 |     100 | 75
+  index.tsx              |     100 |      100 |     100 |     100 |
+ reader                  |   98.58 |    90.35 |     100 |     100 |
+  Reader.tsx             |   98.51 |    90.35 |     100 |     100 | 82,123,147-157,194-211,333,413
+  index.tsx              |     100 |      100 |     100 |     100 |
+ utils                   |     100 |    96.57 |     100 |     100 |
+  aiOrganizer.ts         |     100 |    81.48 |     100 |     100 | 55,77,125-126,227
+  aiService.ts           |     100 |      100 |     100 |     100 |
+  folderStructure.ts     |     100 |      100 |     100 |     100 |
+  storage.ts             |     100 |      100 |     100 |     100 |
+-------------------------|---------|----------|---------|---------|------------------------------------------------
+
+Test Suites: 1 failed, 19 passed, 20 total
+Tests:       1 failed, 1 skipped, 263 passed, 265 total
+Snapshots:   0 total
+Time:        4.972 s
+Ran all test suites.
