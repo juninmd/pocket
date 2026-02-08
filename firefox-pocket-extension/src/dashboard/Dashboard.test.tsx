@@ -855,4 +855,29 @@ describe('Dashboard', () => {
         // Verify line 790-794 (empty state rendering)
         expect(screen.getByText('Voltar para Coleções')).toBeInTheDocument();
     });
+
+    it('should cancel edit item modal', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Edit'));
+        await waitFor(() => expect(screen.getByText('Editar Item')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Cancelar'));
+        await waitFor(() => expect(screen.queryByText('Editar Item')).not.toBeInTheDocument());
+    });
+
+    it('should close edit item modal via close button', async () => {
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Test Item')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Edit'));
+        await waitFor(() => expect(screen.getByText('Editar Item')).toBeInTheDocument());
+
+        const closeBtn = screen.getByLabelText('Fechar');
+        fireEvent.click(closeBtn);
+        await waitFor(() => expect(screen.queryByText('Editar Item')).not.toBeInTheDocument());
+    });
 });

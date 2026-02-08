@@ -363,6 +363,42 @@ describe('background script', () => {
             expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({ siteName: 'Meta Site' }));
         });
 
+        it('should use url as title if tab title equals url and no metadata title', async () => {
+            const url = 'http://test.com';
+            const info = { menuItemId: 'save-to-pocket-like', linkUrl: url } as any;
+            const tab = { id: 1, active: true, windowId: 1, url, title: url } as any; // Title == URL
+
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');
+            // Mock getMetadata failure
+            (browser.tabs.sendMessage as jest.Mock).mockRejectedValue(new Error('No meta'));
+
+            await handleContextMenu(info, tab);
+            await new Promise(r => setTimeout(r, 50));
+
+            expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({
+                title: url
+            }));
+        });
+
+        it('should use metadata title if tab title equals url', async () => {
+            const url = 'http://test.com';
+            const metaTitle = 'Real Title';
+            const info = { menuItemId: 'save-to-pocket-like', linkUrl: url } as any;
+            const tab = { id: 1, active: true, windowId: 1, url, title: url } as any; // Title == URL
+
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');
+            (browser.tabs.sendMessage as jest.Mock).mockResolvedValue({ title: metaTitle });
+
+            await handleContextMenu(info, tab);
+            await new Promise(r => setTimeout(r, 50));
+
+            expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({
+                title: metaTitle
+            }));
+        });
+
         it('should handle metadata fetch failure', async () => {
             const info = { menuItemId: 'save-to-pocket-like', linkUrl: 'http://test.com' } as any;
             const tab = { id: 1 } as any;

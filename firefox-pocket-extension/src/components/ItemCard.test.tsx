@@ -179,4 +179,21 @@ describe('ItemCard', () => {
         render(<ItemCard {...props} item={{ ...mockItem, tags: ['user-tag'], aiTags: [] }} />);
         expect(screen.getByText('user-tag')).toBeInTheDocument();
     });
+
+    it('should render correct titles and styles for favorited and archived items', () => {
+        const item = {
+            ...mockItem,
+            isFavorite: true,
+            status: ItemStatus.Archived
+        };
+        render(<ItemCard {...props} item={item} />);
+
+        const favBtn = screen.getByTitle('Remover dos favoritos');
+        expect(favBtn).toBeInTheDocument();
+        expect(favBtn).toHaveStyle('color: orange');
+
+        const archiveBtn = screen.getByTitle('Desarquivar');
+        expect(archiveBtn).toBeInTheDocument();
+        expect(archiveBtn).toHaveStyle('color: green');
+    });
 });

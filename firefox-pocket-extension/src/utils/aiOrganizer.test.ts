@@ -209,8 +209,6 @@ describe('aiOrganizer', () => {
             // Debug logs should contain error for batch 2
             const errorLog = result.debugLogs.find((l: any) => l.error);
             expect(errorLog).toBeDefined();
-            // Error message depends on environment (node vs browser), typically "Invalid URL"
-            // We check if it has error property.
             expect(errorLog.batchSize).toBeDefined();
         });
     });
@@ -322,6 +320,33 @@ describe('aiOrganizer', () => {
 
             const count = await exportToFirefox(items);
             expect(count).toBe(1);
+        });
+
+        it('should reuse parent folders for nested structures (Hit Cache)', async () => {
+            const items = [
+                { ...mockItem, id: '1', aiFolder: 'Tech/Web' },
+                { ...mockItem, id: '2', aiFolder: 'Tech/Mobile' }
+            ];
+
+            const rootId = 'root';
+            const techId = 'tech_id';
+            const webId = 'web_id';
+            const mobileId = 'mobile_id';
+
+            (browser.bookmarks.create as jest.Mock)
+                .mockResolvedValueOnce({ id: rootId }) // Root
+                // Item 1: Tech/Web
+                .mockResolvedValueOnce({ id: techId }) // Create Tech
+                .mockResolvedValueOnce({ id: webId })  // Create Web
+                .mockResolvedValueOnce({ id: 'bm1' })  // Bookmark 1
+                // Item 2: Tech/Mobile
+                // 'Tech' should be cached, no create call
+                .mockResolvedValueOnce({ id: mobileId }) // Create Mobile (inside Tech)
+                .mockResolvedValueOnce({ id: 'bm2' });   // Bookmark 2
+
+            const count = await exportToFirefox(items);
+            expect(count).toBe(2);
+            expect(browser.bookmarks.create).toHaveBeenCalledTimes(6);
         });
     });
 });
