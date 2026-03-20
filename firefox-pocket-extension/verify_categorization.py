@@ -74,8 +74,8 @@ def run():
             page.wait_for_selector("text=#dev")
 
             # Take screenshot
-            os.makedirs("/home/jules/verification", exist_ok=True)
-            page.screenshot(path="/home/jules/verification/categorization.png")
+            os.makedirs("verification", exist_ok=True)
+            page.screenshot(path="verification/categorization.png")
             print("Verification screenshot saved.")
 
         except Exception as e:
