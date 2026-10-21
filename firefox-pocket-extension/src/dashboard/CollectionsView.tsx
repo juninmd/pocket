@@ -65,7 +65,7 @@ export const CollectionsView = ({ items, searchQuery, matches, actions, onClearS
 
     const node = selectedFolder ? findNode(tree, selectedFolder) : null;
     const subfolders = node ? Object.values(node.children) : Object.values(tree);
-    const direct = selectedFolder ? items.filter(i => (i.aiFolder || i.originalFolder || 'Outros') === selectedFolder) : [];
+    const direct = selectedFolder ? items.filter(i => { const folder = i.aiFolder || i.originalFolder || 'Outros'; return folder.split('/').pop() === selectedFolder.split('/').pop(); }) : [];
     const leaf = selectedFolder?.split('/').pop() ?? '...';
 
     return (
