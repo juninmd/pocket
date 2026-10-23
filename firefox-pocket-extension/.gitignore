@@ -172,3 +172,9 @@ $RECYCLE.BIN/
 
 # Extension Artifacts
 web-ext-artifacts/
+
+# Local artifacts
+test_output.txt
+*.diff
+.old_*
+coverage/
