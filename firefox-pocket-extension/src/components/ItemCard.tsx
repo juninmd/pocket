@@ -35,7 +35,11 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                     <a
                         className="card-title"
                         href={hasContent ? readerUrl : item.url}
-                        onClick={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                            // Modified clicks keep the native "open in new tab/window" behavior.
+                            if (e.ctrlKey || e.metaKey || e.shiftKey) e.stopPropagation();
+                            else e.preventDefault();
+                        }}
                     >
                         {item.title}
                     </a>
