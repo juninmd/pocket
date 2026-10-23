@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { SavedItem, ItemStatus } from '../utils/types';
 import { useItems } from './useItems';
 import { useModal } from './useModal';
@@ -55,6 +55,8 @@ const Dashboard = () => {
         }
     };
 
+    useEffect(() => { document.title = `${TITLES[activeView]} · Pocket`; }, [activeView]);
+
     const changeView = (view: ViewType) => {
         setActiveView(view);
         setNavKey(k => k + 1); // remounts views so folder/tag selection resets
@@ -83,7 +85,7 @@ const Dashboard = () => {
             return (
                 <div className="empty-state">
                     <h2>Nenhum item encontrado</h2>
-                    <p>Salve alguns links para começar!</p>
+                    <p>{searchQuery ? `Nada corresponde a "${searchQuery}".` : 'Salve alguns links para começar!'}</p>
                 </div>
             );
         }

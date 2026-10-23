@@ -17,7 +17,7 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
     const readerUrl = `reader.html?id=${item.id}`;
     const hasContent = !!item.content;
 
-    const handleCardClick = (e: React.MouseEvent) => {
+    const handleCardClick = () => {
         if (hasContent) {
             window.location.href = readerUrl;
         } else {
@@ -29,20 +29,27 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
 
     return (
         <div className="card clickable" onClick={handleCardClick}>
-            <div style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div className="card-body">
                 <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'icons/placeholder.svg'})` }}></div>
                 <div className="card-content">
-                    <div className="card-title">{item.title}</div>
-                    <div className="card-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <a
+                        className="card-title"
+                        href={hasContent ? readerUrl : item.url}
+                        onClick={(e) => e.preventDefault()}
+                    >
+                        {item.title}
+                    </a>
+                    <div className="card-meta">
                         <img
+                            className="card-favicon"
                             src={item.favicon || `https://www.google.com/s2/favicons?domain=${hostOf(item.url)}&sz=16`}
                             alt=""
-                            style={{ width: '16px', height: '16px', borderRadius: '2px' }}
+                            loading="lazy"
                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                         <span>{item.siteName || hostOf(item.url)}</span>
                         <span>• {item.estimatedReadTime || 5} min</span>
-                        {item.content && <span title="Versão backup disponível" style={{ color: '#4caf50' }}>📖</span>}
+                        {item.content && <span className="card-offline" role="img" aria-label="Versão backup disponível" title="Versão backup disponível">📖</span>}
                     </div>
                     {item.excerpt && (
                         <div className="card-excerpt">
@@ -60,7 +67,6 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                             ))}
                         </div>
                     )}
-                    <div style={{ flex: 1 }}></div>
                     <div className="card-actions" onClick={stopProp}>
                         <a
                             href={item.url}
@@ -68,39 +74,47 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                             rel="noopener noreferrer"
                             className="icon-btn"
                             title="Abrir original"
+                            aria-label="Abrir original"
                             onClick={stopProp}
-                            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                             🔗
                         </a>
                         <button
-                            className="icon-btn"
+                            type="button"
+                            className={`icon-btn ${item.isFavorite ? 'is-favorite' : ''}`}
                             title={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
+                            aria-label={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
+                            aria-pressed={item.isFavorite}
                             onClick={(e) => onToggleFavorite(e, item.id, item.isFavorite)}
-                            style={{ color: item.isFavorite ? 'orange' : '' }}
                         >
                             ★
                         </button>
                         <button
-                            className="icon-btn"
+                            type="button"
+                            className={`icon-btn ${item.status === ItemStatus.Archived ? 'is-archived' : ''}`}
                             title={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
+                            aria-label={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
+                            aria-pressed={item.status === ItemStatus.Archived}
                             onClick={(e) => onToggleArchive(e, item.id, item.status)}
-                            style={{ color: item.status === ItemStatus.Archived ? 'green' : '' }}
                         >
                             📥
                         </button>
                         {onEdit && (
                             <button
+                                type="button"
                                 className="icon-btn"
                                 title="Editar tags e pasta"
+                                aria-label="Editar tags e pasta"
                                 onClick={(e) => onEdit(e, item)}
                             >
                                 ✏️
                             </button>
                         )}
                         <button
+                            type="button"
                             className="icon-btn"
                             title="Excluir"
+                            aria-label="Excluir"
                             onClick={(e) => onDelete(e, item.id)}
                         >
                             🗑️

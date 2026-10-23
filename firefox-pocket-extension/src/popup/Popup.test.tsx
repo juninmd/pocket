@@ -193,6 +193,22 @@ describe('Popup', () => {
         await waitFor(() => expect(screen.getByText('Não foi possível acessar a página.')).toBeInTheDocument());
     });
 
+    it('should show error when saveLink rejects instead of hanging', async () => {
+        (browser.tabs.query as jest.Mock).mockResolvedValue([{ id: 1, url: 'https://example.com', title: 'Ex' }]);
+        (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {
+            if (msg.action === 'getLink') return Promise.resolve({ success: false });
+            if (msg.action === 'saveLink') return Promise.reject(new Error('boom'));
+            return Promise.resolve({});
+        });
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        render(<Popup />);
+        await waitFor(() => expect(screen.getByText('💾 Salvar Esta Página')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('💾 Salvar Esta Página'));
+
+        await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível acessar a página.'));
+    });
+
     it('should handle metadata fetch error during save', async () => {
         (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://example.com', id: 1 }]);
         (browser.runtime.sendMessage as jest.Mock).mockImplementation((msg: any) => {

@@ -12,6 +12,7 @@
 .primary-btn.wide { width: 100%; padding: 12px; font-size: 1rem; }
 
 .btn { border: 1px solid var(--border-light); font-family: var(--font-main); color: #fff; }
+.btn:focus-visible, .icon-btn:focus-visible, .tile:focus-visible, .crumb:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .btn.secondary { background: rgba(255, 255, 255, 0.06); }
 .btn.secondary:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
 .btn.accent { background: var(--primary-gradient); border-color: transparent; }
@@ -47,13 +48,13 @@ select.search-bar option { background: var(--bg-dark); color: var(--text-main); 
 .folder-nav { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 .folder-nav h2 { margin: 0; }
 .breadcrumbs { display: flex; gap: 8px; align-items: center; color: var(--text-muted); }
-.crumb { cursor: pointer; color: var(--text-secondary); }
+.crumb { appearance: none; border: 0; background: none; padding: 2px 4px; border-radius: 4px; font: inherit; cursor: pointer; color: var(--text-secondary); }
 .crumb:hover { color: #fff; }
 .crumb.current { color: var(--primary); font-weight: 700; }
 .section-title { margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
 .grid.tiles { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
 .grid.tiles.small { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
-.tile { box-sizing: border-box; cursor: pointer; padding: 22px 16px; align-items: center; justify-content: center; text-align: center; }
+.tile { appearance: none; font: inherit; color: inherit; box-sizing: border-box; cursor: pointer; padding: 22px 16px; align-items: center; justify-content: center; text-align: center; }
 .tile h3 { margin: 0; font-size: 1.05rem; }
 .tile p { margin: 6px 0 0; color: var(--text-secondary); font-size: 0.85rem; }
 .tile-icon { font-size: 2.4rem; margin-bottom: 10px; }

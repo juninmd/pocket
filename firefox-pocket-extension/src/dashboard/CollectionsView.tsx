@@ -76,18 +76,18 @@ export const CollectionsView = ({ items, searchQuery, matches, actions, onClearS
                 <Section title={selectedFolder ? 'Subpastas' : 'Minhas Coleções'}>
                     <div className="grid tiles">
                         {subfolders.map(n => (
-                            <div key={n.fullPath} className="card tile" onClick={() => { setSelectedFolder(n.fullPath); onClearSearch(); }}>
-                                <div className="tile-icon">📁</div>
+                            <button type="button" key={n.fullPath} className="card tile" onClick={() => { setSelectedFolder(n.fullPath); onClearSearch(); }}>
+                                <span className="tile-icon" aria-hidden="true">📁</span>
                                 <h3>{n.name}</h3>
                                 <p>{n.totalItemCount} itens</p>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </Section>
             )}
 
             {direct.length > 0 && (
-                <Section title={`Itens em "${leaf} "`}>
+                <Section title={`Itens em "${leaf}"`}>
                     <ItemGrid items={direct} actions={actions} />
                 </Section>
             )}
@@ -96,10 +96,10 @@ export const CollectionsView = ({ items, searchQuery, matches, actions, onClearS
                 <Section title="Explorar por Tags">
                     <div className="grid tiles small">
                         {tags.map(tag => (
-                            <div key={tag} className="card tile" onClick={() => setSelectedTag(tag)}>
+                            <button type="button" key={tag} className="card tile" onClick={() => setSelectedTag(tag)}>
                                 <h3>#{tag}</h3>
                                 <p>{items.filter(i => hasTag(i, tag)).length}</p>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </Section>

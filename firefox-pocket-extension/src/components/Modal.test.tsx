@@ -49,4 +49,12 @@ describe('Modal', () => {
         render(<Modal isOpen={true} onClose={onClose} footer={<button>Ok</button>}>Content</Modal>);
         expect(screen.getByText('Ok')).toBeInTheDocument();
     });
+
+    it('should close on Escape and focus the dialog', () => {
+        const close = jest.fn();
+        render(<Modal isOpen={true} onClose={close} title="T">Content</Modal>);
+        expect(screen.getByRole('dialog')).toHaveFocus();
+        fireEvent.keyDown(document, { key: 'Escape' });
+        expect(close).toHaveBeenCalledTimes(1);
+    });
 });

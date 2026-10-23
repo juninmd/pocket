@@ -660,3 +660,21 @@ body.has-sidebar .reader-container {
     color: white;
     border-color: var(--primary);
 }
+
+/* Modal actions */
+.modal-btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font: 600 0.9rem var(--font-main);
+    cursor: pointer;
+    border: 1px solid var(--border-light);
+}
+
+.modal-btn.primary { background: var(--accent); border-color: transparent; color: #fff; }
+.modal-btn.secondary { background: transparent; color: var(--text-main); }
+
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}

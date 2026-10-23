@@ -190,10 +190,12 @@ describe('ItemCard', () => {
 
         const favBtn = screen.getByTitle('Remover dos favoritos');
         expect(favBtn).toBeInTheDocument();
-        expect(favBtn).toHaveStyle('color: orange');
+        expect(favBtn).toHaveClass('is-favorite');
+        expect(favBtn).toHaveAttribute('aria-pressed', 'true');
 
         const archiveBtn = screen.getByTitle('Desarquivar');
         expect(archiveBtn).toBeInTheDocument();
-        expect(archiveBtn).toHaveStyle('color: green');
+        expect(archiveBtn).toHaveClass('is-archived');
+        expect(archiveBtn).toHaveAttribute('aria-pressed', 'true');
     });
 });
