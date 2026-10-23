@@ -272,6 +272,25 @@ describe('Dashboard', () => {
         expect(screen.queryByPlaceholderText('Pesquisar...')).not.toBeInTheDocument();
     });
 
+    it('should keep the discovered item stable until "Próximo Item" is clicked', async () => {
+        const items = [1, 2, 3, 4].map(n => ({ ...mockItem, id: String(n), title: `Item ${n}`, status: ItemStatus.Unread }));
+        (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items });
+        const random = jest.spyOn(Math, 'random').mockReturnValue(0.1);
+        render(<Dashboard />);
+        await waitFor(() => expect(screen.getByText('Redescobrir')).toBeInTheDocument());
+        fireEvent.click(screen.getByText('Redescobrir'));
+        await waitFor(() => expect(screen.getByText('Item 1')).toBeInTheDocument());
+
+        random.mockReturnValue(0.9);
+        // unrelated re-render must not change the item
+        window.dispatchEvent(new Event('resize'));
+        expect(screen.getByText('Item 1')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByText('Próximo Item'));
+        expect(screen.getByText('Item 4')).toBeInTheDocument();
+        random.mockRestore();
+    });
+
     it('should collections view', async () => {
          (browser.runtime.sendMessage as jest.Mock).mockResolvedValue({ items: [mockItem] });
          render(<Dashboard />);

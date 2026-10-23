@@ -26,6 +26,6 @@ Thank you for your interest in contributing!
 
 ## Pull Requests
 
-- Open a PR against the `main` branch.
+- Open a PR against the `master` branch.
 - Fill out the PR template.
 - Ensure CI passes.

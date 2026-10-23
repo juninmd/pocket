@@ -9,6 +9,10 @@ interface ItemCardProps {
     onEdit?: (e: React.MouseEvent, item: SavedItem) => void;
 }
 
+const hostOf = (url: string) => {
+    try { return new URL(url).hostname; } catch { return url; }
+};
+
 export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, onDelete, onEdit }: ItemCardProps) => {
     const readerUrl = `reader.html?id=${item.id}`;
     const hasContent = !!item.content;
@@ -24,24 +28,24 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
     const stopProp = (e: React.MouseEvent) => e.stopPropagation();
 
     return (
-        <div className="card" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }} onClick={handleCardClick}>
+        <div className="card clickable" onClick={handleCardClick}>
             <div style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'icons/placeholder.svg'})` }}></div>
                 <div className="card-content">
                     <div className="card-title">{item.title}</div>
                     <div className="card-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <img
-                            src={item.favicon || `https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}&sz=16`}
+                            src={item.favicon || `https://www.google.com/s2/favicons?domain=${hostOf(item.url)}&sz=16`}
                             alt=""
                             style={{ width: '16px', height: '16px', borderRadius: '2px' }}
                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
-                        <span>{item.siteName || new URL(item.url).hostname}</span>
+                        <span>{item.siteName || hostOf(item.url)}</span>
                         <span>• {item.estimatedReadTime || 5} min</span>
                         {item.content && <span title="Versão backup disponível" style={{ color: '#4caf50' }}>📖</span>}
                     </div>
                     {item.excerpt && (
-                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        <div className="card-excerpt">
                             {item.excerpt}
                         </div>
                     )}
@@ -52,7 +56,7 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                                 <span key={tag} className="card-tag">{tag}</span>
                             ))}
                             {item.aiTags && item.aiTags.map(tag => (
-                                <span key={`ai-${tag}`} className="card-tag" style={{ border: '1px solid #e0e0e0', background: 'white' }}>✨ {tag}</span>
+                                <span key={`ai-${tag}`} className="card-tag ai">✨ {tag}</span>
                             ))}
                         </div>
                     )}
