@@ -190,10 +190,23 @@ describe('ItemCard', () => {
 
         const favBtn = screen.getByTitle('Remover dos favoritos');
         expect(favBtn).toBeInTheDocument();
-        expect(favBtn).toHaveStyle('color: orange');
+        expect(favBtn).toHaveClass('is-favorite');
+        expect(favBtn).toHaveAttribute('aria-pressed', 'true');
 
         const archiveBtn = screen.getByTitle('Desarquivar');
         expect(archiveBtn).toBeInTheDocument();
-        expect(archiveBtn).toHaveStyle('color: green');
+        expect(archiveBtn).toHaveClass('is-archived');
+        expect(archiveBtn).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('should leave ctrl+click on the title to the browser', () => {
+        render(<ItemCard {...props} item={mockItem} />);
+        const title = screen.getByText('Test Title');
+        const openSpy = jest.spyOn(window, 'open').mockImplementation(() => null);
+        const event = createEvent.click(title, { ctrlKey: true });
+        fireEvent(title, event);
+        expect(event.defaultPrevented).toBe(false);
+        expect(openSpy).not.toHaveBeenCalled();
+        openSpy.mockRestore();
     });
 });

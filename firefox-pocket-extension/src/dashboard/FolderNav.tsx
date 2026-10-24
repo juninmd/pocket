@@ -12,18 +12,20 @@ export const FolderNav = ({ selectedFolder, onSelect }: FolderNavProps) => {
 
     return (
         <div className="folder-nav">
-            {selectedFolder && <button className="btn ghost" onClick={goUp}>⬆ Subir</button>}
-            <div className="breadcrumbs">
-                <span className={`crumb ${!selectedFolder ? 'current' : ''}`} onClick={() => onSelect(null)}>Coleções</span>
+            {selectedFolder && <button type="button" className="btn ghost" onClick={goUp}>⬆ Subir</button>}
+            <nav className="breadcrumbs" aria-label="Caminho da pasta">
+                <button type="button" className={`crumb ${!selectedFolder ? 'current' : ''}`}
+                    aria-current={!selectedFolder ? 'page' : undefined} onClick={() => onSelect(null)}>Coleções</button>
                 {crumbs.map((crumb, idx) => (
                     <React.Fragment key={crumb.path}>
-                        <span>/</span>
-                        <span className={`crumb ${idx === crumbs.length - 1 ? 'current' : ''}`} onClick={() => onSelect(crumb.path)}>
+                        <span aria-hidden="true">/</span>
+                        <button type="button" className={`crumb ${idx === crumbs.length - 1 ? 'current' : ''}`}
+                            aria-current={idx === crumbs.length - 1 ? 'page' : undefined} onClick={() => onSelect(crumb.path)}>
                             {crumb.name}
-                        </span>
+                        </button>
                     </React.Fragment>
                 ))}
-            </div>
+            </nav>
         </div>
     );
 };

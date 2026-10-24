@@ -61,29 +61,36 @@ const Popup = () => {
       }
     }
 
-    const saveResponse = await browser.runtime.sendMessage({
-      action: 'saveLink',
-      payload: {
-        url: currentTab.url,
-        title: currentTab.title || currentTab.url,
-        ...metadata
-      }
-    }) as { success: boolean, item?: SavedItem };
+    try {
+      const saveResponse = await browser.runtime.sendMessage({
+        action: 'saveLink',
+        payload: {
+          url: currentTab.url,
+          title: currentTab.title || currentTab.url,
+          ...metadata
+        }
+      }) as { success: boolean, item?: SavedItem };
 
-    if (saveResponse && saveResponse.success && saveResponse.item) {
-      setItem(saveResponse.item);
-      setTags(saveResponse.item.tags || []);
-      setStatus('saved');
-    } else {
+      if (saveResponse && saveResponse.success && saveResponse.item) {
+        setItem(saveResponse.item);
+        setTags(saveResponse.item.tags || []);
+        setStatus('saved');
+      } else {
+        setStatus('error');
+      }
+    } catch (e) {
+      console.error(e);
       setStatus('error');
     }
   };
 
   const handleAddTag = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && tagInput.trim() && item) {
-      const newTags = [...tags, tagInput.trim()];
-      setTags(newTags);
+      const tag = tagInput.trim();
       setTagInput('');
+      if (tags.includes(tag)) return;
+      const newTags = [...tags, tag];
+      setTags(newTags);
       await browser.runtime.sendMessage({
         action: 'updateLink',
         payload: { id: item.id, updates: { tags: newTags } }
@@ -126,15 +133,15 @@ const Popup = () => {
   };
 
   if (status === 'loading') {
-    return <div className="loading">Carregando...</div>;
+    return <div className="loading" role="status">Carregando...</div>;
   }
 
   if (status === 'saving') {
-    return <div className="loading">Salvando...</div>;
+    return <div className="loading" role="status">Salvando...</div>;
   }
 
   if (status === 'error') {
-    return <div className="error">Não foi possível acessar a página.</div>;
+    return <div className="error" role="alert">Não foi possível acessar a página.</div>;
   }
 
   // Not saved - show options
@@ -159,10 +166,10 @@ const Popup = () => {
     <div className="popup-container">
       <Mascot message="Link Salvo!" />
 
-      <div className="header" style={{ justifyContent: 'flex-end' }}>
+      <div className="header">
         <div className="actions">
-          <button onClick={handleArchive} title="Arquivar">📥</button>
-          <button onClick={handleDelete} title="Excluir">🗑️</button>
+          <button type="button" onClick={handleArchive} title="Arquivar" aria-label="Arquivar">📥</button>
+          <button type="button" onClick={handleDelete} title="Excluir" aria-label="Excluir">🗑️</button>
         </div>
       </div>
 
@@ -172,13 +179,14 @@ const Popup = () => {
         <div className="tags-list">
           {tags.map(tag => (
             <span key={tag} className="tag">
-              {tag} <button onClick={() => removeTag(tag)}>×</button>
+              {tag} <button type="button" aria-label={`Remover ${tag}`} onClick={() => removeTag(tag)}>×</button>
             </span>
           ))}
         </div>
         <input
           type="text"
           placeholder="Adicionar tags..."
+          aria-label="Adicionar tags"
           value={tagInput}
           onChange={e => setTagInput(e.target.value)}
           onKeyDown={handleAddTag}

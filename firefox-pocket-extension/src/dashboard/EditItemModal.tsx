@@ -34,28 +34,28 @@ export const EditItemModal = ({ item, onClose, onSave }: EditItemModalProps) => 
             title="Editar Item"
             footer={
                 <>
-                    <button className="secondary-btn" onClick={onClose}>Cancelar</button>
-                    <button className="primary-btn" onClick={() => item && onSave(item, tags, folder)}>Salvar</button>
+                    <button type="button" className="secondary-btn" onClick={onClose}>Cancelar</button>
+                    <button type="button" className="primary-btn" onClick={() => item && onSave(item, tags, folder)}>Salvar</button>
                 </>
             }
         >
             <div className="form-stack">
                 <div>
-                    <label className="field-label">Pasta</label>
-                    <input type="text" className="search-bar full" value={folder} placeholder="Ex: Tecnologia/React"
+                    <label className="field-label" htmlFor="edit-folder">Pasta</label>
+                    <input id="edit-folder" type="text" className="search-bar full" value={folder} placeholder="Ex: Tecnologia/React"
                         onChange={(e) => setFolder(e.target.value)} />
                 </div>
                 <div>
-                    <label className="field-label">Tags</label>
+                    <label className="field-label" htmlFor="edit-tag">Tags</label>
                     <div className="tag-list">
                         {tags.map(tag => (
                             <span key={tag} className="tag chip">
                                 {tag}
-                                <button aria-label={`Remover ${tag}`} onClick={() => setTags(tags.filter(t => t !== tag))}>×</button>
+                                <button type="button" aria-label={`Remover ${tag}`} onClick={() => setTags(tags.filter(t => t !== tag))}>×</button>
                             </span>
                         ))}
                     </div>
-                    <input type="text" className="search-bar full" placeholder="Adicionar tag e pressione Enter"
+                    <input id="edit-tag" type="text" className="search-bar full" placeholder="Adicionar tag e pressione Enter"
                         onKeyDown={(e) => e.key === 'Enter' && addTag(e.target as HTMLInputElement)} />
                 </div>
             </div>

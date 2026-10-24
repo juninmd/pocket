@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import clsx from 'clsx';
-import '../styles/theme.css'; // Ensure theme is available if used directly
+import '../styles/theme.css';
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,94 +11,60 @@ interface ModalProps {
   type?: 'default' | 'danger' | 'success';
 }
 
-export const Modal: React.FC<ModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
   footer,
-  type = 'default' 
+  type = 'default'
 }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // Escape closes; focus moves into the dialog and returns to the trigger on close.
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      previous?.focus?.();
+    };
+  }, [isOpen]);
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="modal-overlay"
+          onClick={onClose}
+        >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            style={{ 
-              position: 'fixed', 
-              top: 0, 
-              left: 0, 
-              right: 0, 
-              bottom: 0, 
-              backgroundColor: 'rgba(0,0,0,0.6)', 
-              backdropFilter: 'blur(4px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999
-            }}
-            onClick={onClose}
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? 'modal-title' : undefined}
+            tabIndex={-1}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className={`glass-panel modal-dialog modal-${type}`}
+            onClick={(e) => e.stopPropagation()}
           >
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby={title ? "modal-title" : undefined}
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className="glass-panel w-full max-w-md overflow-hidden relative"
-              style={{
-                width: '100%',
-                maxWidth: '400px',
-                padding: '24px',
-                border: '1px solid var(--border-light)',
-                background: 'var(--bg-card)',
-                borderRadius: 'var(--radius-md)'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {title && (
-                <div className="mb-4">
-                  <h3 id="modal-title" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                    {title}
-                  </h3>
-                </div>
-              )}
-              
-              <div style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
-                {children}
-              </div>
-
-              {footer && (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                  {footer}
-                </div>
-              )}
-              
-              <button 
-                onClick={onClose}
-                aria-label="Fechar"
-                style={{
-                  position: 'absolute',
-                  top: '16px',
-                  right: '16px',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontSize: '20px'
-                }}
-              >
-                ×
-              </button>
-            </motion.div>
+            {title && <h3 id="modal-title" className="modal-title">{title}</h3>}
+            <div className="modal-body">{children}</div>
+            {footer && <div className="modal-footer">{footer}</div>}
+            <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

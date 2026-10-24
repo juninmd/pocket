@@ -11,6 +11,10 @@ import { ChatPanel } from '../components/AI/ChatPanel';
 import { KeyConcepts } from '../components/AI/KeyConcepts';
 import './index.css';
 
+const hostOf = (url: string) => {
+  try { return new URL(url).hostname; } catch { return url; }
+};
+
 const Reader = () => {
   const [item, setItem] = useState<SavedItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -208,7 +212,7 @@ const Reader = () => {
         <a href="dashboard.html" className="back-btn" aria-label="Voltar para Minha Lista">← Voltar para Minha Lista</a>
         <h1 className="article-title">{item.title}</h1>
         <div className="article-meta">
-          {item.siteName ? <span>{item.siteName}</span> : <span>{new URL(item.url).hostname}</span>}
+          <span>{item.siteName || hostOf(item.url)}</span>
           {item.author && <span> • por {item.author}</span>}
           {item.estimatedReadTime && <span> • {item.estimatedReadTime} min de leitura</span>}
         </div>
@@ -235,16 +239,19 @@ const Reader = () => {
                       className={`theme-btn light ${theme === 'light' ? 'active' : ''}`}
                       onClick={() => setTheme('light')}
                       aria-label="Tema Claro"
+                      aria-pressed={theme === 'light'}
                     />
                     <button
                       className={`theme-btn sepia ${theme === 'sepia' ? 'active' : ''}`}
                       onClick={() => setTheme('sepia')}
                       aria-label="Tema Sépia"
+                      aria-pressed={theme === 'sepia'}
                     />
                     <button
                       className={`theme-btn dark ${theme === 'dark' ? 'active' : ''}`}
                       onClick={() => setTheme('dark')}
                       aria-label="Tema Escuro"
+                      aria-pressed={theme === 'dark'}
                     />
                   </div>
                 </div>
@@ -285,6 +292,7 @@ const Reader = () => {
               style={{ background: item.isFavorite ? '#ff9800' : 'rgba(255,255,255,0.1)', color: item.isFavorite ? 'white' : 'var(--text-main)' }}
               title={item.isFavorite ? "Remover dos Favoritos" : "Favoritar"}
               aria-label={item.isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+              aria-pressed={item.isFavorite}
           >
               {item.isFavorite ? "★ Favorito" : "☆ Favoritar"}
           </button>
@@ -316,7 +324,7 @@ const Reader = () => {
           </button>
 
           {summarizeError && (
-            <div style={{ color: 'red', marginTop: '10px', fontSize: '0.9rem', width: '100%' }}>
+            <div role="alert" style={{ color: '#ff6b6b', marginTop: '10px', fontSize: '0.9rem', width: '100%' }}>
               {summarizeError}
             </div>
           )}
@@ -366,11 +374,11 @@ const Reader = () => {
         footer={
           modal.onConfirm ? (
             <>
-              <button className="secondary-btn" onClick={closeModal} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}>Cancelar</button>
-              <button className="primary-btn" onClick={modal.onConfirm} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#ef4056', color: 'white', cursor: 'pointer' }}>{modal.confirmText}</button>
+              <button type="button" className="modal-btn secondary" onClick={closeModal}>Cancelar</button>
+              <button type="button" className="modal-btn primary" onClick={modal.onConfirm}>{modal.confirmText}</button>
             </>
           ) : (
-            <button className="primary-btn" onClick={closeModal} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#ef4056', color: 'white', cursor: 'pointer' }}>OK</button>
+            <button type="button" className="modal-btn primary" onClick={closeModal}>OK</button>
           )
         }
       >
