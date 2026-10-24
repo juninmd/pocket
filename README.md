@@ -1,13 +1,22 @@
+<div align="center">
+
 # Pocket-like
+
+**Extensão para Firefox no estilo do Pocket: salve links, leia sem distrações e organize a biblioteca com IA.**<br/>
+Os dados ficam só no navegador (`browser.storage.local`), sem conta e sem servidor.
 
 ![Firefox](https://img.shields.io/badge/Firefox-WebExtension-ff7139)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Tests](https://img.shields.io/badge/tests-266%20passing-brightgreen)
 
-Extensão para Firefox no estilo do Pocket: salve links, leia sem distrações e organize a biblioteca com IA. Os dados ficam só no navegador (`browser.storage.local`).
+[Funcionalidades](#funcionalidades) · [Como funciona](#como-funciona) · [Começando](#começando) · [Segurança](#segurança) · [Limitações](#limitações-conhecidas) · [Contribuindo](#contribuindo)
 
-![Dashboard](docs/screenshots/home.png)
+<br/>
+
+<img src="docs/screenshots/home.png" alt="Dashboard com a lista Minha Lista e cartões de artigos salvos" width="860" />
+
+</div>
 
 ## Funcionalidades
 
@@ -21,7 +30,26 @@ Extensão para Firefox no estilo do Pocket: salve links, leia sem distrações e
 
 | Coleções | Configurações |
 |---|---|
-| ![Coleções](docs/screenshots/collections.png) | ![Configurações](docs/screenshots/settings.png) |
+| ![Tela Coleções do dashboard](docs/screenshots/collections.png) | ![Tela Configurações do dashboard](docs/screenshots/settings.png) |
+
+## Como funciona
+
+```mermaid
+flowchart LR
+  POP["popup/Popup.tsx"] -->|saveLink| BG
+  CM["Menu de contexto"] -->|handleContextMenu| BG
+  BG["background/background.ts"] -->|getMetadata| CT["content/content.ts (Readability)"]
+  CT -->|título, autor, texto| BG
+  BG -->|saveItem| ST["utils/storage.ts"]
+  ST --> LS[("browser.storage.local")]
+  DB["dashboard/"] -->|getLinks| BG
+  RD["reader/Reader.tsx"] -->|resumo e chat| AI["utils/aiService.ts"]
+  AI -->|generateContent| GG[("API Gemini")]
+```
+
+- O texto completo fica em uma chave separada (`content_<id>`); a lista de itens guarda só metadados (`utils/storage.ts`).
+- O tempo de leitura é estimado a 200 palavras por minuto (`calculateReadTime`).
+- A importação de favoritos do Firefox é feita em lotes de 100 (`background/background.ts`).
 
 ## Começando
 
@@ -34,6 +62,9 @@ pnpm run build:prod
 ```
 
 Para carregar no Firefox, abra `about:debugging` → *Este Firefox* → *Carregar extensão temporária…* e escolha `dist/manifest.json`.
+
+> [!WARNING]
+> Extensão carregada por *Carregar extensão temporária…* é removida quando o Firefox fecha. Carregue de novo a cada sessão.
 
 Para rodar em um perfil de desenvolvimento: `pnpm run start:firefox`.
 
@@ -70,8 +101,29 @@ firefox-pocket-extension/
 
 ## Contribuindo
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md) e [AGENTS.md](AGENTS.md). Regras principais: **máx. 150 linhas por arquivo**, testes e lint passando, e nenhum dado sensível no contexto. O roteiro está em [ROADMAP.md](ROADMAP.md).
+Veja [CONTRIBUTING.md](CONTRIBUTING.md) e [AGENTS.md](AGENTS.md). Regras principais: **máx. 150 linhas por arquivo**, testes passando, e nenhum dado sensível no contexto. O roteiro está em [ROADMAP.md](ROADMAP.md).
+
+## Segurança
+
+| Camada | Proteção |
+|---|---|
+| Armazenamento | itens, conteúdo e chave do Gemini ficam em `browser.storage.local`; a extensão não aplica criptografia própria |
+| Rede | a API do Gemini (`generativelanguage.googleapis.com`) recebe dados só nas ações de IA, e a chave vai como parâmetro `key` na URL dessa chamada. Favicons são buscados em `www.google.com/s2/favicons` |
+| Conteúdo | o HTML salvo passa por DOMPurify antes de ser exibido no leitor e no chat |
+| Permissões | o content script roda em todas as páginas (`<all_urls>`) para extrair o texto do artigo |
+
+## Limitações conhecidas
+
+- **Só Firefox**: o manifesto declara `strict_min_version` 109.0 e não há build para outros navegadores.
+- **Sem sincronização**: os dados ficam no perfil em que foram salvos. Use a exportação em JSON para levar a biblioteca a outro lugar.
+- **IA opcional**: resumo, chat e organização exigem sua chave do Gemini e conexão. Sem chave, as funções sem IA continuam funcionando.
+- **Leitura limpa depende da página**: quando o Readability não reconhece um artigo, o texto salvo pode faltar.
+- **Tempo de leitura é estimativa**: calculado a partir do texto extraído, não medido.
 
 ## Stack
 
 React 19, TypeScript, Webpack 5, Framer Motion, `@mozilla/readability`, DOMPurify, `webextension-polyfill` e Google Gemini API.
+
+## Licença
+
+ISC, conforme o campo `license` de `firefox-pocket-extension/package.json`. O repositório ainda não tem arquivo `LICENSE`.
