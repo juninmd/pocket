@@ -10,6 +10,7 @@ import { callGemini } from '../utils/aiService';
 import { ChatPanel } from '../components/AI/ChatPanel';
 import { KeyConcepts } from '../components/AI/KeyConcepts';
 import './index.css';
+import { htmlToText } from '../utils/htmlToText';
 
 const hostOf = (url: string) => {
   try { return new URL(url).hostname; } catch { return url; }
@@ -156,9 +157,7 @@ const Reader = () => {
     setIsSummarizing(true);
     setSummarizeError(null);
     try {
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = item.content;
-      const plainText = tempDiv.textContent || "";
+      const plainText = htmlToText(item.content);
       const truncatedText = plainText.substring(0, 30000); // Safety limit
 
       const prompt = `Resuma o seguinte artigo em 3 pontos principais (bullet points) e um breve parágrafo de conclusão. Responda em Português do Brasil.\n\nArtigo:\n${truncatedText}`;
@@ -198,9 +197,7 @@ const Reader = () => {
   if (!item) return <div className="error">Item não encontrado</div>;
 
   const getPlainText = () => {
-    const temp = document.createElement('div');
-    temp.innerHTML = item!.content || "";
-    return temp.textContent || temp.innerText || "";
+    return htmlToText(item!.content || "");
   };
 
   return (
