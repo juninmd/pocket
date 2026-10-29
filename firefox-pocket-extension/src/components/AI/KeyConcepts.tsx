@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { callGemini } from '../../utils/aiService';
+import { htmlToText } from '../../utils/htmlToText';
 
 interface Concept {
     term: string;
@@ -25,9 +26,7 @@ export const KeyConcepts: React.FC<KeyConceptsProps> = ({ apiKey, articleContent
         setError(null);
 
         try {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = articleContent;
-            const cleanText = tempDiv.textContent || "";
+            const cleanText = htmlToText(articleContent);
             const truncatedText = cleanText.substring(0, 30000);
 
             const prompt = `Analise o texto abaixo e identifique 5 conceitos-chave, termos técnicos ou ideias complexas.

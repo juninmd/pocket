@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { callGeminiChat, GeminiMessage } from '../../utils/aiService';
 import DOMPurify from 'dompurify';
+import { htmlToText } from '../../utils/htmlToText';
 
 interface ChatPanelProps {
     apiKey: string;
@@ -33,9 +34,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ apiKey, articleContent }) 
 
         try {
             // Strip HTML for the prompt
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = articleContent;
-            const cleanText = tempDiv.textContent || "";
+            const cleanText = htmlToText(articleContent);
             const truncatedText = cleanText.substring(0, 50000); // Safety limit
 
             const systemContext = `Você é um assistente útil e inteligente. Use o seguinte artigo como base para responder às perguntas do usuário. Responda em Português.\n\nArtigo:\n${truncatedText}`;
