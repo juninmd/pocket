@@ -34,6 +34,18 @@ describe('aiService', () => {
             );
         });
 
+        it('should send the API key in a header, never in the URL', async () => {
+            (global.fetch as jest.Mock).mockResolvedValue({
+                json: jest.fn().mockResolvedValue(mockResponse)
+            });
+
+            await callGemini(mockApiKey, 'Prompt');
+            const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
+            expect(url).not.toContain(mockApiKey);
+            expect(url).not.toContain('key=');
+            expect(init.headers['x-goog-api-key']).toBe(mockApiKey);
+        });
+
         it('should handle config options', async () => {
             (global.fetch as jest.Mock).mockResolvedValue({
                 json: jest.fn().mockResolvedValue(mockResponse)

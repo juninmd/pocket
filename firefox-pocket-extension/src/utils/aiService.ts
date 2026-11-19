@@ -40,13 +40,17 @@ interface GeminiConfig {
     toolConfig?: ToolConfig;
 }
 
+// The key goes in a header, never in the URL, so it cannot leak through logs, devtools or error messages.
+const geminiUrl = (model: string) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+const geminiHeaders = (apiKey: string) => ({ 'Content-Type': 'application/json', 'x-goog-api-key': apiKey });
+
 export const callGemini = async (
     apiKey: string,
     prompt: string,
     model: GeminiModel = 'gemini-1.5-flash',
     config: GeminiConfig = {}
 ): Promise<string> => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = geminiUrl(model);
 
     const body: any = {
         contents: [{ parts: [{ text: prompt }] }]
@@ -61,9 +65,7 @@ export const callGemini = async (
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: geminiHeaders(apiKey),
         body: JSON.stringify(body)
     });
 
@@ -88,7 +90,7 @@ export const callGeminiChat = async (
     model: GeminiModel = 'gemini-1.5-flash',
     config: GeminiConfig = {}
 ): Promise<string> => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = geminiUrl(model);
 
     const body: any = {
         contents: history
@@ -103,9 +105,7 @@ export const callGeminiChat = async (
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: geminiHeaders(apiKey),
         body: JSON.stringify(body)
     });
 
@@ -130,7 +130,7 @@ export const callGeminiWithTools = async (
     model: GeminiModel = 'gemini-1.5-flash',
     config: GeminiConfig = {}
 ): Promise<GeminiResponse> => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = geminiUrl(model);
 
     const body: any = {
         contents: [{ parts: [{ text: prompt }] }]
@@ -153,9 +153,7 @@ export const callGeminiWithTools = async (
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: geminiHeaders(apiKey),
         body: JSON.stringify(body)
     });
 
