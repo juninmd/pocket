@@ -53,18 +53,21 @@ export const saveItem = async (item: SavedItem): Promise<void> => {
   // Extract content
   const { content, ...metadata } = item;
 
+  // Re-saving a known URL keeps the stored id: a new id would orphan the old content_<id> key
+  // and break anything that references the item.
+  const existingIndex = items.findIndex(i => i.url === item.url);
+  const id = existingIndex >= 0 ? items[existingIndex].id : item.id;
+
   // Save content separately if it exists
   if (content) {
-     await browser.storage.local.set({ [`content_${item.id}`]: content });
+     await browser.storage.local.set({ [`content_${id}`]: content });
   }
 
-  // Check if already exists
-  const existingIndex = items.findIndex(i => i.url === item.url);
   if (existingIndex >= 0) {
     // Update existing
     // We merge metadata but explicitly remove content from the stored object in the list
     const existing = items[existingIndex];
-    items[existingIndex] = { ...existing, ...metadata, content: undefined };
+    items[existingIndex] = { ...existing, ...metadata, id, content: undefined };
   } else {
     // Add to top
     // Ensure content is undefined in the list

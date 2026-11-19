@@ -65,6 +65,19 @@ describe('storage utils', () => {
   });
 
   describe('saveItem', () => {
+    it('should keep the stored id and write content under it when the URL is saved again', async () => {
+      const stored = { ...mockItem, id: 'old-id', content: undefined };
+      (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [stored] });
+
+      await saveItem({ ...mockItem, id: 'new-id', title: 'Fresh title' });
+
+      expect(browser.storage.local.set).toHaveBeenCalledWith({ 'content_old-id': mockItem.content });
+      expect(browser.storage.local.set).not.toHaveBeenCalledWith({ 'content_new-id': mockItem.content });
+      expect(browser.storage.local.set).toHaveBeenCalledWith({
+        savedItems: [expect.objectContaining({ id: 'old-id', title: 'Fresh title' })],
+      });
+    });
+
     it('should add a new item to the list without content and save content separately', async () => {
       (browser.storage.local.get as jest.Mock).mockResolvedValue({ savedItems: [] });
 

@@ -57,8 +57,10 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
   switch (message.action) {
     case 'saveLink': {
       const { url, title, imageUrl, description, siteName, author, estimatedReadTime, content, favicon } = message.payload;
+      // Re-saving a known URL must hand back the stored id, or later updateLink calls miss it.
+      const known = (await getSavedItems()).find(i => i.url === url);
       const newItem: SavedItem = {
-        id: generateId(),
+        id: known?.id ?? generateId(),
         url: url,
         title: title || url,
         excerpt: description,

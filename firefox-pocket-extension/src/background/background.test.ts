@@ -143,6 +143,7 @@ describe('background script', () => {
         it('saveLink should save item', async () => {
             const payload = { url: 'http://test.com', title: 'Test' };
             (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([]);
             (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://test.com', windowId: 1 }]);
             (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');
 
@@ -152,9 +153,20 @@ describe('background script', () => {
             expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ action: 'itemsUpdated' });
         });
 
+        it('saveLink should reuse the stored id when the URL is already saved', async () => {
+            (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
+            (browser.tabs.query as jest.Mock).mockResolvedValue([]);
+
+            const result = await handleMessage({ action: 'saveLink', payload: { url: 'http://test.com', imageUrl: 'http://img' } }, {} as any);
+            expect(result.item.id).toBe('1');
+            expect(storage.saveItem).toHaveBeenCalledWith(expect.objectContaining({ id: '1' }));
+        });
+
         it('saveLink should fallback to url for title', async () => {
             const payload = { url: 'http://test.com' }; // No title
             (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([]);
             (browser.tabs.query as jest.Mock).mockResolvedValue([{ url: 'http://test.com', windowId: 1 }]);
             (browser.tabs.captureVisibleTab as jest.Mock).mockResolvedValue('data:image/jpeg;base64,original');
 
@@ -165,6 +177,7 @@ describe('background script', () => {
         it('should handle sendMessage error', async () => {
             const payload = { url: 'http://test.com', title: 'Test' };
             (storage.saveItem as jest.Mock).mockResolvedValue(undefined);
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([]);
             (browser.runtime.sendMessage as jest.Mock).mockRejectedValue(new Error('Send Fail'));
 
             // Should not throw
