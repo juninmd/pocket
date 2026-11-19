@@ -108,7 +108,7 @@ Veja [CONTRIBUTING.md](CONTRIBUTING.md) e [AGENTS.md](AGENTS.md). Regras princip
 | Camada | Proteção |
 |---|---|
 | Armazenamento | itens, conteúdo e chave do Gemini ficam em `browser.storage.local`; a extensão não aplica criptografia própria |
-| Rede | a API do Gemini (`generativelanguage.googleapis.com`) recebe dados só nas ações de IA, e a chave vai como parâmetro `key` na URL dessa chamada. Favicons são buscados em `www.google.com/s2/favicons` |
+| Rede | a API do Gemini (`generativelanguage.googleapis.com`) recebe dados só nas ações de IA, e a chave vai no cabeçalho `x-goog-api-key` dessa chamada, nunca na URL. Favicons são buscados em `www.google.com/s2/favicons` |
 | Conteúdo | o HTML salvo passa por DOMPurify antes de ser exibido no leitor e no chat |
 | Permissões | o content script roda em todas as páginas (`<all_urls>`) para extrair o texto do artigo |
 
