@@ -5,6 +5,7 @@ import * as storage from '../utils/storage';
 import * as aiOrganizer from '../utils/aiOrganizer';
 
 jest.mock('../utils/storage');
+jest.mock('../utils/saveItems');
 jest.mock('../utils/aiOrganizer', () => ({
     importBookmarks: jest.fn(),
     organizeWithAI: jest.fn(),

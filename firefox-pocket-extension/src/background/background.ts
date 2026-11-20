@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus, ItemType, Message } from '../utils/types';
 import { getSavedItems, saveItem, updateItem, deleteItem, generateId, getItem } from '../utils/storage';
+import { saveItems } from '../utils/saveItems';
 import { organizeWithAI, importBookmarks, exportToFirefox, organizeAndExportToFirefox } from '../utils/aiOrganizer';
 
 /**
@@ -133,10 +134,7 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
       for (let i = 0; i < bookmarks.length; i += BATCH_SIZE) {
         const batch = bookmarks.slice(i, i + BATCH_SIZE);
 
-        // Save batch
-        for (const item of batch) {
-          await saveItem(item);
-        }
+        await saveItems(batch);
 
         processed += batch.length;
 
