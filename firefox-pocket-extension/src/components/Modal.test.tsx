@@ -57,4 +57,35 @@ describe('Modal', () => {
         fireEvent.keyDown(document, { key: 'Escape' });
         expect(close).toHaveBeenCalledTimes(1);
     });
+
+    describe('focus trap', () => {
+        const renderWithFooter = () => render(
+            <>
+                <button>outside</button>
+                <Modal isOpen={true} onClose={onClose} title="T" footer={<button>Confirmar</button>}>Body</Modal>
+            </>
+        );
+
+        it('Tab on the last control wraps to the first one inside the dialog', () => {
+            renderWithFooter();
+            const close = screen.getByRole('button', { name: 'Fechar' });
+            close.focus();
+            fireEvent.keyDown(document, { key: 'Tab' });
+            expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Confirmar' }));
+        });
+
+        it('Shift+Tab on the first control wraps to the last one', () => {
+            renderWithFooter();
+            screen.getByRole('button', { name: 'Confirmar' }).focus();
+            fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+            expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Fechar' }));
+        });
+
+        it('Shift+Tab from the dialog container goes to its last control, not the page behind', () => {
+            renderWithFooter();
+            expect(document.activeElement).toBe(screen.getByRole('dialog'));
+            fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+            expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Fechar' }));
+        });
+    });
 });
