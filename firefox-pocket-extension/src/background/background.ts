@@ -2,6 +2,7 @@ import browser from 'webextension-polyfill';
 import { SavedItem, ItemStatus, ItemType, Message } from '../utils/types';
 import { getSavedItems, saveItem, updateItem, deleteItem, generateId, getItem } from '../utils/storage';
 import { saveItems } from '../utils/saveItems';
+import { mergeOrganization } from '../utils/mergeOrganization';
 import { organizeWithAI, importBookmarks, exportToFirefox, organizeAndExportToFirefox } from '../utils/aiOrganizer';
 
 /**
@@ -164,9 +165,8 @@ export const handleMessage = async (msg: any, sender: browser.Runtime.MessageSen
     }
     case 'applyOrganization': {
       const { items } = message.payload;
-      await saveItem(items[0]); // Hack to trigger storage? No, we need bulk save.
-      // Re-using storage.local.set for bulk update safely
-      await browser.storage.local.set({ savedItems: items });
+      const current = await getSavedItems();
+      await browser.storage.local.set({ savedItems: mergeOrganization(current, items) });
       browser.runtime.sendMessage({ action: 'itemsUpdated' }).catch(() => { });
       return { success: true };
     }

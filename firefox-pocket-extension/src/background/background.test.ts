@@ -278,10 +278,25 @@ describe('background script', () => {
         });
 
         it('applyOrganization should save items', async () => {
-            const items = [mockItem];
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
+            const items = [{ ...mockItem, aiFolder: 'Tech', aiTags: ['web'] }];
             const result = await handleMessage({ action: 'applyOrganization', payload: { items } }, {} as any);
             expect(result.success).toBe(true);
             expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: items });
+        });
+
+        it('applyOrganization keeps items saved while the preview was open', async () => {
+            const newer = { ...mockItem, id: 'newer', url: 'https://newer.example' };
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([newer, mockItem]);
+            const items = [{ ...mockItem, aiFolder: 'Tech' }];
+            await handleMessage({ action: 'applyOrganization', payload: { items } }, {} as any);
+            expect(browser.storage.local.set).toHaveBeenCalledWith({ savedItems: [newer, { ...mockItem, aiFolder: 'Tech', aiTags: undefined }] });
+        });
+
+        it('applyOrganization with an empty preview does not throw', async () => {
+            (storage.getSavedItems as jest.Mock).mockResolvedValue([mockItem]);
+            const result = await handleMessage({ action: 'applyOrganization', payload: { items: [] } }, {} as any);
+            expect(result.success).toBe(true);
         });
 
         it('applyOrganization should handle sendMessage error', async () => {

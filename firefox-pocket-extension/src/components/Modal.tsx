@@ -2,6 +2,26 @@ import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/theme.css';
 
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** aria-modal promises the page behind is inert: Tab/Shift+Tab wrap inside the dialog instead of leaking out. */
+const trapTab = (e: KeyboardEvent, dialog: HTMLElement | null) => {
+  if (!dialog) return;
+  const items = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+  if (items.length === 0) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  const active = document.activeElement;
+  const outside = !dialog.contains(active);
+  if (e.shiftKey && (active === first || active === dialog || outside)) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && (active === last || outside)) {
+    e.preventDefault();
+    first.focus();
+  }
+};
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,7 +48,10 @@ export const Modal: React.FC<ModalProps> = ({
     if (!isOpen) return;
     const previous = document.activeElement as HTMLElement | null;
     dialogRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') return onCloseRef.current();
+      if (e.key === 'Tab') trapTab(e, dialogRef.current);
+    };
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
