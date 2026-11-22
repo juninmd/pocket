@@ -1,32 +1,47 @@
-# 🧠 AGENTS.md - Pocket Intelligence System
+# AGENTS.md
 
-## 👤 AI Personas
+Pocket: a privacy-focused "read later" extension for Firefox (WebExtension, React 19, TypeScript). All code lives in `firefox-pocket-extension/`. The root holds docs, CI and the roadmap.
 
-### 1. Jules-Architect (System Architect)
-- **Role**: Designing the core architecture and orchestrating logic.
-- **Focus**: Scalability, process integrity, and high-level design.
-- **Vibe**: Direct, analytical, and strategic.
+**Read first:** `firefox-pocket-extension/GEMINI.md` is the project manifesto (constraints, styling, workflow).
 
-### 2. Spark-Frontend (UI/UX Expert)
-- **Role**: Crafting the visual identity and user interactions.
-- **Focus**: Aesthetics, responsiveness, and accessibility.
-- **Vibe**: Creative, detail-oriented, and user-focused.
+## Stack
+- Firefox only (Gecko). Extension APIs go through `webextension-polyfill`
+- React 19, TypeScript (strict), Webpack 5, Jest with jsdom, Framer Motion, Tailwind-style utility classes in `index.css`, `clsx`
+- pnpm 10.34.5 (`packageManager`), lockfile `pnpm-lock.yaml`. CI uses Node 20
 
-### 3. Bolt-Automation (DevOps)
-- **Role**: Managing CI/CD, scripts, and automation.
-- **Focus**: Build pipelines, testing, and deployment.
-- **Vibe**: Fast, technical, and "automation-first".
+## Commands
+Run inside `firefox-pocket-extension/`:
+- Install: `pnpm install --frozen-lockfile`
+- Build: `pnpm run build` (dev), `pnpm run build:prod`, watch: `pnpm run watch`
+- Test: `pnpm test` (Jest). CI runs `pnpm exec jest --ci`
+- Load in Firefox: `pnpm run start:firefox`, or load `dist/manifest.json` in `about:debugging`
+- Package: `pnpm run package` (web-ext build from `dist/`)
+- Lint: no lint script is configured
 
-## 📜 Development Rules (Antigravity)
+## Structure
+- `src/background/`: background service worker
+- `src/content/`: content script (page parsing)
+- `src/popup/`: toolbar popup
+- `src/dashboard/`: full-page manager (items, collections, discover, settings)
+- `src/reader/`: distraction-free reading view
+- `src/components/`, `src/utils/` (storage, saving, AI service and organizer, text helpers), `src/styles/theme.css`
+- `__mocks__/`, `jest.setup.ts`: test mocks and setup
+- Root: `CONTRIBUTING.md`, `PULL_REQUEST_TEMPLATE.md`, `ROADMAP.md`, `docs/screenshots/`, `.github/workflows/`
 
-1. **Size Limit**: **Max 150 lines per file**.
-2. **Clean Logic**: Separation of concerns enforced across all layers.
-3. **Validation**: All changes require successful tests and linting.
-4. **Security**: Sensitive data must be excluded from context.
+## Conventions
+- Storage: data lives in `browser.storage.local`. No external database
+- JSDoc on every exported function
+- Tests: new features and bug fixes ship with tests. Target 100% coverage (`GEMINI.md`, `CONTRIBUTING.md`)
+- Styling: premium glassmorphism. Use the CSS variables in `src/styles/theme.css`. No basic UI
+- Open PRs against `master`, and fill in `PULL_REQUEST_TEMPLATE.md` (it sits at the root, not in `.github/`)
+- Max 150 lines per file (also stated in `README.md`)
+- Workflow: Plan -> Act -> Validate. A change is done only with tests passing
+- Sensitive data stays out of context
 
-## 🤝 Interaction Protocol
-- Follow the **Plan -> Act -> Validate** cycle for every task.
-- Consult `GEMINI.md` for project-specific instructions.
+## Gotchas
+- The AI summary uses the user's own Gemini API key. Never hardcode it or log it
+- `validate.yml` runs on every PR: `pnpm exec jest --ci` and `pnpm run build:prod` in `firefox-pocket-extension/`. `central-validate.yml` calls the base-actions reusable validation
+- Do not hand-edit `pnpm-lock.yaml`. Regenerate it with `pnpm install`
 
 <!-- base-actions-main-policy -->
 ## GitHub Actions — padrão obrigatório (@main)
