@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Badge, Button, Card, EmptyState } from '@juninmd/sonido';
 import { SavedItem } from '../utils/types';
 import { buildFolderTree, FolderNode } from '../utils/folderStructure';
 import { ItemGrid, ItemActions } from './ItemGrid';
@@ -32,6 +33,26 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
     </section>
 );
 
+const Tile = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
+    <Card
+        interactive
+        surface="glass"
+        className="card tile"
+        padding="none"
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+            }
+        }}
+    >
+        {children}
+    </Card>
+);
+
 export const CollectionsView = ({ items, searchQuery, matches, actions, onClearSearch }: CollectionsViewProps) => {
     const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -44,18 +65,21 @@ export const CollectionsView = ({ items, searchQuery, matches, actions, onClearS
 
     if (selectedTag) {
         const tagged = items.filter(i => hasTag(i, selectedTag));
-        const back = <button className="btn ghost" onClick={() => setSelectedTag(null)}>← Voltar</button>;
         if (tagged.length === 0) {
             return (
-                <div className="empty-state">
-                    <h2>Nenhum item com a tag #{selectedTag}</h2>
-                    <button className="btn ghost" onClick={() => setSelectedTag(null)}>Voltar para Coleções</button>
-                </div>
+                <EmptyState
+                    titleAs="h2"
+                    title={`Nenhum item com a tag #${selectedTag}`}
+                    action={<Button variant="ghost" onClick={() => setSelectedTag(null)}>Voltar para Coleções</Button>}
+                />
             );
         }
         return (
             <div>
-                <div className="folder-nav">{back}<h2>#{selectedTag}</h2></div>
+                <div className="folder-nav">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedTag(null)}>← Voltar</Button>
+                    <h2>#{selectedTag}</h2>
+                </div>
                 <ItemGrid items={tagged} actions={actions} />
             </div>
         );
@@ -76,11 +100,11 @@ export const CollectionsView = ({ items, searchQuery, matches, actions, onClearS
                 <Section title={selectedFolder ? 'Subpastas' : 'Minhas Coleções'}>
                     <div className="grid tiles">
                         {subfolders.map(n => (
-                            <button type="button" key={n.fullPath} className="card tile" onClick={() => { setSelectedFolder(n.fullPath); onClearSearch(); }}>
+                            <Tile key={n.fullPath} onClick={() => { setSelectedFolder(n.fullPath); onClearSearch(); }}>
                                 <span className="tile-icon" aria-hidden="true">📁</span>
                                 <h3>{n.name}</h3>
                                 <p>{n.totalItemCount} itens</p>
-                            </button>
+                            </Tile>
                         ))}
                     </div>
                 </Section>
@@ -96,17 +120,17 @@ export const CollectionsView = ({ items, searchQuery, matches, actions, onClearS
                 <Section title="Explorar por Tags">
                     <div className="grid tiles small">
                         {tags.map(tag => (
-                            <button type="button" key={tag} className="card tile" onClick={() => setSelectedTag(tag)}>
+                            <Tile key={tag} onClick={() => setSelectedTag(tag)}>
                                 <h3>#{tag}</h3>
-                                <p>{items.filter(i => hasTag(i, tag)).length}</p>
-                            </button>
+                                <Badge tone="neutral" appearance="count">{items.filter(i => hasTag(i, tag)).length}</Badge>
+                            </Tile>
                         ))}
                     </div>
                 </Section>
             )}
 
             {subfolders.length === 0 && direct.length === 0 && selectedFolder && (
-                <div className="empty-state"><p>Esta pasta está vazia.</p></div>
+                <EmptyState title="Esta pasta está vazia." />
             )}
         </div>
     );

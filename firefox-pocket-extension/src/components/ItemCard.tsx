@@ -1,4 +1,5 @@
 import React from 'react';
+import { Badge, Button, Card } from '@juninmd/sonido';
 import { SavedItem, ItemStatus } from '../utils/types';
 
 interface ItemCardProps {
@@ -28,7 +29,7 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
     const stopProp = (e: React.MouseEvent) => e.stopPropagation();
 
     return (
-        <div className="card clickable" onClick={handleCardClick}>
+        <Card surface="glass" interactive className="card clickable" onClick={handleCardClick} padding="none">
             <div className="card-body">
                 <div className="card-image" style={{ backgroundImage: `url(${item.snapshotUrl || item.imageUrl || 'icons/placeholder.svg'})` }}></div>
                 <div className="card-content">
@@ -60,31 +61,33 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                             {item.excerpt}
                         </div>
                     )}
-                    {/* Tags handling */}
                     {((item.tags && item.tags.length > 0) || (item.aiTags && item.aiTags.length > 0)) && (
                         <div className="card-tags">
                             {item.tags && item.tags.map(tag => (
-                                <span key={tag} className="card-tag">{tag}</span>
+                                <Badge key={tag} tone="neutral" appearance="soft" className="card-tag">{tag}</Badge>
                             ))}
                             {item.aiTags && item.aiTags.map(tag => (
-                                <span key={`ai-${tag}`} className="card-tag ai">✨ {tag}</span>
+                                <Badge key={`ai-${tag}`} tone="accent" appearance="soft" className="card-tag ai">✨ {tag}</Badge>
                             ))}
                         </div>
                     )}
                     <div className="card-actions" onClick={stopProp}>
-                        <a
+                        <Button
                             href={item.url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            variant="ghost"
+                            size="icon"
                             className="icon-btn"
                             title="Abrir original"
                             aria-label="Abrir original"
                             onClick={stopProp}
                         >
                             🔗
-                        </a>
-                        <button
-                            type="button"
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             className={`icon-btn ${item.isFavorite ? 'is-favorite' : ''}`}
                             title={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
                             aria-label={item.isFavorite ? "Remover dos favoritos" : "Favoritar"}
@@ -92,9 +95,10 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                             onClick={(e) => onToggleFavorite(e, item.id, item.isFavorite)}
                         >
                             ★
-                        </button>
-                        <button
-                            type="button"
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             className={`icon-btn ${item.status === ItemStatus.Archived ? 'is-archived' : ''}`}
                             title={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
                             aria-label={item.status === ItemStatus.Archived ? "Desarquivar" : "Arquivar"}
@@ -102,30 +106,32 @@ export const ItemCard = React.memo(({ item, onToggleFavorite, onToggleArchive, o
                             onClick={(e) => onToggleArchive(e, item.id, item.status)}
                         >
                             📥
-                        </button>
+                        </Button>
                         {onEdit && (
-                            <button
-                                type="button"
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 className="icon-btn"
                                 title="Editar tags e pasta"
                                 aria-label="Editar tags e pasta"
                                 onClick={(e) => onEdit(e, item)}
                             >
                                 ✏️
-                            </button>
+                            </Button>
                         )}
-                        <button
-                            type="button"
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             className="icon-btn"
                             title="Excluir"
                             aria-label="Excluir"
                             onClick={(e) => onDelete(e, item.id)}
                         >
                             🗑️
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
-        </div>
+        </Card>
     );
 });

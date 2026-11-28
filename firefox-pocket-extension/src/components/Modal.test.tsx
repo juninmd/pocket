@@ -1,17 +1,13 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Modal } from './Modal';
-
-// Mock AnimatePresence since it delays unmounting
-jest.mock('framer-motion', () => ({
-    motion: {
-        div: ({ children, ...props }: any) => <div {...props}>{children}</div>
-    },
-    AnimatePresence: ({ children }: any) => <>{children}</>
-}));
 
 describe('Modal', () => {
     const onClose = jest.fn();
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
     it('should not render when not open', () => {
         render(<Modal isOpen={false} onClose={onClose}>Content</Modal>);
@@ -24,25 +20,25 @@ describe('Modal', () => {
         expect(screen.getByText('Title')).toBeInTheDocument();
     });
 
-    it('should call onClose when clicking overlay', () => {
+    it('should open the native dialog as a modal', () => {
+        const { container } = render(<Modal isOpen={true} onClose={onClose} title="T">Content</Modal>);
+        expect(container.querySelector('dialog')).toHaveAttribute('open');
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('should call onClose when clicking the close button', () => {
         render(<Modal isOpen={true} onClose={onClose}>Content</Modal>);
-        // The first motion.div is the overlay
-        // We can find it by looking for the one with fixed position style logic or class
-        // Since we mocked motion.div to just be div, we can just click the outer container?
-        // But testing-library renders into a container.
+        fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
 
-        // Let's rely on the click handler on the backdrop
-        // The backdrop has `onClick={onClose}`
-        // The content stops propagation.
-
-        // Let's assume the first div inside the component is the backdrop
-        // But we can't easily select it without a test id or role.
-        // I should probably add data-testid to Modal.tsx but I can't modify it easily right now without another step.
-        // Actually, the button "×" calls onClose too.
-
-        const closeBtn = screen.getByText('×');
-        fireEvent.click(closeBtn);
-        expect(onClose).toHaveBeenCalled();
+    it('should call onClose when the dialog is cancelled (Escape)', () => {
+        const close = jest.fn();
+        const { container } = render(<Modal isOpen={true} onClose={close} title="T">Content</Modal>);
+        const dialog = container.querySelector('dialog') as HTMLDialogElement;
+        // The browser turns Escape into a cancel event on the open dialog.
+        fireEvent(dialog, new Event('cancel', { cancelable: true }));
+        expect(close).toHaveBeenCalledTimes(1);
     });
 
     it('should render footer', () => {
@@ -50,42 +46,13 @@ describe('Modal', () => {
         expect(screen.getByText('Ok')).toBeInTheDocument();
     });
 
-    it('should close on Escape and focus the dialog', () => {
-        const close = jest.fn();
-        render(<Modal isOpen={true} onClose={close} title="T">Content</Modal>);
-        expect(screen.getByRole('dialog')).toHaveFocus();
-        fireEvent.keyDown(document, { key: 'Escape' });
-        expect(close).toHaveBeenCalledTimes(1);
-    });
-
-    describe('focus trap', () => {
-        const renderWithFooter = () => render(
-            <>
-                <button>outside</button>
-                <Modal isOpen={true} onClose={onClose} title="T" footer={<button>Confirmar</button>}>Body</Modal>
-            </>
+    it('should mark danger and success modals', () => {
+        const { container, rerender } = render(
+            <Modal isOpen={true} onClose={onClose} type="danger">Content</Modal>
         );
+        expect(container.querySelector('dialog')).toHaveClass('pocket-modal--danger');
 
-        it('Tab on the last control wraps to the first one inside the dialog', () => {
-            renderWithFooter();
-            const close = screen.getByRole('button', { name: 'Fechar' });
-            close.focus();
-            fireEvent.keyDown(document, { key: 'Tab' });
-            expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Confirmar' }));
-        });
-
-        it('Shift+Tab on the first control wraps to the last one', () => {
-            renderWithFooter();
-            screen.getByRole('button', { name: 'Confirmar' }).focus();
-            fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
-            expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Fechar' }));
-        });
-
-        it('Shift+Tab from the dialog container goes to its last control, not the page behind', () => {
-            renderWithFooter();
-            expect(document.activeElement).toBe(screen.getByRole('dialog'));
-            fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
-            expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Fechar' }));
-        });
+        rerender(<Modal isOpen={true} onClose={onClose} type="success">Content</Modal>);
+        expect(container.querySelector('dialog')).toHaveClass('pocket-modal--success');
     });
 });

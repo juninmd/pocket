@@ -14,3 +14,17 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 });
+
+// jsdom 20 exposes <dialog> without showModal/close. Mirror the browser API so
+// Sonido's Dialog (used by Pocket's Modal) opens during tests.
+const dialogProto = window.HTMLDialogElement?.prototype;
+if (dialogProto && typeof dialogProto.showModal !== 'function') {
+  dialogProto.showModal = function showModal(this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  };
+}
+if (dialogProto && typeof dialogProto.close !== 'function') {
+  dialogProto.close = function close(this: HTMLDialogElement) {
+    this.removeAttribute('open');
+  };
+}

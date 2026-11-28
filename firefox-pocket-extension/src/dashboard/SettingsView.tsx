@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button, Card, Select, TextField, useToast } from '@juninmd/sonido';
 import { useSettings } from './useSettings';
 import { DataManagement } from './DataManagement';
 
@@ -15,26 +16,46 @@ type Settings = ReturnType<typeof useSettings>;
 
 export const SettingsView = ({ settings, ...props }: DataProps & { settings: Settings }) => {
     const { apiKey, setApiKey, model, changeModel, saved, saveKey } = settings;
+    const toast = useToast();
+
+    const handleSave = async () => {
+        await saveKey();
+        toast({ title: 'API Key salva', description: 'Os resumos com IA já podem ser usados.', tone: 'success' });
+    };
 
     return (
         <div className="settings">
-            <div className="card panel">
+            <Card surface="glass" className="card panel" padding="none">
                 <h2>Configurações</h2>
                 <section className="panel-section">
                     <h3>Inteligência Artificial (Gemini)</h3>
                     <p className="hint">Adicione sua chave de API do Gemini para habilitar resumos automáticos.</p>
                     <div className="btn-row nowrap">
-                        <input type="password" className="search-bar grow" value={apiKey} placeholder="Cole sua API Key aqui"
-                            aria-label="Chave da API Gemini" onChange={(e) => setApiKey(e.target.value)} />
-                        <button className={`btn accent ${saved ? 'ok' : ''}`} onClick={saveKey}>{saved ? 'Salvo!' : 'Salvar Key'}</button>
+                        <div className="grow">
+                            <TextField
+                                label="Chave da API Gemini"
+                                hideLabel
+                                type="password"
+                                placeholder="Cole sua API Key aqui"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                            />
+                        </div>
+                        <Button className={`btn accent ${saved ? 'ok' : ''}`} onClick={handleSave}>
+                            {saved ? 'Salvo!' : 'Salvar Key'}
+                        </Button>
                     </div>
                     <p className="hint small">
                         <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Obter chave de API gratuita</a>
                     </p>
-                    <label className="field-label" htmlFor="model">Modelo de IA</label>
-                    <select id="model" className="search-bar full" value={model} onChange={(e) => changeModel(e.target.value)}>
-                        {MODELS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                    </select>
+                    <div className="model-field">
+                        <Select
+                            label="Modelo de IA"
+                            value={model}
+                            onChange={changeModel}
+                            options={MODELS.map(([value, label]) => ({ value, label }))}
+                        />
+                    </div>
                     <p className="hint small">ℹ️ Modelos 2.5 exigem plano pago. Use 1.5 Flash/Pro se estiver no tier gratuito.</p>
                 </section>
                 <section className="panel-section">
@@ -45,7 +66,7 @@ export const SettingsView = ({ settings, ...props }: DataProps & { settings: Set
                     <p>Extensão Pocket-like v1.0</p>
                     <p>Uma alternativa focada em privacidade para salvar links.</p>
                 </section>
-            </div>
+            </Card>
         </div>
     );
 };

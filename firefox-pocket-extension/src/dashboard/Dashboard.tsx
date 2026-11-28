@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { EmptyState, SearchField, Skeleton, ToastProvider } from '@juninmd/sonido';
 import { SavedItem, ItemStatus } from '../utils/types';
 import { useItems } from './useItems';
 import { useModal } from './useModal';
@@ -26,7 +27,7 @@ const matchesView = (item: SavedItem, view: ViewType) =>
                 : true;
 
 const Dashboard = () => {
-    const { items, loadItems, importProgress, setImportProgress, updateItem, toggleFavorite, toggleArchive, deleteItem, swallow } = useItems();
+    const { items, loadItems, importProgress, setImportProgress, updateItem, toggleFavorite, toggleArchive, deleteItem, swallow, loading } = useItems();
     const { openModal, closeModal, modalElement } = useModal();
     const settings = useSettings();
     const [activeView, setActiveView] = useState<ViewType>('home');
@@ -83,31 +84,46 @@ const Dashboard = () => {
         }
         if (matches.length === 0) {
             return (
-                <div className="empty-state">
-                    <h2>Nenhum item encontrado</h2>
-                    <p>{searchQuery ? `Nada corresponde a "${searchQuery}".` : 'Salve alguns links para começar!'}</p>
-                </div>
+                <EmptyState
+                    titleAs="h2"
+                    title="Nenhum item encontrado"
+                    description={searchQuery ? `Nada corresponde a "${searchQuery}".` : 'Salve alguns links para começar!'}
+                />
             );
         }
         return <ItemGrid items={matches} actions={actions} />;
     };
 
-    return (
-        <div className="dashboard-container">
-            <Sidebar activeView={activeView} onChange={changeView} />
-            <main className="main-content">
-                <header className="header">
-                    <h1 className="page-title">{TITLES[activeView]}</h1>
-                    {SEARCHABLE.includes(activeView) && (
-                        <input type="search" className="search-bar" placeholder="Pesquisar..." aria-label="Pesquisar"
-                            value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                    )}
-                </header>
-                {renderContent()}
-                <EditItemModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />
-                {modalElement}
-            </main>
+    const listLoading = loading && SEARCHABLE.includes(activeView);
+    const content = listLoading ? (
+        <div className="grid" aria-busy="true">
+            {[0, 1, 2].map(i => <Skeleton key={i} media rows={3} label="Carregando itens" />)}
         </div>
+    ) : renderContent();
+
+    return (
+        <ToastProvider>
+            <div className="dashboard-container">
+                <Sidebar activeView={activeView} onChange={changeView} />
+                <main className="main-content">
+                    <header className="header">
+                        <h1 className="page-title">{TITLES[activeView]}</h1>
+                        {SEARCHABLE.includes(activeView) && (
+                            <SearchField
+                                className="dashboard-search"
+                                label="Pesquisar"
+                                placeholder="Pesquisar..."
+                                value={searchQuery}
+                                onChange={setSearchQuery}
+                            />
+                        )}
+                    </header>
+                    {content}
+                    <EditItemModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />
+                    {modalElement}
+                </main>
+            </div>
+        </ToastProvider>
     );
 };
 

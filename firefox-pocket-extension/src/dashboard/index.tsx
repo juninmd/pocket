@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '../styles/sonido';
 import Dashboard from './Dashboard';
 import './index.css';
 

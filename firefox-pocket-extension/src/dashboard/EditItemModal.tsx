@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Badge, Button, TextField } from '@juninmd/sonido';
 import { Modal } from '../components/Modal';
 import { SavedItem } from '../utils/types';
 
@@ -34,29 +35,32 @@ export const EditItemModal = ({ item, onClose, onSave }: EditItemModalProps) => 
             title="Editar Item"
             footer={
                 <>
-                    <button type="button" className="secondary-btn" onClick={onClose}>Cancelar</button>
-                    <button type="button" className="primary-btn" onClick={() => item && onSave(item, tags, folder)}>Salvar</button>
+                    <Button variant="secondary" className="secondary-btn" onClick={onClose}>Cancelar</Button>
+                    <Button className="primary-btn" onClick={() => item && onSave(item, tags, folder)}>Salvar</Button>
                 </>
             }
         >
             <div className="form-stack">
+                <TextField
+                    label="Pasta"
+                    value={folder}
+                    placeholder="Ex: Tecnologia/React"
+                    onChange={(e) => setFolder(e.target.value)}
+                />
                 <div>
-                    <label className="field-label" htmlFor="edit-folder">Pasta</label>
-                    <input id="edit-folder" type="text" className="search-bar full" value={folder} placeholder="Ex: Tecnologia/React"
-                        onChange={(e) => setFolder(e.target.value)} />
-                </div>
-                <div>
-                    <label className="field-label" htmlFor="edit-tag">Tags</label>
                     <div className="tag-list">
                         {tags.map(tag => (
-                            <span key={tag} className="tag chip">
+                            <Badge key={tag} tone="accent" appearance="soft" className="tag chip">
                                 {tag}
                                 <button type="button" aria-label={`Remover ${tag}`} onClick={() => setTags(tags.filter(t => t !== tag))}>×</button>
-                            </span>
+                            </Badge>
                         ))}
                     </div>
-                    <input id="edit-tag" type="text" className="search-bar full" placeholder="Adicionar tag e pressione Enter"
-                        onKeyDown={(e) => e.key === 'Enter' && addTag(e.target as HTMLInputElement)} />
+                    <TextField
+                        label="Tags"
+                        placeholder="Adicionar tag e pressione Enter"
+                        onKeyDown={(e) => e.key === 'Enter' && addTag(e.target as HTMLInputElement)}
+                    />
                 </div>
             </div>
         </Modal>

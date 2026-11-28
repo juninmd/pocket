@@ -1,4 +1,5 @@
 import React from 'react';
+import { Badge } from '@juninmd/sonido';
 import { SavedItem } from '../utils/types';
 
 interface OrganizePreviewProps {
@@ -37,7 +38,7 @@ export const OrganizePreview = ({ total, organized, debugLogs }: OrganizePreview
                 {sorted.map(([folder, count]) => (
                     <React.Fragment key={folder}>
                         <div className="preview-folder">📁 {folder}</div>
-                        <div className="preview-count">{count} itens</div>
+                        <div className="preview-count"><Badge tone="neutral" appearance="count">{count}</Badge> itens</div>
                     </React.Fragment>
                 ))}
             </div>

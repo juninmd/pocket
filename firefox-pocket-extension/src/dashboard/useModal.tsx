@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { Button } from '@juninmd/sonido';
 import { Modal } from '../components/Modal';
 
 type ModalType = 'default' | 'danger' | 'success';
@@ -38,11 +39,11 @@ export const useModal = () => {
             footer={
                 modal.onConfirm ? (
                     <>
-                        <button className="secondary-btn" onClick={closeModal}>Cancelar</button>
-                        <button className="primary-btn" onClick={modal.onConfirm}>{modal.confirmText}</button>
+                        <Button variant="secondary" className="secondary-btn" onClick={closeModal}>Cancelar</Button>
+                        <Button className="primary-btn" onClick={modal.onConfirm}>{modal.confirmText}</Button>
                     </>
                 ) : (
-                    <button className="primary-btn" onClick={closeModal}>OK</button>
+                    <Button className="primary-btn" onClick={closeModal}>OK</Button>
                 )
             }
         >

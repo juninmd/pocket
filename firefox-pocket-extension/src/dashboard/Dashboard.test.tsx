@@ -401,7 +401,7 @@ describe('Dashboard', () => {
         fireEvent.click(screen.getByText('OK'));
     });
 
-    it.skip('should handle API key save timeout', async () => {
+    it('should handle API key save timeout', async () => {
         jest.useFakeTimers();
         render(<Dashboard />);
         fireEvent.click(screen.getByText('Configurações'));
@@ -824,7 +824,7 @@ describe('Dashboard', () => {
 
         render(<Dashboard />);
         fireEvent.click(screen.getByText('Configurações'));
-        const btn = screen.getByText('📥 Importar Favoritos do Firefox');
+        const btn = screen.getByRole('button', { name: '📥 Importar Favoritos do Firefox' });
         fireEvent.click(btn);
 
         await waitFor(() => expect(btn).toBeDisabled());

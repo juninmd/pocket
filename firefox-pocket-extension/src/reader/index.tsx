@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '../styles/sonido';
 import Reader from './Reader';
 import './index.css';
 

@@ -11,6 +11,9 @@ importers:
 
   .:
     dependencies:
+      '@juninmd/sonido':
+        specifier: ^2.5.0
+        version: 2.5.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
@@ -454,6 +457,13 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@juninmd/sonido@2.5.0':
+    resolution: {integrity: sha512-BDDPug2RiI+B5Q88lc0Y32phpWnnlixAdso3XydR9qGmONuUZG8a+OzKiqxyZwrgPnOMPY7m+Oi39WycO1xErg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
 
   '@mdn/browser-compat-data@7.3.3':
     resolution: {integrity: sha512-kjpAS3PlCvm0Ab59lXsGMaF6afnUiKwyNmRFOWFh3nXXhsKnTmPPrBg3LFngIZ38GVYxSBPzPlsnz+3cW3LKkA==}
@@ -3676,6 +3686,11 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  '@juninmd/sonido@2.5.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
 
   '@mdn/browser-compat-data@7.3.3': {}
 

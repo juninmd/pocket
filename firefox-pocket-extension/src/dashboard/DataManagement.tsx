@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import browser from 'webextension-polyfill';
+import { Button, ProgressBar } from '@juninmd/sonido';
 import { SavedItem } from '../utils/types';
 import { getItem } from '../utils/storage';
 import { OpenModal } from './useModal';
@@ -116,21 +117,20 @@ export const DataManagement = ({ items, apiKey, model, progress, onProgress, ope
         <div>
             <h3>Gerenciamento de Dados</h3>
             <div className="btn-row">
-                <button className="btn secondary" onClick={handleImport} disabled={isImporting}>
+                <Button variant="secondary" className="btn secondary" onClick={handleImport} disabled={isImporting}>
                     {isImporting ? 'Importando...' : '📥 Importar Favoritos do Firefox'}
-                </button>
-                <button className="btn accent" onClick={handleOrganize} disabled={isOrganizing}>
+                </Button>
+                <Button className="btn accent" onClick={handleOrganize} disabled={isOrganizing}>
                     {isOrganizing ? 'Organizando...' : '✨ Organizar TUDO com IA'}
-                </button>
-                <button className="btn secondary" onClick={handleExport} disabled={isDownloading}>📤 Exportar (JSON)</button>
-                <button className="btn warm" onClick={handleExportToFirefox} disabled={isExporting}>
+                </Button>
+                <Button variant="secondary" className="btn secondary" onClick={handleExport} disabled={isDownloading}>📤 Exportar (JSON)</Button>
+                <Button variant="secondary" className="btn warm" onClick={handleExportToFirefox} disabled={isExporting}>
                     {isExporting ? 'Exportando...' : '🦊 Exportar para Firefox'}
-                </button>
+                </Button>
             </div>
             {isImporting && (
                 <div className="progress-box" role="status">
-                    <div className="progress-head"><span>Importando favoritos...</span><span>{pct}%</span></div>
-                    <div className="progress-track"><div className="progress-bar" style={{ width: `${pct}%` }} /></div>
+                    <ProgressBar value={pct / 100} label="Importando favoritos" showValue />
                     <p className="hint right">{progress.current} de {progress.total} itens processados</p>
                 </div>
             )}

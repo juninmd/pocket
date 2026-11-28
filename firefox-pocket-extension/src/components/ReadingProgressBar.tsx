@@ -1,28 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useScroll, useSpring } from 'framer-motion';
+import { ProgressBar } from '@juninmd/sonido';
 
+/** Reading progress for the reader, rendered with Sonido's ProgressBar. */
 export const ReadingProgressBar = () => {
-    const { scrollYProgress } = useScroll();
-    const scaleX = useSpring(scrollYProgress, {
-        stiffness: 100,
-        damping: 30,
-        restDelta: 0.001
-    });
+  const [progress, setProgress] = useState(0);
 
-    return (
-        <motion.div
-            className="reading-progress-bar"
-            style={{
-                scaleX,
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '4px',
-                background: 'var(--primary-gradient)',
-                transformOrigin: '0%',
-                zIndex: 1000
-            }}
-        />
-    );
+  useEffect(() => {
+    const update = () => {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0);
+    };
+
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  return (
+    <div className="reading-progress">
+      <ProgressBar value={progress} label="Progresso de leitura" size="sm" tone="accent" />
+    </div>
+  );
 };

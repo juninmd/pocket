@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@juninmd/sonido';
 
 interface FolderNavProps {
     selectedFolder: string | null;
@@ -12,7 +13,7 @@ export const FolderNav = ({ selectedFolder, onSelect }: FolderNavProps) => {
 
     return (
         <div className="folder-nav">
-            {selectedFolder && <button type="button" className="btn ghost" onClick={goUp}>⬆ Subir</button>}
+            {selectedFolder && <Button variant="ghost" size="sm" onClick={goUp}>⬆ Subir</Button>}
             <nav className="breadcrumbs" aria-label="Caminho da pasta">
                 <button type="button" className={`crumb ${!selectedFolder ? 'current' : ''}`}
                     aria-current={!selectedFolder ? 'page' : undefined} onClick={() => onSelect(null)}>Coleções</button>
