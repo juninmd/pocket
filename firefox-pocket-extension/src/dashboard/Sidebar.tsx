@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@juninmd/sonido';
 
 export type ViewType = 'home' | 'favorites' | 'archive' | 'discover' | 'collections' | 'settings';
 
@@ -34,15 +35,16 @@ export const Sidebar = ({ activeView, onChange }: SidebarProps) => (
             <React.Fragment key={i}>
                 {i > 0 && <div className="nav-divider" />}
                 {group.map(view => view !== 'divider' && (
-                    <button
+                    <Button
                         key={view}
-                        type="button"
+                        variant="ghost"
+                        size="sm"
                         className={`nav-item ${activeView === view ? 'active' : ''}`}
                         aria-current={activeView === view ? 'page' : undefined}
                         onClick={() => onChange(view)}
                     >
                         {LABELS[view]}
-                    </button>
+                    </Button>
                 ))}
             </React.Fragment>
         ))}

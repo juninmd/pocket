@@ -16,6 +16,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.34.5",
   "dependencies": {
+    "@juninmd/sonido": "^2.5.0",
     "@mozilla/readability": "^0.6.0",
     "clsx": "^2.1.1",
     "dompurify": "^3.3.1",

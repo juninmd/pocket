@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
+import { Badge, Button, Skeleton, Spinner, TextField } from '@juninmd/sonido';
 import { SavedItem, ItemStatus } from '../utils/types';
 import Mascot from './Mascot';
 import './index.css';
@@ -133,11 +134,22 @@ const Popup = () => {
   };
 
   if (status === 'loading') {
-    return <div className="loading" role="status">Carregando...</div>;
+    return (
+      <div className="loading popup-loading" role="status">
+        <Spinner label="Carregando" />
+        <span>Carregando...</span>
+        <Skeleton rows={2} label="Carregando seu link" />
+      </div>
+    );
   }
 
   if (status === 'saving') {
-    return <div className="loading" role="status">Salvando...</div>;
+    return (
+      <div className="loading popup-loading" role="status">
+        <Spinner label="Salvando" />
+        <span>Salvando...</span>
+      </div>
+    );
   }
 
   if (status === 'error') {
@@ -150,12 +162,12 @@ const Popup = () => {
       <div className="popup-container not-saved-view">
         <Mascot message="O que deseja fazer?" />
         <div className="not-saved-actions">
-          <button className="primary-btn" onClick={handleSave}>
+          <Button className="primary-btn" onClick={handleSave}>
             💾 Salvar Esta Página
-          </button>
-          <button className="secondary-btn" onClick={openDashboard}>
+          </Button>
+          <Button variant="secondary" className="secondary-btn" onClick={openDashboard}>
             📂 Abrir Minha Lista
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -168,8 +180,8 @@ const Popup = () => {
 
       <div className="header">
         <div className="actions">
-          <button type="button" onClick={handleArchive} title="Arquivar" aria-label="Arquivar">📥</button>
-          <button type="button" onClick={handleDelete} title="Excluir" aria-label="Excluir">🗑️</button>
+          <Button variant="ghost" size="icon" onClick={handleArchive} title="Arquivar" aria-label="Arquivar">📥</Button>
+          <Button variant="ghost" size="icon" onClick={handleDelete} title="Excluir" aria-label="Excluir">🗑️</Button>
         </div>
       </div>
 
@@ -178,24 +190,23 @@ const Popup = () => {
       <div className="tags-section">
         <div className="tags-list">
           {tags.map(tag => (
-            <span key={tag} className="tag">
+            <Badge key={tag} tone="accent" appearance="soft" className="tag">
               {tag} <button type="button" aria-label={`Remover ${tag}`} onClick={() => removeTag(tag)}>×</button>
-            </span>
+            </Badge>
           ))}
         </div>
-        <input
-          type="text"
+        <TextField
+          label="Adicionar tags"
+          hideLabel
           placeholder="Adicionar tags..."
-          aria-label="Adicionar tags"
           value={tagInput}
           onChange={e => setTagInput(e.target.value)}
           onKeyDown={handleAddTag}
-          className="tag-input"
         />
       </div>
 
       <div className="footer">
-        <button className="link-btn" onClick={openDashboard}>Abrir Minha Lista</button>
+        <Button variant="link" className="link-btn" onClick={openDashboard}>Abrir Minha Lista</Button>
       </div>
     </div>
   );

@@ -1,0 +1,147 @@
+/*
+ * Sonido × Pocket.
+ * Loads the design system stylesheet once and bridges its `--sn-*` tokens to
+ * Pocket's glassmorphism palette, so components keep the app's #667eea accent.
+ */
+@import '@juninmd/sonido/styles.css';
+
+/* `data-theme` sets the Sonido dark base; these values override its glass theme. */
+:root[data-theme] {
+  color-scheme: dark;
+  --sn-font: var(--font-main);
+  --sn-font-display: var(--font-main);
+  --sn-color-bg: var(--bg-dark);
+  --sn-color-surface: #17191e;
+  --sn-color-surface-2: rgba(255, 255, 255, 0.04);
+  --sn-color-surface-hover: rgba(255, 255, 255, 0.09);
+  --sn-color-border: rgba(255, 255, 255, 0.12);
+  --sn-color-border-soft: var(--border-light);
+  --sn-color-text: var(--text-main);
+  --sn-color-text-dim: var(--text-secondary);
+  --sn-color-text-faint: var(--text-muted);
+  --sn-color-accent: var(--primary);
+  --sn-color-accent-2: var(--accent);
+  --sn-color-on-accent: #ffffff;
+  --sn-gradient: var(--primary-gradient);
+  --sn-gradient-soft: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(102, 126, 234, 0.04));
+  --sn-sig-1: #667eea;
+  --sn-sig-2: #764ba2;
+  --sn-sig-3: #ef4056;
+  --sn-gradient-signature: var(--primary-gradient);
+  --sn-glass: rgba(23, 25, 30, 0.7);
+  --sn-glass-strong: rgba(15, 17, 21, 0.94);
+  --sn-glass-fill: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  --sn-glass-edge: var(--border-light);
+  --sn-scrim: rgba(0, 0, 0, 0.6);
+  --sn-ring: 0 0 0 4px rgba(102, 126, 234, 0.22);
+  --sn-blur: 12px;
+  --sn-radius-sm: var(--radius-sm);
+  --sn-radius: var(--radius-md);
+  --sn-radius-lg: var(--radius-lg);
+  --sn-shadow-card: var(--shadow-md);
+  --sn-shadow-pop: var(--shadow-lg);
+  --sn-shadow-lift: var(--shadow-md);
+}
+
+/* Dialog (Modal wrapper) */
+.sn-dialog.pocket-modal {
+  max-width: 440px;
+}
+
+.sn-dialog.pocket-modal .sn-dialog__panel {
+  border-radius: var(--radius-md);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.pocket-modal--danger .sn-dialog__panel {
+  border-top: 3px solid var(--accent);
+}
+
+.pocket-modal--success .sn-dialog__panel {
+  border-top: 3px solid #2e9e5b;
+}
+
+.sn-dialog.pocket-modal .sn-dialog__body {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.sn-dialog.pocket-modal .sn-dialog__footer {
+  gap: 12px;
+}
+
+/* Dashboard search */
+.dashboard-search {
+  width: 320px;
+}
+
+/* Settings form fields */
+.btn-row .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.model-field {
+  margin-top: 16px;
+}
+
+/* Popup loading stack */
+.popup-loading {
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.popup-loading .sn-skeleton {
+  width: 100%;
+  text-align: left;
+}
+
+/* Reading progress: a fixed hairline across the top of the reader. */
+.reading-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 1000;
+}
+
+.reading-progress .sn-progress {
+  gap: 0;
+}
+
+.reading-progress .sn-progress__track {
+  height: 4px;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Sidebar nav uses the design-system Button; keep it as a full-width nav row. */
+.nav-item.sn-button {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 0;
+}
+
+/* Collection tiles and popup tags keep their compact app spacing. */
+.tile.sn-card {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0;
+}
+
+/* Sonido cards are grid items: let them stretch to the row instead of sizing to content. */
+.grid > .sn-card {
+  height: auto;
+}
+
+/* Reader AI sidebar tabs */
+.ai-sidebar .sn-tabs {
+  padding: 0 16px;
+}
+
+@media (max-width: 860px) {
+  .dashboard-search {
+    width: 100%;
+  }
+}

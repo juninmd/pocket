@@ -12,6 +12,7 @@ const swallow = (e: ItemEvent) => {
 export const useItems = () => {
     const [items, setItems] = useState<SavedItem[]>([]);
     const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+    const [loading, setLoading] = useState(true);
 
     const loadItems = useCallback(async () => {
         try {
@@ -19,6 +20,8 @@ export const useItems = () => {
             if (response && response.items) setItems(response.items);
         } catch (err) {
             console.error('Failed to load items', err);
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -53,5 +56,5 @@ export const useItems = () => {
         loadItems();
     }, [loadItems]);
 
-    return { items, loadItems, importProgress, setImportProgress, updateItem, toggleFavorite, toggleArchive, deleteItem, swallow };
+    return { items, loadItems, importProgress, setImportProgress, updateItem, toggleFavorite, toggleArchive, deleteItem, swallow, loading };
 };

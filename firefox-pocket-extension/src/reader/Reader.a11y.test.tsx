@@ -105,10 +105,12 @@ describe('Reader Accessibility', () => {
 
         const modal = await screen.findByRole('dialog');
         expect(modal).toBeInTheDocument();
-        expect(modal).toHaveAttribute('aria-modal', 'true');
-        expect(modal).toHaveAttribute('aria-labelledby', 'modal-title');
+        // Native <dialog> opened with showModal() is modal, and Sonido links its title via aria-labelledby.
+        expect(modal).toHaveAttribute('open');
+        const labelledBy = modal.getAttribute('aria-labelledby');
+        expect(labelledBy).toBeTruthy();
 
-        const title = document.getElementById('modal-title');
+        const title = document.getElementById(labelledBy as string);
         expect(title).toBeInTheDocument();
         expect(title).toHaveTextContent('Configuração Necessária');
 

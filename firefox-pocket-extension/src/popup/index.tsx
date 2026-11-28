@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '../styles/sonido';
 import Popup from './Popup';
 import './index.css';
 

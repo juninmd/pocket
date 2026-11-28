@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button, Card, EmptyState } from '@juninmd/sonido';
 import { SavedItem, ItemStatus } from '../utils/types';
 
 const hostOf = (url: string) => {
@@ -14,12 +15,12 @@ export const DiscoverView = ({ items }: { items: SavedItem[] }) => {
     const current = React.useMemo(() => (unread.length ? pick(unread) : null), [unread.length, seed]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (!current) {
-        return <div className="empty-state"><h2>Sem itens para redescobrir</h2><p>Salve mais itens!</p></div>;
+        return <EmptyState titleAs="h2" title="Sem itens para redescobrir" description="Salve mais itens!" />;
     }
 
     return (
         <div className="discover">
-            <div className="card discover-card">
+            <Card surface="glass" className="card discover-card" padding="none">
                 <a href={current.url} target="_blank" rel="noopener noreferrer" className="discover-link">
                     <div className="card-image discover-image" style={{ backgroundImage: `url(${current.imageUrl || 'icons/placeholder.svg'})` }} />
                     <div className="card-content">
@@ -30,9 +31,9 @@ export const DiscoverView = ({ items }: { items: SavedItem[] }) => {
                     </div>
                 </a>
                 <div className="card-content discover-footer">
-                    <button className="primary-btn wide" onClick={() => setSeed(s => s + 1)}>Próximo Item</button>
+                    <Button className="primary-btn wide" onClick={() => setSeed(s => s + 1)}>Próximo Item</Button>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 import DOMPurify from 'dompurify';
+import { Button, Tabs } from '@juninmd/sonido';
 import { SavedItem, ItemStatus } from '../utils/types';
 import { getItem } from '../utils/storage';
 import { Modal } from '../components/Modal';
@@ -371,11 +372,11 @@ const Reader = () => {
         footer={
           modal.onConfirm ? (
             <>
-              <button type="button" className="modal-btn secondary" onClick={closeModal}>Cancelar</button>
-              <button type="button" className="modal-btn primary" onClick={modal.onConfirm}>{modal.confirmText}</button>
+              <Button type="button" variant="secondary" className="modal-btn secondary" onClick={closeModal}>Cancelar</Button>
+              <Button type="button" className="modal-btn primary" onClick={modal.onConfirm}>{modal.confirmText}</Button>
             </>
           ) : (
-            <button type="button" className="modal-btn primary" onClick={closeModal}>OK</button>
+            <Button type="button" className="modal-btn primary" onClick={closeModal}>OK</Button>
           )
         }
       >
@@ -396,25 +397,18 @@ const Reader = () => {
             </div>
             <button className="sidebar-close" onClick={() => setShowSidebar(false)} aria-label="Fechar barra lateral">✕</button>
         </header>
-        <div className="sidebar-tabs" role="tablist">
-            <button
-                className={`sidebar-tab ${sidebarTab === 'chat' ? 'active' : ''}`}
-                onClick={() => setSidebarTab('chat')}
-                role="tab"
-                aria-selected={sidebarTab === 'chat'}
-            >
-                Chat
-            </button>
-            <button
-                className={`sidebar-tab ${sidebarTab === 'concepts' ? 'active' : ''}`}
-                onClick={() => setSidebarTab('concepts')}
-                role="tab"
-                aria-selected={sidebarTab === 'concepts'}
-            >
-                Conceitos
-            </button>
-        </div>
-        <div className="sidebar-content" role="tabpanel">
+        <Tabs
+            items={[
+                { key: 'chat', label: 'Chat' },
+                { key: 'concepts', label: 'Conceitos' },
+            ]}
+            value={sidebarTab}
+            onChange={setSidebarTab}
+            label="Assistente"
+            idPrefix="ai-sidebar"
+            hasPanels
+        />
+        <div className="sidebar-content" role="tabpanel" id={`ai-sidebar-panel-${sidebarTab}`} aria-labelledby={`ai-sidebar-${sidebarTab}`}>
             {apiKey && item?.content ? (
                 <>
                     {sidebarTab === 'chat' && <ChatPanel apiKey={apiKey} articleContent={item.content} />}
